@@ -28,7 +28,7 @@ from pyworkflow.gui.plotter import Plotter
 from pyworkflow.protocol.params import LabelParam, StringParam, EnumParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER
 from pyworkflow.em.viewer import ChimeraView, DataView
-from protocol_resolution_monogenic_signal import XmippProtMonoResRes, OUTPUT_RESOLUTION_FILE
+from protocol_resolution_monogenic_signal import XmippProtMonoRes, OUTPUT_RESOLUTION_FILE
 from pyworkflow.em.metadata import MetaData, MDL_X, MDL_COUNT
 from pyworkflow.em import ImageHandler
 import numpy as np
