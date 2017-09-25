@@ -128,7 +128,7 @@ class XmippMonoResViewer(ProtocolViewer):
         return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices,
                 'doShowVolumeSlices': self._showVolumeSlices,
                 'doShowVolumeColorSlices': self._showVolumeColorSlices,
-                'doShowResHistogram': self._plotHistogram,
+                'doShowResHistogram': self._plotHistogram,Prot
                 'doShowChimera': self._showChimera,
                 }
        

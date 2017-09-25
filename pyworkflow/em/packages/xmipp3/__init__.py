@@ -51,6 +51,7 @@ from viewer_ml2d import XmippML2DViewer
 from viewer_movie_alignment import XmippMovieAlignViewer
 from viewer_normalize_strain import XmippNormalizeStrainViewer
 from viewer_resolution3d import XmippResolution3DViewer
+from viewer_resolution_directional import XmippMonoDirViewer
 from viewer_resolution_monogenic_signal import XmippMonoResViewer
 from viewer_validate_nontilt import XmippValidateNonTiltViewer
 from viewer_split_volume import XmippViewerSplitVolume
