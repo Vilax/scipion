@@ -42,7 +42,8 @@ from collections import OrderedDict
 OUTPUT_RESOLUTION_FILE_CHIMERA = 'MG_Chimera_resolution.vol'
 
 OUTPUT_VARIANCE_FILE_CHIMERA = 'MG_Chimera_resolution.vol'
-
+CHIMERA_CMD_DOA = 'chimera_DoA.cmd'
+CHIMERA_CMD_VARIANCE = 'chimera_Variance.cmd'
 
 
 OUTPUT_RESOLUTION_MEAN = 'mean_volume.vol'
@@ -53,7 +54,7 @@ OUTPUT_DOA_FILE = 'local_anisotropy.vol'
 
 #TODO: prepare volumes for chimera
 OUTPUT_VARIANCE_FILE_CHIMERA = 'varResolution_Chimera.vol'
-OUTPUT_RESOLUTION_DOA_FILE_CHIMERA = 'DoA_Chimera.vol'
+OUTPUT_DOA_FILE_CHIMERA = 'DoA_Chimera.vol'
 OUTPUT_RESOLUTION_MEAN_CHIMERA = 'mean_volume_Chimera.vol'
 OUTPUT_DOA_FILE
 # Color maps
@@ -154,13 +155,22 @@ class XmippMonoDirViewer(ProtocolViewer):
         
     def _getVisualizeDict(self):
         return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices,
-                'doShowDoASlices': self._showDoASlices,
-                'doShowDoAColorSlices': self._showDoAColorSlices,
+                'doShowDoASlices': self._showSlices(OUTPUT_DOA_FILE),
+                'doShowDoAColorSlices': self._showColorSlices(OUTPUT_DOA_FILE),
                 'doShowHistogram': self._plotHistogram,
-                'doShowVarianceSlices': self._showVarianceSlices,
-                'doShowVarianceColorSlices': self._showVarianceColorSlices,
-                'doShowDoAChimera': self._showChimera
+                'doShowVarianceSlices': self._showSlices(OUTPUT_VARIANCE_FILE),
+                'doShowVarianceColorSlices': self._showColorSlices(OUTPUT_VARIANCE_FILE),
+                'doShowDoAChimera': self._showChimera(OUTPUT_DOA_FILE_CHIMERA, 
+                                                      CHIMERA_CMD_DOA),
+                'doShowVarianceChimera': self._showChimera(
+                                    OUTPUT_VARIANCE_FILE_CHIMERA, CHIMERA_CMD_VARIANCE)
                 }
+
+    def _showSlices(self, fileName):
+        cm = DataView(self.protocol._getExtraPath(fileName))
+        
+        return [cm]        
+
        
     def _showOriginalVolumeSlices(self, param=None):
         if self.protocol.halfVolumes.get() is True:
@@ -171,15 +181,9 @@ class XmippMonoDirViewer(ProtocolViewer):
             cm = DataView(self.protocol.inputVolumes.get().getFileName())
             return [cm]
 
-
-    def _showDoASlices(self, param=None):
-        cm = DataView(self.protocol.outputVolume.getFileName())
-        
-        return [cm]        
-    
-    
-    def _showDoAColorSlices(self, param=None):
-        imageFile = self.protocol._getExtraPath(OUTPUT_DOA_FILE)
+   
+    def _showColorSlices(self, fileName):
+        imageFile = self.protocol._getExtraPath(fileName)
         img = ImageHandler().read(imageFile)
         imgData = img.getData()
         max_Res = np.amax(imgData)
@@ -197,7 +201,7 @@ class XmippMonoDirViewer(ProtocolViewer):
         cbar.ax.invert_yaxis()
 
         return plt.show(fig)
-    
+
 
     def _plotHistogram(self, param=None):
         md = MetaData()
@@ -225,36 +229,11 @@ class XmippMonoDirViewer(ProtocolViewer):
         plt.ylabel("Counts")
         
         return plt.show()
-
-    def _showVarrianceSlices(self, param=None):
-        cm = DataView(self.protocol.outputVolume.getFileName())
-        
-        return [cm]        
-    
-    
-    def _showVarianceColorSlices(self, param=None):
-        imageFile = self.protocol._getExtraPath(OUTPUT_VARIANCE_FILE)
-        img = ImageHandler().read(imageFile)
-        imgData = img.getData()
-        max_Res = np.amax(imgData)
-
-        #  This is to generate figures for the paper
-        # min_Res = np.amin(imgData)
-        # imgData2 = imgData
-        imgData2 = np.ma.masked_where(imgData < 0.1, imgData, copy=True)
-        
-        min_Res = np.amin(imgData2)
-        fig, im = self._plotVolumeSlices('MonoDir slices', imgData2,
-                                         min_Res, max_Res, self.getColorMap(), dataAxis=self._getAxis())
-        cax = fig.add_axes([0.9, 0.1, 0.03, 0.8])
-        cbar = fig.colorbar(im, cax=cax)
-        cbar.ax.invert_yaxis()
-
-        return plt.show(fig)
-    
+  
     
     def _getAxis(self):
         return self.getEnumText('sliceAxis')
+
 
     def _plotVolumeSlices(self, title, volumeData, vminData, vmaxData, cmap, **kwargs):
         """ Helper function to create plots of volumes slices. 
@@ -297,9 +276,10 @@ class XmippMonoDirViewer(ProtocolViewer):
         
         return f, im 
 
-    def _showChimera(self, param=None):
-        self.createChimeraScript()
-        cmdFile = self.protocol._getPath('Chimera_resolution.cmd')
+    def _showChimera(self, inputfilename, outputfilename):
+        self.createChimeraScript(inputfilename, outputfilename)
+        self.createChimeraScript(inputfilename, outputfilename)
+        cmdFile = self.protocol._getPath(outputfilename)
         view = ChimeraView(cmdFile)
         return [view]
     
@@ -311,12 +291,11 @@ class XmippMonoDirViewer(ProtocolViewer):
             colors_labels += round(min_Res + step*inter,2),
         return colors_labels
 
-    def createChimeraScript(self):
+    def createChimeraScript(self, infile, outfile):
         fnRoot = "extra/"
-        scriptFile_DoA = self.protocol._getPath('Chimera_DoA.cmd')
-        scriptFile = self.protocol._getPath('Chimera_variance.cmd')
+        scriptFile = self.protocol._getPath(outfile)
         fhCmd = open(scriptFile, 'w')
-        imageFile = self.protocol._getExtraPath(OUTPUT_RESOLUTION_DOA_FILE_CHIMERA)
+        imageFile = self.protocol._getExtraPath(infile)
         img = ImageHandler().read(imageFile)
         imgData = img.getData()
         min_Res = round(np.amin(imgData)*100)/100
@@ -337,7 +316,7 @@ class XmippMonoDirViewer(ProtocolViewer):
             ext = getExt(self.protocol.inputVolumes.get().getFileName())
             fninput = abspath(fnbase + ext[0:4])
             fhCmd.write("open %s\n" % fninput)
-        fhCmd.write("open %s\n" % (fnRoot + OUTPUT_RESOLUTION_DOA_FILE_CHIMERA))
+        fhCmd.write("open %s\n" % (fnRoot + infile))
         if self.protocol.halfVolumes.get() is True:
             smprt = self.protocol.inputVolume.get().getSamplingRate()
         else:
