@@ -91,7 +91,7 @@ class XmippMonoDirViewer(ProtocolViewer):
     density maps studied in structural biology, primarily by cryo-electron
     microscopy (cryo-EM).
     """
-    _label = 'viewer MonoRes'
+    _label = 'viewer MonoDir'
     _targets = [XmippProtMonoDir]      
     _environments = [DESKTOP_TKINTER]
     
