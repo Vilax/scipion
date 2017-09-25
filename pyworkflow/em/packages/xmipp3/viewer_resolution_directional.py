@@ -159,7 +159,7 @@ class XmippMonoDirViewer(ProtocolViewer):
                 'doShowHistogram': self._plotHistogram,
                 'doShowVarianceSlices': self._showVarianceSlices,
                 'doShowVarianceColorSlices': self._showVarianceColorSlices,
-                'doShowChimera': self._showChimera,
+                'doShowDoAChimera': self._showChimera
                 }
        
     def _showOriginalVolumeSlices(self, param=None):
