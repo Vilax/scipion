@@ -35,17 +35,17 @@ import numpy as np
 import pyworkflow.em.metadata as md
 
 
-MONORES_METHOD_URL = 'http://github.com/I2PC/scipion/wiki/XmippProtMonoRes'
+MONORES_METHOD_URL = 'http://github.com/I2PC/scipion/wiki/XmippProtMonoDir'
 
 OUTPUT_RESOLUTION_FILE = 'mgresolution.vol'
-FN_FILTERED_MAP = 'filteredMap.vol'
 OUTPUT_RESOLUTION_FILE_CHIMERA = 'MG_Chimera_resolution.vol'
 OUTPUT_MASK_FILE = 'output_Mask.vol'
 FN_MEAN_VOL = 'mean_volume.vol'
 METADATA_ANGLES_FILE = 'angles_md.xmd'
 OUTPUT_RESOLUTION_MAX_FILE = 'maxResolution.vol'
 OUTPUT_RESOLUTION_MIN_FILE = 'minResolution.vol'
-OUTPUT_RESOLUTION_VAR_FILE = 'varResolution.vol'
+OUTPUT_DOA_FILE = 'local_anisotropy.vol'
+OUTPUT_VARIANCE_FILE = 'resolution variance.vol'
 
 
 class XmippProtMonoDir(ProtAnalysis3D):
@@ -250,23 +250,24 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params += ' --maxRes %f' % self.maxRes.get()
         params += ' --maxVol %s' % self._getExtraPath(OUTPUT_RESOLUTION_MAX_FILE)
         params += ' --minVol %s' % self._getExtraPath(OUTPUT_RESOLUTION_MIN_FILE)
-        params += ' --varVol %s' % self._getExtraPath(OUTPUT_RESOLUTION_VAR_FILE)
+        params += ' --varVol %s' % self._getExtraPath(OUTPUT_VARIANCE_FILE)
         params += ' --volumeRadius %f' % xdim
         params += ' --chimera_volume %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE_CHIMERA)
         params += ' --sym %s' % self.symmetry.get()
         params += ' --significance %f' % self.significance.get()
         params += ' --md_resdir %s' % self._getExtraPath(METADATA_ANGLES_FILE)
+        params += ' --doa_vol %s' % self._getExtraPath(OUTPUT_DOA_FILE)
 
         self.runJob('xmipp_resolution_directional', params)
 
 
     def createHistrogram(self):
 
-        params = ' -i %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
+        params = ' -i %s' % self._getExtraPath(OUTPUT_DOA_FILE)
         params += ' --mask binary_file %s' % self._getExtraPath(OUTPUT_MASK_FILE)
         params += ' --steps %f' % 30
         params += ' --range %f %f' % (self.min_res_init, self.max_res_init)#(self.minRes.get(), self.maxRes.get())
-        params += ' -o %s' % self._getExtraPath('hist.xmd')
+        params += ' -o %s' % self._getExtraPath('hist_DoA.xmd')
 
         self.runJob('xmipp_image_histogram', params)
         
@@ -274,31 +275,42 @@ class XmippProtMonoDir(ProtAnalysis3D):
     def createOutputStep(self):
         volume_path_max = self._getExtraPath(OUTPUT_RESOLUTION_MAX_FILE)
         volume_path_min = self._getExtraPath(OUTPUT_RESOLUTION_MIN_FILE)
+        volume_path_doa = self._getExtraPath(OUTPUT_DOA_FILE)
+        volume_path_var = self._getExtraPath(OUTPUT_VARIANCE_FILE)
         
         self.volumesSet_max = self._createSetOfVolumes('resolutionMaxVol')
         self.volumesSet_min = self._createSetOfVolumes('resolutionMinVol')
+        self.volumesSet_doa = self._createSetOfVolumes('doaVol')
+        self.volumesSet_var = self._createSetOfVolumes('varianceVol')
         
         if (self.halfVolumes):
-            self.volumesSet.setSamplingRate(self.inputVolume.get().getSamplingRate())
-        else:
-            self.volumesSet_max.setSamplingRate(self.inputVolumes.get().getSamplingRate())
-        readSetOfVolumes(volume_path_max, self.volumesSet_max)
-        self._defineOutputs(outputVolume=self.volumesSet_max)
-        if (self.halfVolumes):
             self._defineSourceRelation(self.inputVolume, self.volumesSet_max)
+            self._defineSourceRelation(self.inputVolume, self.volumesSet_min)
+            self._defineSourceRelation(self.inputVolume, self.volumesSet_doa)
+            self._defineSourceRelation(self.inputVolume, self.volumesSet_var)
+            self.volumesSet_min.setSamplingRate(self.inputVolume.get().getSamplingRate())
+            self.volumesSet_max.setSamplingRate(self.inputVolume.get().getSamplingRate())
+            self.volumesSet_doa.setSamplingRate(self.inputVolume.get().getSamplingRate())
+            self.volumesSet_var.setSamplingRate(self.inputVolume.get().getSamplingRate())
+            
         else:
             self._defineSourceRelation(self.inputVolumes, self.volumesSet_max)
-            
-        if (self.halfVolumes):
-            self.volumesSet_min.setSamplingRate(self.inputVolume.get().getSamplingRate())
-        else:
-            self.volumesSet_min.setSamplingRate(self.inputVolumes.get().getSamplingRate())
-        readSetOfVolumes(volume_path_min, self.volumesSet_min)
-        self._defineOutputs(outputVolume_Filtered=self.volumesSet_min)
-        if (self.halfVolumes):
-            self._defineSourceRelation(self.inputVolume, self.volumesSet_min)
-        else:
             self._defineSourceRelation(self.inputVolumes, self.volumesSet_min)
+            self._defineSourceRelation(self.inputVolumes, self.volumesSet_doa)
+            self._defineSourceRelation(self.inputVolumes, self.volumesSet_var)
+            self.volumesSet_min.setSamplingRate(self.inputVolumes.get().getSamplingRate())
+            self.volumesSet_max.setSamplingRate(self.inputVolumes.get().getSamplingRate())
+            self.volumesSet_doa.setSamplingRate(self.inputVolumes.get().getSamplingRate())
+            self.volumesSet_var.setSamplingRate(self.inputVolumes.get().getSamplingRate())
+
+        readSetOfVolumes(volume_path_min, self.volumesSet_min)
+        readSetOfVolumes(volume_path_max, self.volumesSet_max)
+        readSetOfVolumes(volume_path_doa, self.volumesSet_doa)
+        readSetOfVolumes(volume_path_var, self.volumesSet_var)
+        self._defineOutputs(outputVolume_max=self.volumesSet_max)
+        self._defineOutputs(outputVolume_min=self.volumesSet_min)
+        self._defineOutputs(outputVolume_doa=self.volumesSet_doa)
+        self._defineOutputs(outputVolume_var=self.volumesSet_var)
 
     # --------------------------- INFO functions ------------------------------
 

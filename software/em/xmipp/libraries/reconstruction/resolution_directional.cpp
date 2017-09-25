@@ -55,6 +55,7 @@ void ProgResDir::readParams()
 	noiseOnlyInHalves = checkParam("--noiseonlyinhalves");
 	significance = getDoubleParam("--significance");
 	fnMd = getParam("--md_resdir");
+	fnDoA = getParam("--doa_vol");
 }
 
 
@@ -86,6 +87,7 @@ void ProgResDir::defineParams()
 	addParamsLine("  [--noiseonlyinhalves]        : The noise estimation is only performed inside the mask");
 	addParamsLine("  [--significance <s=0.95>]    : The level of confidence for the hypothesis test.");
 	addParamsLine("  [--md_resdir <file=\".\">]   : Metadata with mean resolution by direction.");
+	addParamsLine("  [--doa_vol <vol_file=\"\">]  : Output filename with DoA volume");
 }
 
 void ProgResDir::produceSideInfo()
@@ -1178,6 +1180,6 @@ void ProgResDir::run()
 			DIRECT_MULTIDIM_ELEM(pAvgResolution, n) = 0;
 		}
 	}
-	AvgResolution.write("isotropy.vol");
+	AvgResolution.write(fnDoA);
 	VarianzeResolution.write(fnVar);
 }

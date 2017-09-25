@@ -52,7 +52,8 @@ class ProgResDir : public XmippProgram
 {
 public:
 	 /** Filenames */
-	FileName fnOut, fnVol, fnVol2, fnMask, fnchim, fnSym, fnMeanVol, fnMaskOut, fnMaxVol, fnMinVol, fnMd, fnVar;
+	FileName fnOut, fnVol, fnVol2, fnMask, fnchim, fnSym, fnMeanVol, fnMaskOut, fnMaxVol,
+	fnMinVol, fnMd, fnVar, fnDoA;
 
 	/** sampling rate, minimum resolution, and maximum resolution */
 	double sampling, minRes, maxRes, R, ang_sampling, N_points, pepep;
