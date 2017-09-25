@@ -49,7 +49,7 @@ CHIMERA_CMD_VARIANCE = 'chimera_Variance.cmd'
 OUTPUT_RESOLUTION_MEAN = 'mean_volume.vol'
 OUTPUT_RESOLUTION_MAX_FILE = 'maxResolution.vol'
 OUTPUT_RESOLUTION_MIN_FILE = 'minResolution.vol'
-OUTPUT_VARIANCE_FILE = 'varResolution.vol'
+OUTPUT_VARIANCE_FILE = 'resolution_variance.vol'
 OUTPUT_DOA_FILE = 'local_anisotropy.vol'
 
 #TODO: prepare volumes for chimera

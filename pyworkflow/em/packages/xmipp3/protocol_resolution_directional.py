@@ -45,7 +45,7 @@ METADATA_ANGLES_FILE = 'angles_md.xmd'
 OUTPUT_RESOLUTION_MAX_FILE = 'maxResolution.vol'
 OUTPUT_RESOLUTION_MIN_FILE = 'minResolution.vol'
 OUTPUT_DOA_FILE = 'local_anisotropy.vol'
-OUTPUT_VARIANCE_FILE = 'resolution variance.vol'
+OUTPUT_VARIANCE_FILE = 'resolution_variance.vol'
 
 
 class XmippProtMonoDir(ProtAnalysis3D):
