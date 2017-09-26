@@ -153,14 +153,14 @@ class XmippMonoDirViewer(ProtocolViewer):
     def _getVisualizeDict(self):
         return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices(),
                 'doShowDoASlices': self._showSlices(OUTPUT_DOA_FILE),
-                'doShowDoAColorSlices': self._showColorSlices(OUTPUT_DOA_FILE),
-                'doShowDoAChimera': self._showChimera(OUTPUT_DOA_FILE_CHIMERA, 
-                                                      CHIMERA_CMD_DOA),
-                'doShowHistogram': self._plotHistogram,
-                'doShowVarianceSlices': self._showSlices(OUTPUT_VARIANCE_FILE),
-                'doShowVarianceColorSlices': self._showColorSlices(OUTPUT_VARIANCE_FILE),
-                'doShowVarianceChimera': self._showChimera(
-                                    OUTPUT_VARIANCE_FILE_CHIMERA, CHIMERA_CMD_VARIANCE)
+#                 'doShowDoAColorSlices': self._showColorSlices(OUTPUT_DOA_FILE),
+#                 'doShowDoAChimera': self._showChimera(OUTPUT_DOA_FILE_CHIMERA, 
+#                                                       CHIMERA_CMD_DOA),
+#                 'doShowHistogram': self._plotHistogram,
+#                 'doShowVarianceSlices': self._showSlices(OUTPUT_VARIANCE_FILE),
+#                 'doShowVarianceColorSlices': self._showColorSlices(OUTPUT_VARIANCE_FILE),
+#                 'doShowVarianceChimera': self._showChimera(
+#                                     OUTPUT_VARIANCE_FILE_CHIMERA, CHIMERA_CMD_VARIANCE)
                 }
 
 
