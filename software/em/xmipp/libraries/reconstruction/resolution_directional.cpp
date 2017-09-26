@@ -818,7 +818,7 @@ void ProgResDir::run()
 		double angle_cone = ang_sampling;
 		double rot = MAT_ELEM(angles, 0, dir);
 		double tilt = MAT_ELEM(angles, 1, dir);
-		std::cout << "Analyzing frequencies in direction = " << dir << "   rot = " << rot*180/PI << "   tilt = " << tilt*180/PI << std::endl;
+		std::cout << "Analyzing frequencies in direction = " << dir << "   rot = " << rot << "   tilt = " << tilt << std::endl;
 
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
 			if (DIRECT_MULTIDIM_ELEM(pMask, n) == 1)
