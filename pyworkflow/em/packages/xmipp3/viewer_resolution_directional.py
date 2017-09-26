@@ -122,7 +122,6 @@ class XmippMonoDirViewer(ProtocolViewer):
         groupDoA.addParam('doShowDoAChimera', LabelParam,
                        label="Show DoA map in Chimera")
         
-        
         groupVariance = form.addGroup('Variance information')
         groupVariance.addParam('doShowVarianceSlices', LabelParam,
               label="Show variance slices")
@@ -150,21 +149,20 @@ class XmippMonoDirViewer(ProtocolViewer):
                        display=EnumParam.DISPLAY_HLIST,
                        label='Slice axis')
 
-
-
         
     def _getVisualizeDict(self):
         return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices,
                 'doShowDoASlices': self._showSlices(OUTPUT_DOA_FILE),
                 'doShowDoAColorSlices': self._showColorSlices(OUTPUT_DOA_FILE),
+                'doShowDoAChimera': self._showChimera(OUTPUT_DOA_FILE_CHIMERA, 
+                                                      CHIMERA_CMD_DOA),
                 'doShowHistogram': self._plotHistogram,
                 'doShowVarianceSlices': self._showSlices(OUTPUT_VARIANCE_FILE),
                 'doShowVarianceColorSlices': self._showColorSlices(OUTPUT_VARIANCE_FILE),
-                'doShowDoAChimera': self._showChimera(OUTPUT_DOA_FILE_CHIMERA, 
-                                                      CHIMERA_CMD_DOA),
                 'doShowVarianceChimera': self._showChimera(
                                     OUTPUT_VARIANCE_FILE_CHIMERA, CHIMERA_CMD_VARIANCE)
                 }
+
 
     def _showSlices(self, fileName):
         cm = DataView(self.protocol._getExtraPath(fileName))

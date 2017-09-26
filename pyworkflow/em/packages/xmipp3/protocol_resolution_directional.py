@@ -319,7 +319,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
 
     def _methods(self):
         messages = []
-        if hasattr(self, 'outputVolume'):
+        if hasattr(self, 'resolutionMaxVol', 'resolutionMinVol', 'doaVol', 'varianceVol'):
             messages.append(
                 'Information about the method/article in ' + MONORES_METHOD_URL)
         return messages
