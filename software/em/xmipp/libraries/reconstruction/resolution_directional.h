@@ -56,7 +56,7 @@ public:
 	fnMinVol, fnMd, fnVar, fnDoA;
 
 	/** sampling rate, minimum resolution, and maximum resolution */
-	double sampling, minRes, maxRes, R, ang_sampling, N_points, pepep;
+	double sampling, minRes, maxRes, R, ang_sampling, N_points, pepep, N_directions;
 
 	/** Is the volume previously masked?*/
 	int NVoxelsOriginalMask, Nvoxels;

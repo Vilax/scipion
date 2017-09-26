@@ -25,7 +25,7 @@
  ***************************************************************************/
 
 #include "resolution_directional.h"
-#define DEBUG
+//#define DEBUG
 //#define DEBUG_MASK
 #define DEBUG_DIR
 //define DEBUG_FILTER
@@ -43,7 +43,6 @@ void ProgResDir::readParams()
 	fnchim = getParam("--chimera_volume");
 	sampling = getDoubleParam("--sampling_rate");
 	ang_sampling = getDoubleParam("--angular_sampling");
-	N_points = getDoubleParam("--sampling_points");
 	R = getDoubleParam("--volumeRadius");
 	minRes = getDoubleParam("--minRes");
 	maxRes = getDoubleParam("--maxRes");
@@ -74,8 +73,7 @@ void ProgResDir::defineParams()
 	addParamsLine("  --sym <symmetry>: Symmetry (c1, c2, c3,..d1, d2, d3,...)");
 	addParamsLine("  [--chimera_volume <output=\"Chimera_resolution_volume.vol\">]: Local resolution volume for chimera viewer (in Angstroms)");
 	addParamsLine("  [--sampling_rate <s=1>]      : Sampling rate (A/px)");
-	addParamsLine("  [--angular_sampling <s=20>]   : Angular Sampling rate (degrees)");
-	addParamsLine("  [--sampling_points <s=20>]   : Number of sampling points");
+	addParamsLine("  [--angular_sampling <s=15>]  : Angular Sampling rate (degrees)");
 	addParamsLine("  [--volumeRadius <s=100>]     : This parameter determines the radius of a sphere where the volume is");
 	addParamsLine("  [--number_frequencies <w=50>]       : The resolution is computed at a number of frequencies between mininum and");
 	addParamsLine("                               : maximum resolution px/A. This parameter determines that number");
@@ -110,42 +108,8 @@ void ProgResDir::produceSideInfo()
 	V().setXmippOrigin();
 
 	//Sweeping the projection sphere
-		std::cout << "Obtaining angular projections..." << std::endl;
-		/*
-		int symmetry, sym_order;
-		mysampling.verbose=verbose;
-	    show();
-	    mysampling.setSampling(ang_sampling);
-	    srand ( time(NULL) );
-
-	    if (!mysampling.SL.isSymmetryGroup(fnSym, symmetry, sym_order))
-	    {
-	    	REPORT_ERROR(ERR_VALUE_INCORRECT,
-	    			(std::string)"Invalid symmetry" +  fnSym);
-	    }
-
-	    double max_tilt_angle = 180;
-	    double min_tilt_angle = 0;
-	    //true => compute half sphere
-	    mysampling.computeSamplingPoints(true,max_tilt_angle,min_tilt_angle);
-	    mysampling.SL.readSymmetryFile(fnSym);
-	    mysampling.fillLRRepository();
-	    mysampling.removeRedundantPoints(symmetry, sym_order);
-		#define BREAKSIMMETRY
-		#ifdef BREAKSIMMETRY
-	        mysampling.SL.readSymmetryFile(fnSym);
-	        mysampling.fillLRRepository();
-		#endif
-		#undef BREAKSIMMETRY
-	    FileName fnAux;
-	    fnAux = fnOut.withoutExtension();
-	    mysampling.createAsymUnitFile(fnAux);
-	    */
-
-
-	//generateGrid(N_points, angles);
+	std::cout << "Obtaining angular projections..." << std::endl;
 	generateGridProjectionMatching(fnVol, ang_sampling, angles);
-    ////////////////////////////////////////////////////////////////////
 
 	FourierTransformer transformer;
 	MultidimArray<double> &inputVol = V();
@@ -171,7 +135,6 @@ void ProgResDir::produceSideInfo()
 				u2=uz2y2+ux*ux;
 //				if ((fabs(ux) <= 0.1) || (fabs(uy) <= 0.1) || (fabs(uz) <= 0.1))
 //					DIRECT_MULTIDIM_ELEM(iu,n) = uz;
-
 				if ((k != 0) || (i != 0) || (j != 0))
 					DIRECT_MULTIDIM_ELEM(iu,n) = 1.0/sqrt(u2);
 				else
@@ -180,14 +143,6 @@ void ProgResDir::produceSideInfo()
 			}
 		}
 	}
-
-//	#ifdef DEBUG
-//	Image<double> filteredvolume;
-//	filteredvolume = iu;
-//	filteredvolume.write("freqs.vol");
-//	#endif
-//exit(0);
-
 
 	std::cout << " atan(0) " << atan(0)*180/PI << std::endl;
 	std::cout << " atan(1) " << atan(1)*180/PI << std::endl;
@@ -235,6 +190,7 @@ void ProgResDir::produceSideInfo()
 	MaxResolution.clear();
 	MinResolution.clear();
 	AvgResoltion.clear();
+	VarianzeResolution.clear();
 
 	NVoxelsOriginalMask = 0;
 	FOR_ALL_ELEMENTS_IN_ARRAY3D(pMask)
@@ -284,7 +240,6 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 	String args=formatString("-i %s -o %s --sampling_rate %f",
 			fnVol_.c_str(), fnGallery.c_str(), smprt); //fnGallery.c_str(),smprt);
 
-	std::cout << args << std::endl;
 	String cmd=(String)"xmipp_angular_project_library " + args;
 	system(cmd.c_str());
 
@@ -307,48 +262,18 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 			count++;
 		}
 	}
-	N_points = count-1;
-	angles.initZeros(4,N_points);
 
-	for (size_t k = 0; k<N_points; k++)
+	N_directions = count-1;
+	angles.initZeros(4,N_directions);
+
+	for (size_t k = 0; k<N_directions; k++)
 	{
 		MAT_ELEM(angles, 0, k) = MAT_ELEM(aux_angles,0, k);
 		MAT_ELEM(angles, 1, k) = MAT_ELEM(aux_angles,1, k);
-		std::cout << "rot = " << MAT_ELEM(angles, 0, k) << "  tilt = " << MAT_ELEM(angles, 1, k) << std::endl;
+		std::cout << "k=" << k << "  rot = " << MAT_ELEM(angles, 0, k) << "  tilt = " << MAT_ELEM(angles, 1, k) << std::endl;
 	}
 }
 
-void ProgResDir::generateGrid(const double N_points, Matrix2D<double> &angles)
-{
-	angles.initZeros(4,N_points);
-	double h;
-
-	for (size_t k=1 ; k<N_points+1; k++)
-	{
-		h = -1 + 2*(k-1)/(N_points-1);
-		MAT_ELEM(angles, 1, k-1) = acos(h)-PI/2;
-		if (abs(h) != 1)
-		{
-			if (k == 1)
-				MAT_ELEM(angles, 0, k-1) = fmod((3.6/sqrt(N_points))*(1/sqrt(1-h*h)), PI);
-			else
-				MAT_ELEM(angles, 0, k-1) = fmod(MAT_ELEM(angles, 0, k-2) + (3.6/sqrt(N_points))*(1/sqrt(1-h*h)), PI);
-		}
-		else
-		{
-			MAT_ELEM(angles, 0, k-1) = 0;
-		}
-		std::cout << "rot = " << MAT_ELEM(angles, 0, k-1)*180/PI << "   tilt = " << MAT_ELEM(angles, 1, k-1)*180/PI << std::endl;
-	}
-
-//	MAT_ELEM(angles, 0, 0) = 0;
-//	MAT_ELEM(angles, 1, 0) = PI/2;
-//	MAT_ELEM(angles, 0, 1) = PI/2;
-//	MAT_ELEM(angles, 1, 1) = PI/2;
-
-
-
-}
 
 void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
 		double w1, double w1h, double w1l, MultidimArray<double> &amplitude, int count, FileName fnDebug,
@@ -794,7 +719,7 @@ void ProgResDir::run()
 
 		std::cout << "Analyzing directions" << std::endl;
 
-	for (size_t dir=0; dir<N_points; dir++)
+	for (size_t dir=0; dir<N_directions; dir++)
 	{
 		Image<double> outputResolution;
 		outputResolution().resizeNoCopy(VRiesz);
@@ -1067,9 +992,7 @@ void ProgResDir::run()
 
 		#ifdef DEBUG_SYMMETRY
 			outputResolution.write("resolution_simple_simmetrized.vol");
-		#endif
 
-		#ifdef DEBUG_DIR
 		Image<double> saveImg;
 		saveImg = pOutputResolution;
 		FileName fnres;
@@ -1081,11 +1004,6 @@ void ProgResDir::run()
 		MultidimArray<double> resolutionFiltered, resolutionChimera;
 		postProcessingLocalResolutions(pOutputResolution, list, resolutionChimera, cut_value, pMask);
 
-//		Image<double> outputResolutionImage;
-//		outputResolutionImage() = pOutputResolution;//resolutionFiltered;
-//		outputResolutionImage.write(fnOut);
-//		outputResolutionImage() = resolutionChimera;
-//		outputResolutionImage.write(fnchim);
 
 		Image<double> VarianzeResolution, MaxResolution, MinResolution, AvgResolution;
 
@@ -1177,11 +1095,11 @@ void ProgResDir::run()
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pAvgResolution)
 	{
-		DIRECT_MULTIDIM_ELEM(pAvgResolution, n) /= N_points;
+		DIRECT_MULTIDIM_ELEM(pAvgResolution, n) /= N_directions;
 		DIRECT_MULTIDIM_ELEM(pAvgResolution, n) *= DIRECT_MULTIDIM_ELEM(mask(), n);
 	}
 	AvgResolution.write(fnOut);
-	#ifdef DEBUG_DIR
+	#ifdef DEBUG
 	Image<int> saveImg_int;
 	FileName fnm;
 	saveImg_int = mask();
@@ -1205,7 +1123,7 @@ void ProgResDir::run()
 			max_voxel = DIRECT_MULTIDIM_ELEM(pMaxResolution, n);
 			min_voxel = DIRECT_MULTIDIM_ELEM(pMinResolution, n);
 			double resmean = DIRECT_MULTIDIM_ELEM(pAvgResolution, n);
-			DIRECT_MULTIDIM_ELEM(pVarianzeResolution, n) = (DIRECT_MULTIDIM_ELEM(pVarianzeResolution, n)/N_points) - (resmean*resmean/(N_points*N_points));
+			DIRECT_MULTIDIM_ELEM(pVarianzeResolution, n) = (DIRECT_MULTIDIM_ELEM(pVarianzeResolution, n)/N_directions) - (resmean*resmean/(N_directions*N_directions));
 			DIRECT_MULTIDIM_ELEM(pAvgResolution, n) = (max_voxel - min_voxel)/(max_voxel + min_voxel);
 		}
 		else

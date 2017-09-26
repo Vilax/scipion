@@ -101,9 +101,9 @@ class XmippProtMonoDir(ProtAnalysis3D):
                             help="If the user knows the range of resolutions or only a"
                                  " range of frequency needs to be analysed")
         
-        group.addParam('samplingPoints', FloatParam, default=50, 
-                      label="N. Directions",
-                      help='Number of directions to be computed')
+        group.addParam('angularsampling', FloatParam, default=15, expertLevel=LEVEL_ADVANCED,
+                      label="Angular Sampling",
+                      help='Angular sampling to cover the projection sphere')
         
         
         group.addParam('significance', FloatParam, default=0.95, expertLevel=LEVEL_ADVANCED,
@@ -244,8 +244,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
                 params += ' --noiseonlyinhalves'
         else:
             params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
-        params += ' --sampling_points %f' % self.samplingPoints.get()
-        params += ' --angular_sampling %f' % self.samplingPoints.get()
+        params += ' --angular_sampling %f' % self.angularsampling.get()
         params += ' --number_frequencies %f' % Nfreqs
         params += ' --minRes %f' % self.minRes.get()
         params += ' --maxRes %f' % self.maxRes.get()
