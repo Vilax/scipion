@@ -154,13 +154,11 @@ class XmippMonoDirViewer(ProtocolViewer):
         return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices,
                 'doShowDoASlices': self._showDoASlices,
                 'doShowDoAColorSlices': self._showDoAColorSlices,
-#                 'doShowDoAChimera': self._showChimera(OUTPUT_DOA_FILE_CHIMERA, 
-#                                                       CHIMERA_CMD_DOA),
-#                 'doShowHistogram': self._plotHistogram,
-#                 'doShowVarianceSlices': self._showSlices(OUTPUT_VARIANCE_FILE),
-#                 'doShowVarianceColorSlices': self._showColorSlices(OUTPUT_VARIANCE_FILE),
-#                 'doShowVarianceChimera': self._showChimera(
-#                                     OUTPUT_VARIANCE_FILE_CHIMERA, CHIMERA_CMD_VARIANCE)
+                'doShowDoAChimera': self._showDoAChimera,
+                'doShowHistogram': self._plotHistogram,
+                 'doShowVarianceSlices': self._showVarianceSlices,
+                 'doShowVarianceColorSlices': self._showVarianceColorSlices,
+                 'doShowVarianceChimera': self._showChimera
                 }
 
     def _showDoASlices(self, param=None):
@@ -169,12 +167,22 @@ class XmippMonoDirViewer(ProtocolViewer):
     def _showDoAColorSlices(self, param=None):
         self._showColorSlices(OUTPUT_DOA_FILE)
 
-
+    def _showDoAChimera(self, param=None):
+        self._showChimera(OUTPUT_DOA_FILE_CHIMERA, CHIMERA_CMD_DOA)
+        
+    def _showVarianceSlices(self, param=None):
+        self._showSlices(OUTPUT_VARIANCE_FILE)
+    
+    def _showVarianceColorSlices(self, param=None):
+        self._showColorSlices(OUTPUT_VARIANCE_FILE)
+    
+    def _showVarianceChimera(self, param=None):
+        self._showChimera(OUTPUT_VARIANCE_FILE_CHIMERA, CHIMERA_CMD_VARIANCE)
+        
     def _showSlices(self, fileName):
         cm = DataView(self.protocol._getExtraPath(fileName))
         
         return [cm]        
-
        
     def _showOriginalVolumeSlices(self, param=None):
         if self.protocol.halfVolumes.get() is True:
