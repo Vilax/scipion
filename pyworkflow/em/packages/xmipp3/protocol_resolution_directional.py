@@ -174,7 +174,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
 
         self._insertFunctionStep('createOutputStep', prerequisites=[MS])
 
-        #self._insertFunctionStep("createHistrogram")
+        self._insertFunctionStep("createHistrogram")
 
     def convertInputStep(self):
         """ Read the input volume.
@@ -319,7 +319,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
 
     def _methods(self):
         messages = []
-        if hasattr(self, 'resolutionMaxVol', 'resolutionMinVol', 'doaVol', 'varianceVol'):
+        if hasattr(self, 'doaVol'):
             messages.append(
                 'Information about the method/article in ' + MONORES_METHOD_URL)
         return messages
@@ -330,5 +330,5 @@ class XmippProtMonoDir(ProtAnalysis3D):
         return summary
 
     def _citations(self):
-        return ['Vilas2017']
+        return ['Not yet']
 
