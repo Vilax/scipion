@@ -288,16 +288,10 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 	String cmd=(String)"xmipp_angular_project_library " + args;
 	system(cmd.c_str());
 
-	std::cout << "angles generation finished" << std::endl;
-
 	MetaData md;
 	md.read(fnanglesmd);
 
-	std::cout << "I can read" << std::endl;
-
 	size_t md_size = md.size();
-
-	std::cout << "I cant determine the size" << std::endl;
 
 	Matrix2D<double> aux_angles(2,md_size);
 	size_t count = 0;
@@ -320,6 +314,7 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 	{
 		MAT_ELEM(angles, 0, k-1) = MAT_ELEM(aux_angles,0, k);
 		MAT_ELEM(angles, 1, k-1) = MAT_ELEM(aux_angles,1, k);
+		std::cout << "rot = " << rot << "  tilt = " << tilt << std::endl;
 	}
 }
 
