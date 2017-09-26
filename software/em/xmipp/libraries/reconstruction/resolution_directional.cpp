@@ -276,7 +276,7 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 												Matrix2D<double> &angles)
 {
 	FileName fnGallery;
-	FileName fnanglesmd = "angles.xmd";
+	FileName fnanglesmd = "angles.doc";
 
 	// Generate projections
 	fnGallery=formatString("angles.stk");
@@ -291,7 +291,7 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 	std::cout << "angles generation finished" << std::endl;
 
 	MetaData md;
-	md.read(fnGallery);
+	md.read(fnanglesmd);
 
 	std::cout << "I can read" << std::endl;
 
