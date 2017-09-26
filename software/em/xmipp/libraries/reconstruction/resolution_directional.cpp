@@ -300,7 +300,7 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 	{
 		md.getValue(MDL_ANGLE_ROT, rot, __iter.objId);
 		md.getValue(MDL_ANGLE_TILT, tilt, __iter.objId);
-		if ( (rot<=180) && (abs(tilt)<=90) )
+		if ( (rot<=180) && (tilt<=180) )
 		{
 			MAT_ELEM(aux_angles,0, count) = rot;
 			MAT_ELEM(aux_angles,1, count) = tilt;
