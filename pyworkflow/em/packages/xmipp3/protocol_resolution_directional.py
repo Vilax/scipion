@@ -245,6 +245,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
         else:
             params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
         params += ' --sampling_points %f' % self.samplingPoints.get()
+        params += ' --angular_sampling %f' % self.samplingPoints.get()
         params += ' --number_frequencies %f' % Nfreqs
         params += ' --minRes %f' % self.minRes.get()
         params += ' --maxRes %f' % self.maxRes.get()
