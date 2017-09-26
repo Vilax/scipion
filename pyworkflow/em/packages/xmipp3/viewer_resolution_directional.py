@@ -155,7 +155,7 @@ class XmippMonoDirViewer(ProtocolViewer):
                 'doShowDoASlices': self._showDoASlices,
                 'doShowDoAColorSlices': self._showDoAColorSlices,
                 'doShowDoAChimera': self._showDoAChimera,
-                'doShowHistogram': self._plotHistogram,
+                'doShowDoAHistogram': self._plotHistogram,
                  'doShowVarianceSlices': self._showVarianceSlices,
                  'doShowVarianceColorSlices': self._showVarianceColorSlices,
                  'doShowVarianceChimera': self._showChimera
