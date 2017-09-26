@@ -284,20 +284,12 @@ class XmippProtMonoDir(ProtAnalysis3D):
         self.volumesSet_var = self._createSetOfVolumes('varianceVol')
         
         if (self.halfVolumes):
-            self._defineSourceRelation(self.inputVolume, self.volumesSet_max)
-            self._defineSourceRelation(self.inputVolume, self.volumesSet_min)
-            self._defineSourceRelation(self.inputVolume, self.volumesSet_doa)
-            self._defineSourceRelation(self.inputVolume, self.volumesSet_var)
             self.volumesSet_min.setSamplingRate(self.inputVolume.get().getSamplingRate())
             self.volumesSet_max.setSamplingRate(self.inputVolume.get().getSamplingRate())
             self.volumesSet_doa.setSamplingRate(self.inputVolume.get().getSamplingRate())
             self.volumesSet_var.setSamplingRate(self.inputVolume.get().getSamplingRate())
             
         else:
-            self._defineSourceRelation(self.inputVolumes, self.volumesSet_max)
-            self._defineSourceRelation(self.inputVolumes, self.volumesSet_min)
-            self._defineSourceRelation(self.inputVolumes, self.volumesSet_doa)
-            self._defineSourceRelation(self.inputVolumes, self.volumesSet_var)
             self.volumesSet_min.setSamplingRate(self.inputVolumes.get().getSamplingRate())
             self.volumesSet_max.setSamplingRate(self.inputVolumes.get().getSamplingRate())
             self.volumesSet_doa.setSamplingRate(self.inputVolumes.get().getSamplingRate())
@@ -311,6 +303,17 @@ class XmippProtMonoDir(ProtAnalysis3D):
         self._defineOutputs(outputVolume_min=self.volumesSet_min)
         self._defineOutputs(outputVolume_doa=self.volumesSet_doa)
         self._defineOutputs(outputVolume_var=self.volumesSet_var)
+        
+        if (self.halfVolumes):
+            self._defineSourceRelation(self.inputVolume, self.volumesSet_max)
+            self._defineSourceRelation(self.inputVolume, self.volumesSet_min)
+            self._defineSourceRelation(self.inputVolume, self.volumesSet_doa)
+            self._defineSourceRelation(self.inputVolume, self.volumesSet_var)
+        else:
+            self._defineSourceRelation(self.inputVolumes, self.volumesSet_max)
+            self._defineSourceRelation(self.inputVolumes, self.volumesSet_min)
+            self._defineSourceRelation(self.inputVolumes, self.volumesSet_doa)
+            self._defineSourceRelation(self.inputVolumes, self.volumesSet_var)
 
     # --------------------------- INFO functions ------------------------------
 
