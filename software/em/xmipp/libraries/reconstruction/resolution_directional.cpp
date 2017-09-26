@@ -279,10 +279,10 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 	FileName fnanglesmd = "angles.xmd";
 
 	// Generate projections
-	fnGallery=formatString("gallery.stk");
+	fnGallery=formatString("angles.stk");
 
 	String args=formatString("-i %s -o %s --sampling_rate %f",
-			fnVol_.c_str(), fnanglesmd.c_str(), smprt); //fnGallery.c_str(),smprt);
+			fnVol_.c_str(), fnGallery.c_str(), smprt); //fnGallery.c_str(),smprt);
 
 	std::cout << args << std::endl;
 	String cmd=(String)"xmipp_angular_project_library " + args;
