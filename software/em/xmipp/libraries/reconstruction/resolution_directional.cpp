@@ -74,7 +74,7 @@ void ProgResDir::defineParams()
 	addParamsLine("  --sym <symmetry>: Symmetry (c1, c2, c3,..d1, d2, d3,...)");
 	addParamsLine("  [--chimera_volume <output=\"Chimera_resolution_volume.vol\">]: Local resolution volume for chimera viewer (in Angstroms)");
 	addParamsLine("  [--sampling_rate <s=1>]      : Sampling rate (A/px)");
-	addParamsLine("  [--angular_sampling <s=5>]   : Angular Sampling rate (degrees)");
+	addParamsLine("  [--angular_sampling <s=20>]   : Angular Sampling rate (degrees)");
 	addParamsLine("  [--sampling_points <s=20>]   : Number of sampling points");
 	addParamsLine("  [--volumeRadius <s=100>]     : This parameter determines the radius of a sphere where the volume is");
 	addParamsLine("  [--number_frequencies <w=50>]       : The resolution is computed at a number of frequencies between mininum and");
@@ -142,8 +142,9 @@ void ProgResDir::produceSideInfo()
 	    mysampling.createAsymUnitFile(fnAux);
 	    */
 
-	FileName fnDir = ".";
-	generateGrid(N_points, angles);
+
+	//generateGrid(N_points, angles);
+	generateGridProjectionMatching(fnVol, ang_sampling, angles);
     ////////////////////////////////////////////////////////////////////
 
 	FourierTransformer transformer;
@@ -271,20 +272,48 @@ void ProgResDir::produceSideInfo()
 }
 
 
-void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt, FileName fnDir)
+void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
+												Matrix2D<double> &angles)
 {
 	FileName fnGallery;
+	FileName fnanglesmd = "angles.xmd";
 
 	// Generate projections
-	fnGallery=formatString("%s/gallery.stk",fnDir.c_str());
+	fnGallery=formatString("gallery.stk");
 
 	String args=formatString("-i %s -o %s --sampling_rate %f",
-			fnVol_.c_str(),fnGallery.c_str(),smprt);
-			//We are considering the psi sampling = angular sampling rate
+			fnVol_.c_str(), fnanglesmd.c_str(), smprt); //fnGallery.c_str(),smprt);
 
 	std::cout << args << std::endl;
 	String cmd=(String)"xmipp_angular_project_library " + args;
 	system(cmd.c_str());
+
+	MetaData md;
+	md.read(fnanglesmd);
+
+	size_t md_size = md.size();
+	Matrix2D<double> aux_angles(2,md_size);
+	size_t count = 0;
+	double rot, tilt;
+	FOR_ALL_OBJECTS_IN_METADATA(md)
+	{
+		md.getValue(MDL_ANGLE_ROT, rot, __iter.objId);
+		md.getValue(MDL_ANGLE_TILT, tilt, __iter.objId);
+		if ( (rot<=180) && (abs(tilt)<=90) )
+		{
+			MAT_ELEM(aux_angles,0, count) = rot;
+			MAT_ELEM(aux_angles,1, count) = tilt;
+			count++;
+		}
+	}
+	N_points = count-1;
+	angles.initZeros(4,N_points);
+
+	for (size_t k = 0; k<N_points; k++)
+	{
+		MAT_ELEM(angles, 0, k-1) = MAT_ELEM(aux_angles,0, k);
+		MAT_ELEM(angles, 1, k-1) = MAT_ELEM(aux_angles,1, k);
+	}
 }
 
 void ProgResDir::generateGrid(const double N_points, Matrix2D<double> &angles)
@@ -782,7 +811,7 @@ void ProgResDir::run()
 		int iter = 0;
 		int count_res = 0;
 		double criticalW=-1;
-		double angle_cone = 20;
+		double angle_cone = ang_sampling;
 		double rot = MAT_ELEM(angles, 0, dir);
 		double tilt = MAT_ELEM(angles, 1, dir);
 		std::cout << "Analyzing frequencies in direction = " << dir << "   rot = " << rot*180/PI << "   tilt = " << tilt*180/PI << std::endl;

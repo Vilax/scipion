@@ -81,7 +81,7 @@ public:
     void postProcessingLocalResolutions(MultidimArray<double> &resolutionVol,
     		std::vector<double> &list, MultidimArray<double> &resolutionChimera, double &cut_value, MultidimArray<int> &pMask);
     void generateGrid(const double N_points, Matrix2D<double> &angles);
-    void generateGridProjectionMatching(FileName fnVol, double smprt, FileName fnDir);
+    void generateGridProjectionMatching(FileName fnVol_, double smprt, Matrix2D<double> &angles);
     void run();
 
 public:
