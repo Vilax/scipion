@@ -1077,6 +1077,7 @@ void ProgResDir::run()
 
 		/////////////////////////
 		#ifdef DEBUG_DIR
+		Image<double> saveImg;
 		saveImg = pOutputResolution;
 		FileName fnres = formatString("resolution_dir_%i.vol", dir);
 		saveImg.write(fnres);
