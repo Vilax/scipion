@@ -300,7 +300,7 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 	{
 		md.getValue(MDL_ANGLE_ROT, rot, __iter.objId);
 		md.getValue(MDL_ANGLE_TILT, tilt, __iter.objId);
-		if ( (rot<=180) && (tilt<=180) )
+		if ( (rot>=0) && (tilt>=0) )
 		{
 			MAT_ELEM(aux_angles,0, count) = rot;
 			MAT_ELEM(aux_angles,1, count) = tilt;
@@ -365,6 +365,8 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	double iwl=1.0/w1l;
 	double ideltal=PI/(w1-w1l);
 
+	if (tilt<0)
+		tilt= tilt + 180;
 
 	double tilt_cone_plus = tilt + 0.5*angle_cone*PI/180;
 	double tilt_cone_minus = tilt - 0.5*angle_cone*PI/180;
