@@ -151,7 +151,7 @@ class XmippMonoDirViewer(ProtocolViewer):
 
         
     def _getVisualizeDict(self):
-        return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices,
+        return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices(),
                 'doShowDoASlices': self._showSlices(OUTPUT_DOA_FILE),
                 'doShowDoAColorSlices': self._showColorSlices(OUTPUT_DOA_FILE),
                 'doShowDoAChimera': self._showChimera(OUTPUT_DOA_FILE_CHIMERA, 
@@ -186,9 +186,6 @@ class XmippMonoDirViewer(ProtocolViewer):
         imgData = img.getData()
         max_Res = np.amax(imgData)
 
-        #  This is to generate figures for the paper
-        # min_Res = np.amin(imgData)
-        # imgData2 = imgData
         imgData2 = np.ma.masked_where(imgData < 0.1, imgData, copy=True)
         
         min_Res = np.amin(imgData2)
