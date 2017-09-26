@@ -293,9 +293,12 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 	MetaData md;
 	md.read(fnGallery);
 
-	std::cout << "I cant read" << std::endl;
+	std::cout << "I can read" << std::endl;
 
 	size_t md_size = md.size();
+
+	std::cout << "I cant determine the size" << std::endl;
+
 	Matrix2D<double> aux_angles(2,md_size);
 	size_t count = 0;
 	double rot, tilt;
