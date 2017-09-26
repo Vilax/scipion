@@ -289,7 +289,7 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 	system(cmd.c_str());
 
 	MetaData md;
-	md.read(fnanglesmd);
+	md.read(fnGallery);
 
 	size_t md_size = md.size();
 	Matrix2D<double> aux_angles(2,md_size);
