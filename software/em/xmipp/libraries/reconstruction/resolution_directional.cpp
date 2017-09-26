@@ -312,9 +312,9 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 
 	for (size_t k = 0; k<N_points; k++)
 	{
-		MAT_ELEM(angles, 0, k-1) = MAT_ELEM(aux_angles,0, k);
-		MAT_ELEM(angles, 1, k-1) = MAT_ELEM(aux_angles,1, k);
-		std::cout << "rot = " << rot << "  tilt = " << tilt << std::endl;
+		MAT_ELEM(angles, 0, k) = MAT_ELEM(aux_angles,0, k);
+		MAT_ELEM(angles, 1, k) = MAT_ELEM(aux_angles,1, k);
+		std::cout << "rot = " << MAT_ELEM(angles, 0, k) << "  tilt = " << MAT_ELEM(angles, 1, k) << std::endl;
 	}
 }
 
