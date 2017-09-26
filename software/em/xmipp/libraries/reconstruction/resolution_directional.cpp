@@ -375,12 +375,12 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 	bool tilt_extreme=false, rot_extreme = false;
 
-	if (tilt_cone_plus>=PI/2)
+	if (tilt_cone_plus>=PI)
 	{
 		tilt_cone_plus = tilt_cone_plus - PI;
 		tilt_extreme = true;
 	}
-	if (tilt_cone_minus<=-PI/2)
+	if (tilt_cone_minus<=0)
 	{
 		tilt_cone_minus = tilt_cone_minus + PI;
 		tilt_extreme = true;
