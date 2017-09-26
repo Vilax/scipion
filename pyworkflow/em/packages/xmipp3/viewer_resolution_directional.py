@@ -152,8 +152,8 @@ class XmippMonoDirViewer(ProtocolViewer):
         
     def _getVisualizeDict(self):
         return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices(),
-                'doShowDoASlices': self._showSlices(OUTPUT_DOA_FILE),
-#                 'doShowDoAColorSlices': self._showColorSlices(OUTPUT_DOA_FILE),
+                'doShowDoASlices': self._showDoASlices(),
+                'doShowDoAColorSlices': self._showDoAColorSlices(),
 #                 'doShowDoAChimera': self._showChimera(OUTPUT_DOA_FILE_CHIMERA, 
 #                                                       CHIMERA_CMD_DOA),
 #                 'doShowHistogram': self._plotHistogram,
@@ -162,6 +162,12 @@ class XmippMonoDirViewer(ProtocolViewer):
 #                 'doShowVarianceChimera': self._showChimera(
 #                                     OUTPUT_VARIANCE_FILE_CHIMERA, CHIMERA_CMD_VARIANCE)
                 }
+
+    def _showDoASlices(self, param=None):
+        self._showSlices(OUTPUT_DOA_FILE)
+ 
+    def _showDoAColorSlices(self, param=None):
+        self._showColorSlices(OUTPUT_DOA_FILE)
 
 
     def _showSlices(self, fileName):
