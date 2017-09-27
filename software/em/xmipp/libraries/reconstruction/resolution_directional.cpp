@@ -133,20 +133,21 @@ void ProgResDir::produceSideInfo()
 			{
 				FFT_IDX2DIGFREQ(j,XSIZE(inputVol),ux);
 				u2=uz2y2+ux*ux;
-//				if ((fabs(ux) <= 0.1) || (fabs(uy) <= 0.1) || (fabs(uz) <= 0.1))
-//					DIRECT_MULTIDIM_ELEM(iu,n) = uz;
-				if ((k != 0) || (i != 0) || (j != 0))
-					DIRECT_MULTIDIM_ELEM(iu,n) = 1.0/sqrt(u2);
-				else
-					DIRECT_MULTIDIM_ELEM(iu,n) = 1e38;
+				if ((fabs(ux) <= 0.1) || (fabs(uy) <= 0.1) )//|| (fabs(uz) <= 0.1))
+					DIRECT_MULTIDIM_ELEM(iu,n) = uz;
+//				if ((k != 0) || (i != 0) || (j != 0))
+//					DIRECT_MULTIDIM_ELEM(iu,n) = 1.0/sqrt(u2);
+//				else
+//					DIRECT_MULTIDIM_ELEM(iu,n) = 1e38;
 				++n;
 			}
 		}
 	}
+	Image<double> PPP;
+	PPP = iu;
+	PPP.write(formatString("PPP.vol"));
 
-	std::cout << " atan(0) " << atan(0)*180/PI << std::endl;
-	std::cout << " atan(1) " << atan(1)*180/PI << std::endl;
-	std::cout << " atan(-1) " << atan(-1)*180/PI << std::endl;
+	exit(0);
 
 	// Prepare low pass filter
 	lowPassFilter.FilterShape = RAISED_COSINE;
@@ -290,8 +291,11 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	double iwl=1.0/w1l;
 	double ideltal=PI/(w1-w1l);
 
-	if (tilt<0)
-		tilt= tilt + 180;
+//	if (tilt<0)
+//	{
+//		std::cout << "tilt < 0" << std::endl;
+//		tilt= tilt + 180;
+//	}
 
 	double tilt_cone_plus = (tilt + 0.5*angle_cone)*PI/180;
 	double tilt_cone_minus = (tilt - 0.5*angle_cone)*PI/180;
