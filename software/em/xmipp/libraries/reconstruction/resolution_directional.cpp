@@ -237,6 +237,7 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 			fnVol_.c_str(), fnGallery.c_str(), smprt); //fnGallery.c_str(),smprt);
 
 	String cmd=(String)"xmipp_angular_project_library " + args;
+	std::cout << cmd << std::endl;
 	system(cmd.c_str());
 
 	MetaData md;
@@ -306,7 +307,6 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	std::cout << "tilt_cone_minus = " << tilt_cone_minus << std::endl;
 	std::cout << "rot_cone_plus = " << rot_cone_plus << std::endl;
 	std::cout << "rot_cone_minus = " << rot_cone_minus << std::endl;
-
 	std::cout << "------------------------" << std::endl;
 
 	bool tilt_extreme=false, rot_extreme = false;
