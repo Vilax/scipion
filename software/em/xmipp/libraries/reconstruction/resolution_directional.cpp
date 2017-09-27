@@ -303,12 +303,12 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 	bool tilt_extreme=false, rot_extreme = false;
 
-	if (tilt_cone_plus>=PI)
+	if (tilt_cone_plus>=PI/2)
 	{
 		tilt_cone_plus = tilt_cone_plus - PI;
 		tilt_extreme = true;
 	}
-	if (tilt_cone_minus<=0)
+	if (tilt_cone_minus<=-PI/2)
 	{
 		tilt_cone_minus = tilt_cone_minus + PI;
 		tilt_extreme = true;
@@ -353,15 +353,6 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 						//double tilt_freq = acos(uz/sqrt(ux*ux + uy*uy + uz*uz));
 						double tilt_freq = atan(sqrt(ux*ux + uy*uy)/uz);
 						double rot_freq = acos(uy/sqrt(ux*ux + uy*uy));
-						if (rot_freq<0)
-						{
-							std::cout << "Si entro muuh malito..." << std::endl;
-							rot_freq = rot_freq + PI;
-						}
-//						if (tilt_freq<0)
-//						{
-//							tilt_freq = tilt_freq + PI;
-//						}
 
 						//std::cout << "rot = " << rot_freq*180/PI << "   tilt_freq = " << tilt_freq*180/PI << "  " << ux << "  " << uy << "  " << uz << "  "  << uxxuyy << std::endl;
 
@@ -407,15 +398,6 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 					//double tilt_freq = acos(uz/sqrt(ux*ux + uy*uy + uz*uz));
 					double tilt_freq = atan(sqrt(ux*ux + uy*uy)/uz);
 					double rot_freq = acos(uy/sqrt(ux*ux + uy*uy));
-					if (rot_freq<0)
-					{
-						std::cout << "Si entro muuh malito..." << std::endl;
-						rot_freq = rot_freq + PI;
-					}
-//					if (tilt_freq<0)
-//					{
-//						tilt_freq = tilt_freq + PI;
-//					}
 
 					//std::cout << "rot = " << rot_freq*180/PI << "   tilt_freq = " << tilt_freq*180/PI << "  " << ux << "  " << uy << "  " << uz << "  "  << uxxuyy << std::endl;
 
@@ -461,16 +443,6 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 					//double tilt_freq = acos(uz/sqrt(ux*ux + uy*uy + uz*uz));
 					double tilt_freq = atan(sqrt(ux*ux + uy*uy)/uz);
 					double rot_freq = acos(uy/sqrt(ux*ux + uy*uy));
-					if (rot_freq<0)
-					{
-						std::cout << "Si entro muuh malito..." << std::endl;
-						rot_freq = rot_freq + PI;
-					}
-//					if (tilt_freq<0)
-//					{
-//						tilt_freq = tilt_freq + PI;
-//					}
-
 
 					//std::cout << "rot = " << rot_freq*180/PI << "   tilt_freq = " << tilt_freq*180/PI << "  " << ux << "  " << uy << "  " << uz << "  "  << uxxuyy << std::endl;
 
@@ -516,20 +488,10 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 					if (ux ==0)
 						ux = 1e-38;
 
-
 					double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 					//double tilt_freq = acos(uz/sqrt(ux*ux + uy*uy + uz*uz));
 					double tilt_freq = atan(sqrt(ux*ux + uy*uy)/uz);
 					double rot_freq = acos(uy/sqrt(ux*ux + uy*uy));
-					if (rot_freq<0)
-					{
-						std::cout << "Si entro muuh malito..." << std::endl;
-						rot_freq = rot_freq + PI;
-					}
-//					if (tilt_freq<0)
-//					{
-//						tilt_freq = tilt_freq + PI;
-//					}
 
 					if ( (((tilt_freq<tilt_cone_plus) && (tilt_freq>=0)) || ((tilt_freq>tilt_cone_minus) && (tilt_freq<=PI)) ) &&
 							(((rot_freq<rot_cone_plus) && (rot_freq>=0)) || ((rot_freq>rot_cone_minus) && (rot_freq<=PI)) ))
