@@ -133,21 +133,16 @@ void ProgResDir::produceSideInfo()
 			{
 				FFT_IDX2DIGFREQ(j,XSIZE(inputVol),ux);
 				u2=uz2y2+ux*ux;
-				if ((fabs(uz) <= 0.1) || (fabs(uy) <= 0.1) )//|| (fabs(uz) <= 0.1))
-					DIRECT_MULTIDIM_ELEM(iu,n) = ux;
-//				if ((k != 0) || (i != 0) || (j != 0))
-//					DIRECT_MULTIDIM_ELEM(iu,n) = 1.0/sqrt(u2);
-//				else
-//					DIRECT_MULTIDIM_ELEM(iu,n) = 1e38;
+//				if ((fabs(uz) <= 0.1) || (fabs(uy) <= 0.1) )//|| (fabs(uz) <= 0.1))
+//					DIRECT_MULTIDIM_ELEM(iu,n) = ux;
+				if ((k != 0) || (i != 0) || (j != 0))
+					DIRECT_MULTIDIM_ELEM(iu,n) = 1.0/sqrt(u2);
+				else
+					DIRECT_MULTIDIM_ELEM(iu,n) = 1e38;
 				++n;
 			}
 		}
 	}
-	Image<double> PPP;
-	PPP = iu;
-	PPP.write(formatString("PPP.vol"));
-
-	exit(0);
 
 	// Prepare low pass filter
 	lowPassFilter.FilterShape = RAISED_COSINE;
@@ -248,7 +243,8 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 	md.read(fnanglesmd);
 
 	size_t md_size = md.size();
-
+	//				if ((fabs(uz) <= 0.1) || (fabs(uy) <= 0.1) )//|| (fabs(uz) <= 0.1))
+	//					DIRECT_MULTIDIM_ELEM(iu,n) = ux;
 	Matrix2D<double> aux_angles(2,md_size);
 	size_t count = 0;
 	double rot, tilt;
@@ -259,7 +255,10 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 		if ( (rot>=0) && (tilt>=0) )
 		{
 			MAT_ELEM(aux_angles,0, count) = rot;
-			MAT_ELEM(aux_angles,1, count) = tilt;
+			if (tilt>90)
+				MAT_ELEM(aux_angles,1, count) = tilt-180;
+			else
+				MAT_ELEM(aux_angles,1, count) = tilt;
 			count++;
 		}
 	}
@@ -354,8 +353,15 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 						//double tilt_freq = acos(uz/sqrt(ux*ux + uy*uy + uz*uz));
 						double tilt_freq = atan(sqrt(ux*ux + uy*uy)/uz);
 						double rot_freq = acos(uy/sqrt(ux*ux + uy*uy));
-//						if (rot_freq<0)
-//							rot_freq = rot_freq + PI;
+						if (rot_freq<0)
+						{
+							std::cout << "Si entro muuh malito..." << std::endl;
+							rot_freq = rot_freq + PI;
+						}
+//						if (tilt_freq<0)
+//						{
+//							tilt_freq = tilt_freq + PI;
+//						}
 
 						//std::cout << "rot = " << rot_freq*180/PI << "   tilt_freq = " << tilt_freq*180/PI << "  " << ux << "  " << uy << "  " << uz << "  "  << uxxuyy << std::endl;
 
@@ -402,7 +408,14 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 					double tilt_freq = atan(sqrt(ux*ux + uy*uy)/uz);
 					double rot_freq = acos(uy/sqrt(ux*ux + uy*uy));
 					if (rot_freq<0)
+					{
+						std::cout << "Si entro muuh malito..." << std::endl;
 						rot_freq = rot_freq + PI;
+					}
+//					if (tilt_freq<0)
+//					{
+//						tilt_freq = tilt_freq + PI;
+//					}
 
 					//std::cout << "rot = " << rot_freq*180/PI << "   tilt_freq = " << tilt_freq*180/PI << "  " << ux << "  " << uy << "  " << uz << "  "  << uxxuyy << std::endl;
 
@@ -449,7 +462,15 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 					double tilt_freq = atan(sqrt(ux*ux + uy*uy)/uz);
 					double rot_freq = acos(uy/sqrt(ux*ux + uy*uy));
 					if (rot_freq<0)
+					{
+						std::cout << "Si entro muuh malito..." << std::endl;
 						rot_freq = rot_freq + PI;
+					}
+//					if (tilt_freq<0)
+//					{
+//						tilt_freq = tilt_freq + PI;
+//					}
+
 
 					//std::cout << "rot = " << rot_freq*180/PI << "   tilt_freq = " << tilt_freq*180/PI << "  " << ux << "  " << uy << "  " << uz << "  "  << uxxuyy << std::endl;
 
@@ -500,6 +521,15 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 					//double tilt_freq = acos(uz/sqrt(ux*ux + uy*uy + uz*uz));
 					double tilt_freq = atan(sqrt(ux*ux + uy*uy)/uz);
 					double rot_freq = acos(uy/sqrt(ux*ux + uy*uy));
+					if (rot_freq<0)
+					{
+						std::cout << "Si entro muuh malito..." << std::endl;
+						rot_freq = rot_freq + PI;
+					}
+//					if (tilt_freq<0)
+//					{
+//						tilt_freq = tilt_freq + PI;
+//					}
 
 					if ( (((tilt_freq<tilt_cone_plus) && (tilt_freq>=0)) || ((tilt_freq>tilt_cone_minus) && (tilt_freq<=PI)) ) &&
 							(((rot_freq<rot_cone_plus) && (rot_freq>=0)) || ((rot_freq>rot_cone_minus) && (rot_freq<=PI)) ))
