@@ -301,6 +301,14 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	double rot_cone_plus = (rot + 0.5*angle_cone)*PI/180;
 	double rot_cone_minus = (rot - 0.5*angle_cone)*PI/180;
 
+	std::cout << "------------------------" << std::endl;
+	std::cout << "tilt_cone_plus = " << tilt_cone_plus << std::endl;
+	std::cout << "tilt_cone_minus = " << tilt_cone_minus << std::endl;
+	std::cout << "rot_cone_plus = " << rot_cone_plus << std::endl;
+	std::cout << "rot_cone_minus = " << rot_cone_minus << std::endl;
+
+	std::cout << "------------------------" << std::endl;
+
 	bool tilt_extreme=false, rot_extreme = false;
 
 	if (tilt_cone_plus>=PI/2)
