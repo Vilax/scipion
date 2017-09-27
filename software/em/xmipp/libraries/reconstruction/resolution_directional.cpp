@@ -133,8 +133,8 @@ void ProgResDir::produceSideInfo()
 			{
 				FFT_IDX2DIGFREQ(j,XSIZE(inputVol),ux);
 				u2=uz2y2+ux*ux;
-				if ((fabs(ux) <= 0.1) || (fabs(uy) <= 0.1) )//|| (fabs(uz) <= 0.1))
-					DIRECT_MULTIDIM_ELEM(iu,n) = uz;
+				if ((fabs(ux) <= 0.1) || (fabs(uz) <= 0.1) )//|| (fabs(uz) <= 0.1))
+					DIRECT_MULTIDIM_ELEM(iu,n) = uy;
 //				if ((k != 0) || (i != 0) || (j != 0))
 //					DIRECT_MULTIDIM_ELEM(iu,n) = 1.0/sqrt(u2);
 //				else
