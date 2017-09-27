@@ -291,7 +291,12 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	double iwl=1.0/w1l;
 	double ideltal=PI/(w1-w1l);
 
-//	if (tilt<0)
+	#ifdef DEBUG_DIR
+	MultidimArray<double> coneVol;
+	coneVol.initZeros(iu);
+	#endif
+
+	//	if (tilt<0)
 //	{
 //		std::cout << "tilt < 0" << std::endl;
 //		tilt= tilt + 180;
@@ -368,7 +373,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 							 ( (rot_freq<rot_cone_plus)   &&  (rot_freq>rot_cone_minus)   ) )
 						{
 							double un=1.0/iun;
-							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = 1;
+							DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
 //							if (w1l<=un && un<=w1)
 //							{
 //								DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
@@ -414,7 +419,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 							(((rot_freq<rot_cone_plus) && (rot_freq>=0)) || ((rot_freq>rot_cone_minus) && (rot_freq<=PI)) ))
 					{
 						double un=1.0/iun;
-						DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = 1;
+						DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
 //						if (w1l<=un && un<=w1)
 //						{
 //							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
@@ -460,7 +465,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 												( (rot_freq<rot_cone_plus) && (rot_freq>rot_cone_minus) ) )
 					{
 						double un=1.0/iun;
-						DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = 1;
+						DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
 //						if (w1l<=un && un<=w1)
 //						{
 //							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
@@ -508,7 +513,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 							(((rot_freq<rot_cone_plus) && (rot_freq>=0)) || ((rot_freq>rot_cone_minus) && (rot_freq<=PI)) ))
 					{
 						double un=1.0/iun;
-						DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = 1;
+						DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
 //						if (w1l<=un && un<=w1)
 //						{
 //							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
@@ -526,7 +531,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	}
 	#ifdef DEBUG_DIR
 	Image<double> direction;
-	direction = fftVRiesz;
+	direction = coneVol;
 	direction.write(formatString("cone_%i.vol", count));
 	#endif
 //	#ifdef DEBUG
