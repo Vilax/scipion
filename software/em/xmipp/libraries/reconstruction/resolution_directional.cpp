@@ -121,20 +121,42 @@ void ProgResDir::produceSideInfo()
 	// Frequency volume
 	double uz, uy, ux, uz2, u2, uz2y2;
 	long n=0;
+//	for(size_t k=0; k<ZSIZE(fftV); ++k)
+//	{
+//		FFT_IDX2DIGFREQ(k,ZSIZE(inputVol),uz);
+//		uz2=uz*uz;
+//		for(size_t i=0; i<YSIZE(fftV); ++i)
+//		{
+//			FFT_IDX2DIGFREQ(i,YSIZE(inputVol),uy);
+//			uz2y2=uz2+uy*uy;
+//			for(size_t j=0; j<XSIZE(fftV); ++j)
+//			{
+//				FFT_IDX2DIGFREQ(j,XSIZE(inputVol),ux);
+//				u2=uz2y2+ux*ux;
+////				if ((fabs(uz) <= 0.1) || (fabs(uy) <= 0.1) )//|| (fabs(uz) <= 0.1))
+////					DIRECT_MULTIDIM_ELEM(iu,n) = ux;
+//				if ((k != 0) || (i != 0) || (j != 0))
+//					DIRECT_MULTIDIM_ELEM(iu,n) = 1.0/sqrt(u2);
+//				else
+//					DIRECT_MULTIDIM_ELEM(iu,n) = 1e38;
+//				++n;
+//			}
+//		}
+//	}
 	for(size_t k=0; k<ZSIZE(fftV); ++k)
 	{
 		FFT_IDX2DIGFREQ(k,ZSIZE(inputVol),uz);
 		uz2=uz*uz;
+
 		for(size_t i=0; i<YSIZE(fftV); ++i)
 		{
 			FFT_IDX2DIGFREQ(i,YSIZE(inputVol),uy);
 			uz2y2=uz2+uy*uy;
+
 			for(size_t j=0; j<XSIZE(fftV); ++j)
 			{
 				FFT_IDX2DIGFREQ(j,XSIZE(inputVol),ux);
 				u2=uz2y2+ux*ux;
-//				if ((fabs(uz) <= 0.1) || (fabs(uy) <= 0.1) )//|| (fabs(uz) <= 0.1))
-//					DIRECT_MULTIDIM_ELEM(iu,n) = ux;
 				if ((k != 0) || (i != 0) || (j != 0))
 					DIRECT_MULTIDIM_ELEM(iu,n) = 1.0/sqrt(u2);
 				else
@@ -143,6 +165,9 @@ void ProgResDir::produceSideInfo()
 			}
 		}
 	}
+
+
+
 	#ifdef DEBUG_DIR
 	Image<double> freqimg;
 	freqimg = iu;
