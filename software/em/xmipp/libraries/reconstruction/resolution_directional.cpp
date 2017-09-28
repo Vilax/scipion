@@ -118,7 +118,7 @@ void ProgResDir::produceSideInfo()
 	transformer.FourierTransform(inputVol, fftV);
 	iu.initZeros(fftV);
 
-	// Calculate u and first component of Riesz vector
+	// Frequency volume
 	double uz, uy, ux, uz2, u2, uz2y2;
 	long n=0;
 	for(size_t k=0; k<ZSIZE(fftV); ++k)
@@ -143,6 +143,13 @@ void ProgResDir::produceSideInfo()
 			}
 		}
 	}
+	#ifdef DEBUG_DIR
+	Image<double> freqimg;
+	freqimg = iu;
+	freqimg.write(formatString("frequencys.vol"));
+	#endif
+
+
 
 	// Prepare low pass filter
 	lowPassFilter.FilterShape = RAISED_COSINE;
