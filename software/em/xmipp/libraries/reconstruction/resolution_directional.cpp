@@ -534,6 +534,8 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	direction = coneVol;
 	direction.write(formatString("cone_%i.vol", count));
 	#endif
+
+	exit(0);
 //	#ifdef DEBUG
 //	MultidimArray<double> pppp;
 //	pppp.initZeros(fftVRiesz);
