@@ -409,16 +409,16 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 						{
 						double un=1.0/iun;
 						DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
-//							if (w1l<=un && un<=w1)
-//							{
-//								DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-//								DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
-//							} else if (un>w1)
-//							{
-//								DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-//							}
+						if (w1l<=un && un<=w1)
+						{
+							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
+						} else if (un>w1)
+						{
+							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 						}
-//						DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J*iun*DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
+						}
+						DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J*iun*DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
 					++n;
 				}
 			}
@@ -426,7 +426,6 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	}
 	else
 	{
-		std::cout << "Hago otra cosa" << std::endl;
 		for(size_t k=0; k<ZSIZE(myfftV); ++k)
 		{
 			FFT_IDX2DIGFREQ(k,ZSIZE(amplitude),uz);
@@ -455,246 +454,40 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 					double dotproduct = fabs(xx*x_dir + yy*y_dir + zz*z_dir);
 
-//					std::cout << "dotproduct = " << dotproduct <<
-//							"  cos_cone = " << cos_cone << std::endl;
-
 					if (dotproduct>=cos_cone)
 						{
-//						std::cout << "entro" << std::endl;
 						double un=1.0/iun;
 						DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
-//							if (w1l<=un && un<=w1)
-//							{
-//								DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-//								DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
-//							} else if (un>w1)
-//							{
-//								DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-//							}
+							if (w1l<=un && un<=w1)
+							{
+								DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+								DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
+							} else if (un>w1)
+							{
+								DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+							}
 						}
-//						DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J*iun*DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
-					++n;
-				}
-			}
-		}
-
-		//Determinar el cono de aceptación
-	}
-/*
-	if ((tilt_extreme  == false) && (rot_extreme == false))
-	{
-		std::cout << "(tilt_extreme  == false) && (rot_extreme == false)" << std::endl;
-		for(size_t k=0; k<ZSIZE(myfftV); ++k)
-		{
-			FFT_IDX2DIGFREQ(k,ZSIZE(amplitude),uz);
-			if (uz ==0)
-				uz = 1e-38;
-			for(size_t i=0; i<YSIZE(myfftV); ++i)
-			{
-				FFT_IDX2DIGFREQ(i,YSIZE(amplitude),uy);
-				if (uy ==0)
-					uy = 1e-38;
-				for(size_t j=0; j<XSIZE(myfftV); ++j)
-				{
-					FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
-					if (ux ==0)
-						ux = 1e-38;
-
-						double iun=DIRECT_MULTIDIM_ELEM(iu,n);
-						//double tilt_freq = acos(uz/sqrt(ux*ux + uy*uy + uz*uz));
-						double tilt_freq = atan(sqrt(ux*ux + uy*uy)/uz);
-						double rot_freq = acos(uy/sqrt(ux*ux + uy*uy));
-
-						//std::cout << "rot = " << rot_freq*180/PI << "   tilt_freq = " << tilt_freq*180/PI << "  " << ux << "  " << uy << "  " << uz << "  "  << uxxuyy << std::endl;
-
-						if ( ( (tilt_freq<tilt_cone_plus) &&  (tilt_freq>tilt_cone_minus) ) &&
-							 ( (rot_freq<rot_cone_plus)   &&  (rot_freq>rot_cone_minus)   ) )
-						{
-							double un=1.0/iun;
-							DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
-//							if (w1l<=un && un<=w1)
-//							{
-//								DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-//								DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
-//							} else if (un>w1)
-//							{
-//								DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-//							}
-						}
-//						DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J*iun*DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
-						++n;
-					}
-				}
-			}
-	}
-	if ((tilt_extreme  == false) && (rot_extreme == true))
-	{
-		std::cout << "(tilt_extreme  == false) && (rot_extreme == true)" << std::endl;
-		for(size_t k=0; k<ZSIZE(myfftV); ++k)
-		{
-			FFT_IDX2DIGFREQ(k,ZSIZE(amplitude),uz);
-			if (uz ==0)
-				uz = 1e-38;
-			for(size_t i=0; i<YSIZE(myfftV); ++i)
-			{
-				FFT_IDX2DIGFREQ(i,YSIZE(amplitude),uy);
-				if (uy ==0)
-					uy = 1e-38;
-				for(size_t j=0; j<XSIZE(myfftV); ++j)
-				{
-					FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
-					if (ux ==0)
-						ux = 1e-38;
-
-					double iun=DIRECT_MULTIDIM_ELEM(iu,n);
-					//double tilt_freq = acos(uz/sqrt(ux*ux + uy*uy + uz*uz));
-					double tilt_freq = atan(sqrt(ux*ux + uy*uy)/uz);
-					double rot_freq = acos(uy/sqrt(ux*ux + uy*uy));
-
-					//std::cout << "rot = " << rot_freq*180/PI << "   tilt_freq = " << tilt_freq*180/PI << "  " << ux << "  " << uy << "  " << uz << "  "  << uxxuyy << std::endl;
-
-					if ( ( (tilt_freq<tilt_cone_plus) && (tilt_freq>tilt_cone_minus)   ) &&
-							(((rot_freq<rot_cone_plus) && (rot_freq>=0)) || ((rot_freq>rot_cone_minus) && (rot_freq<=PI)) ))
-					{
-						double un=1.0/iun;
-						DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
-//						if (w1l<=un && un<=w1)
-//						{
-//							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-//							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
-//						} else if (un>w1)
-//						{
-//							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-//						}
-					}
-//					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J*iun*DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
-					++n;
-				}
-			}
-		}
-	}
-	if ((tilt_extreme  == true) && (rot_extreme == false))
-	{
-		std::cout << "(tilt_extreme  == true) && (rot_extreme == false)" << std::endl;
-		for(size_t k=0; k<ZSIZE(myfftV); ++k)
-		{
-			FFT_IDX2DIGFREQ(k,ZSIZE(amplitude),uz);
-			if (uz ==0)
-				uz = 1e-38;
-			for(size_t i=0; i<YSIZE(myfftV); ++i)
-			{
-				FFT_IDX2DIGFREQ(i,YSIZE(amplitude),uy);
-				if (uy ==0)
-					uy = 1e-38;
-				for(size_t j=0; j<XSIZE(myfftV); ++j)
-				{
-					FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
-					if (ux ==0)
-						ux = 1e-38;
-
-					double iun=DIRECT_MULTIDIM_ELEM(iu,n);
-					//double tilt_freq = acos(uz/sqrt(ux*ux + uy*uy + uz*uz));
-					double tilt_freq = atan(sqrt(ux*ux + uy*uy)/uz);
-					double rot_freq = acos(uy/sqrt(ux*ux + uy*uy));
-
-					//std::cout << "rot = " << rot_freq*180/PI << "   tilt_freq = " << tilt_freq*180/PI << "  " << ux << "  " << uy << "  " << uz << "  "  << uxxuyy << std::endl;
-
-					if ( (((tilt_freq<tilt_cone_plus) && (tilt_freq>=0)) || ((tilt_freq>tilt_cone_minus) && (tilt_freq<=PI)) ) &&
-												( (rot_freq<rot_cone_plus) && (rot_freq>rot_cone_minus) ) )
-					{
-						double un=1.0/iun;
-						DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
-//						if (w1l<=un && un<=w1)
-//						{
-//							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-//							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
-//						} else if (un>w1)
-//						{
-//							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-//
-//						}
-					}
-//					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J*iun*DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
-					++n;
-				}
-			}
-		}
-	}
-	MultidimArray<double> freq_plot;
-	if ((tilt_extreme  == true) && (rot_extreme == true))
-	{
-
-		freq_plot.initZeros(myfftV);
-		std::cout << "4 (tilt_extreme  == true) && (rot_extreme == true)" << std::endl;
-		for(size_t k=0; k<ZSIZE(myfftV); ++k)
-		{
-			FFT_IDX2DIGFREQ(k,ZSIZE(amplitude),uz);
-			if (uz ==0)
-				uz = 1e-38;
-			for(size_t i=0; i<YSIZE(myfftV); ++i)
-			{
-				FFT_IDX2DIGFREQ(i,YSIZE(amplitude),uy);
-				if (uy ==0)
-					uy = 1e-38;
-				for(size_t j=0; j<XSIZE(myfftV); ++j)
-				{
-					FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
-					if (ux ==0)
-						ux = 1e-38;
-
-					double iun=DIRECT_MULTIDIM_ELEM(iu,n);
-					//double tilt_freq = acos(uz/sqrt(ux*ux + uy*uy + uz*uz));
-					double tilt_freq = atan(sqrt(ux*ux + uy*uy)/uz);
-					double rot_freq = acos(uy/sqrt(ux*ux + uy*uy));
-
-					if ( (((tilt_freq<tilt_cone_plus) && (tilt_freq>=0)) || ((tilt_freq>tilt_cone_minus) && (tilt_freq<=PI)) ) &&
-							(((rot_freq<rot_cone_plus) && (rot_freq>=0)) || ((rot_freq>rot_cone_minus) && (rot_freq<=PI)) ))
-					{
-						double un=1.0/iun;
-						DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
-//						if (w1l<=un && un<=w1)
-//						{
-//							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-//							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
-//						} else if (un>w1)
-//						{
-//							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-//						}
-					}
-//					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J*iun*DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
+						DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J*iun*DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
 					++n;
 				}
 			}
 		}
 	}
 
-	*/
 	#ifdef DEBUG_DIR
 	Image<double> direction;
 	direction = coneVol;
 	direction.write(formatString("cone_%i.vol", count));
 	#endif
 
-//	#ifdef DEBUG
-//	MultidimArray<double> pppp;
-//	pppp.initZeros(fftVRiesz);
-//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fftVRiesz)
-//		DIRECT_MULTIDIM_ELEM(pppp,n)=abs(DIRECT_MULTIDIM_ELEM(fftVRiesz,n));
-//	Image<double> filteredvolume2;
-//	filteredvolume2 = pppp;
-//	filteredvolume2.write(formatString("fouriercoefs_%i.vol", count));
-//	#endif
-
-/*
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
-	#ifdef DEBUG_FILTER
+	#ifdef DEBUG_DIR
 	Image<double> filteredvolume;
 	filteredvolume = VRiesz;
 	filteredvolume.write(formatString("Volumen_filtrado_%i.vol", count));
-	filteredvolume.write(formatString("freq_Fourier_%i.vol", count));
 	#endif
-
+/*
 	#ifdef MONO_AMPLITUDE
 	FileName iternumber;
 	iternumber = formatString("_Volume_%i.vol", count);
@@ -1113,9 +906,6 @@ void ProgResDir::run()
 				}
 			}
 			iter++;
-//			#ifdef DEBUG_DIR
-//				doNextIteration = false;
-//			#endif
 		}while(doNextIteration);
 
 		if (lefttrimming == false)
