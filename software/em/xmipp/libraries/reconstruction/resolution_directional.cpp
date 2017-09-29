@@ -382,50 +382,50 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	double cos_cone = cos(0.5*angle_cone*PI/180);
 	double uz, uy, ux, uxxuyy;
 	n=0;
-	if ( (fabs(tilt) <= 0.1) || (fabs(tilt-180) <= 0.1)) //0.1 is a threshold
-	{
-		std::cout << "titl = 0 or tilt = 180" << std::endl;
-		for(size_t k=0; k<ZSIZE(myfftV); ++k)
-		{
-			FFT_IDX2DIGFREQ(k,ZSIZE(amplitude),uz);
-			if (uz ==0)
-				uz = 1e-38;
-			for(size_t i=0; i<YSIZE(myfftV); ++i)
-			{
-				FFT_IDX2DIGFREQ(i,YSIZE(amplitude),uy);
-				if (uy ==0)
-					uy = 1e-38;
-				for(size_t j=0; j<XSIZE(myfftV); ++j)
-				{
-					FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
-					if (ux ==0)
-						ux = 1e-38;
-
-					double iun=DIRECT_MULTIDIM_ELEM(iu,n);
-					double tilt_freq = atan(sqrt(ux*ux + uy*uy)/uz);
-					double rot_freq = acos(uy/sqrt(ux*ux + uy*uy));
-
-					if ( (tilt_freq<tilt_cone_plus) &&  (tilt_freq>tilt_cone_minus) )
-					{
-						double un=1.0/iun;
-						DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
-						if (w1l<=un && un<=w1)
-						{
-							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
-						} else if (un>w1)
-						{
-							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-						}
-					}
-					//DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J*iun*DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
-					++n;
-				}
-			}
-		}
-	}
-	else
-	{
+//	if ( (fabs(tilt) <= 0.1) || (fabs(tilt-180) <= 0.1)) //0.1 is a threshold
+//	{
+//		std::cout << "titl = 0 or tilt = 180" << std::endl;
+//		for(size_t k=0; k<ZSIZE(myfftV); ++k)
+//		{
+//			FFT_IDX2DIGFREQ(k,ZSIZE(amplitude),uz);
+//			if (uz ==0)
+//				uz = 1e-38;
+//			for(size_t i=0; i<YSIZE(myfftV); ++i)
+//			{
+//				FFT_IDX2DIGFREQ(i,YSIZE(amplitude),uy);
+//				if (uy ==0)
+//					uy = 1e-38;
+//				for(size_t j=0; j<XSIZE(myfftV); ++j)
+//				{
+//					FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
+//					if (ux ==0)
+//						ux = 1e-38;
+//
+//					double iun=DIRECT_MULTIDIM_ELEM(iu,n);
+//					double tilt_freq = atan(sqrt(ux*ux + uy*uy)/uz);
+//					double rot_freq = acos(uy/sqrt(ux*ux + uy*uy));
+//
+//					if ( (tilt_freq<tilt_cone_plus) &&  (tilt_freq>tilt_cone_minus) )
+//					{
+//						double un=1.0/iun;
+//						DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
+//						if (w1l<=un && un<=w1)
+//						{
+//							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+//							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
+//						} else if (un>w1)
+//						{
+//							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+//						}
+//					}
+//					//DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J*iun*DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
+//					++n;
+//				}
+//			}
+//		}
+//	}
+//	else
+//	{
 		for(size_t k=0; k<ZSIZE(myfftV); ++k)
 		{
 			FFT_IDX2DIGFREQ(k,ZSIZE(amplitude),uz);
@@ -472,7 +472,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 				}
 			}
 		}
-	}
+//	}
 
 	#ifdef DEBUG_DIR
 	Image<double> direction;
