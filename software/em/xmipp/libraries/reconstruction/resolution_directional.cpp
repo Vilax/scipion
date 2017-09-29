@@ -379,7 +379,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	y_dir = sin(tilt)*sin(rot);
 	z_dir = cos(tilt);
 
-	double cos_cone = cos(0.5*angle_cone);
+	double cos_cone = cos(0.5*angle_cone*PI/180);
 	double uz, uy, ux, uxxuyy;
 	n=0;
 	if ( (fabs(tilt) <= 0.1) || (fabs(tilt-180) <= 0.1)) //0.1 is a threshold
@@ -455,12 +455,12 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 					double dotproduct = fabs(xx*x_dir + yy*y_dir + zz*z_dir);
 
-					std::cout << "dotproduct = " << dotproduct <<
-							"  cos_cone = " << cos_cone << std::endl;
+//					std::cout << "dotproduct = " << dotproduct <<
+//							"  cos_cone = " << cos_cone << std::endl;
 
 					if (dotproduct>=cos_cone)
 						{
-						std::cout << "entro" << std::endl;
+//						std::cout << "entro" << std::endl;
 						double un=1.0/iun;
 						DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
 //							if (w1l<=un && un<=w1)
