@@ -906,6 +906,7 @@ void ProgResDir::run()
 				}
 			}
 			iter++;
+			doNextIteration = false;
 		}while(doNextIteration);
 
 		if (lefttrimming == false)
