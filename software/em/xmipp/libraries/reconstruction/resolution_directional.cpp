@@ -455,7 +455,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 					double dotproduct = fabs(xx*x_dir + yy*y_dir + zz*z_dir);
 
-					if ( dotproduct>=cos_cone)
+					if (dotproduct>=cos_cone)
 						{
 						double un=1.0/iun;
 						DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
@@ -1110,9 +1110,9 @@ void ProgResDir::run()
 				}
 			}
 			iter++;
-			#ifdef DEBUG_DIR
-				doNextIteration = false;
-			#endif
+//			#ifdef DEBUG_DIR
+//				doNextIteration = false;
+//			#endif
 		}while(doNextIteration);
 
 		if (lefttrimming == false)
