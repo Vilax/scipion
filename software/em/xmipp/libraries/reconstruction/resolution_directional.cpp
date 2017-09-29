@@ -375,9 +375,9 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 	double x_dir, y_dir, z_dir;
 
-	x_dir = sin(tilt)*cos(rot);
-	y_dir = sin(tilt)*sin(rot);
-	z_dir = cos(tilt);
+	x_dir = sin(tilt*PI/180)*cos(rot*PI/180);
+	y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
+	z_dir = cos(tilt*PI/180);
 
 	double cos_cone = cos(0.5*angle_cone*PI/180);
 	double uz, uy, ux, uxxuyy;
@@ -406,7 +406,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 					double rot_freq = acos(uy/sqrt(ux*ux + uy*uy));
 
 					if ( (tilt_freq<tilt_cone_plus) &&  (tilt_freq>tilt_cone_minus) )
-						{
+					{
 						double un=1.0/iun;
 						DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
 						if (w1l<=un && un<=w1)
@@ -417,8 +417,8 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 						{
 							DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 						}
-						}
-						DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J*iun*DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
+					}
+					//DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J*iun*DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
 					++n;
 				}
 			}
@@ -467,7 +467,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 								DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 							}
 						}
-						DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J*iun*DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
+						//DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J*iun*DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
 					++n;
 				}
 			}
