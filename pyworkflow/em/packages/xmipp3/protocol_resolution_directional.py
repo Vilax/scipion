@@ -266,7 +266,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params = ' -i %s' % self._getExtraPath(OUTPUT_DOA_FILE)
         params += ' --mask binary_file %s' % self._getExtraPath(OUTPUT_MASK_FILE)
         params += ' --steps %f' % 30
-        params += ' --range %f %f' % (self.min_res_init, self.max_res_init)#(self.minRes.get(), self.maxRes.get())
+        params += ' --range %f %f' % (self.minRes.get(), self.maxRes.get())#(self.minRes.get(), self.maxRes.get())
         params += ' -o %s' % self._getExtraPath('hist_DoA.xmd')
 
         self.runJob('xmipp_image_histogram', params)
