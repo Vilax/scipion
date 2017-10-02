@@ -309,7 +309,7 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 
 
 void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
-		double w1, double w1h, double w1l, MultidimArray<double> &amplitude, int count, FileName fnDebug,
+		double w1, double w1h, double w1l, MultidimArray<double> &amplitude, int count, int dir, FileName fnDebug,
 		double angle_cone, double rot, double tilt)
 {
 	fftVRiesz.initZeros(myfftV);
@@ -430,11 +430,11 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	}
 
 	#ifdef DEBUG_DIR
-	if (count == 0)
+	if ( (count == 0) )
 	{
 		Image<double> direction;
 		direction = coneVol;
-		direction.write(formatString("cone_%i.vol", count));
+		direction.write(formatString("cone_%i.vol", dir));
 	}
 	#endif
 
@@ -446,7 +446,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 		std::cout << "saving filtered volume" << std::endl;
 		Image<double> filteredvolume;
 		filteredvolume = VRiesz;
-		filteredvolume.write(formatString("Volumen_filtrado_%i.vol", count));
+		filteredvolume.write(formatString("Volumen_filtrado_%i.vol", dir));
 	}
 	#endif
 
@@ -681,11 +681,11 @@ void ProgResDir::run()
 
 			fnDebug = "Signal";
 
-			amplitudeMonogenicSignal3D(fftV, freq, freqH, freqL, amplitudeMS, iter, fnDebug, angle_cone, rot, tilt);
+			amplitudeMonogenicSignal3D(fftV, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, angle_cone, rot, tilt);
 			if (halfMapsGiven)
 			{
 				fnDebug = "Noise";
-				amplitudeMonogenicSignal3D(*fftN, freq, freqH, freqL, amplitudeMN, iter, fnDebug, angle_cone, rot, tilt);
+				amplitudeMonogenicSignal3D(*fftN, freq, freqH, freqL, amplitudeMN, iter, dir, fnDebug, angle_cone, rot, tilt);
 			}
 
 			list.push_back(freq);
