@@ -430,9 +430,12 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	}
 
 	#ifdef DEBUG_DIR
-	Image<double> direction;
-	direction = coneVol;
-	direction.write(formatString("cone_%i.vol", count));
+	if (count == 0)
+	{
+		Image<double> direction;
+		direction = coneVol;
+		direction.write(formatString("cone_%i.vol", count));
+	}
 	#endif
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
@@ -440,6 +443,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	#ifdef DEBUG_DIR
 	if (count == 0)
 	{
+		std::cout << "saving filtered volume" << std::endl;
 		Image<double> filteredvolume;
 		filteredvolume = VRiesz;
 		filteredvolume.write(formatString("Volumen_filtrado_%i.vol", count));
@@ -677,7 +681,7 @@ void ProgResDir::run()
 
 			fnDebug = "Signal";
 
-			amplitudeMonogenicSignal3D(fftV, freq, freqH, freqL, amplitudeMS, dir, fnDebug, angle_cone, rot, tilt);
+			amplitudeMonogenicSignal3D(fftV, freq, freqH, freqL, amplitudeMS, iter, fnDebug, angle_cone, rot, tilt);
 			if (halfMapsGiven)
 			{
 				fnDebug = "Noise";
