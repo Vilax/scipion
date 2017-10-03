@@ -162,7 +162,10 @@ class XmippMonoDirViewer(ProtocolViewer):
                 }
 
     def _showDoASlices(self, param=None):
-        self.showSlices(OUTPUT_DOA_FILE)
+        cm = DataView(self.protocol._getExtraPath(OUTPUT_DOA_FILE))
+        
+        return [cm]  
+        #self.showSlices(OUTPUT_DOA_FILE)
         
     def showSlices(self, fileName):
         cm = DataView(self.protocol._getExtraPath(fileName))
@@ -176,7 +179,10 @@ class XmippMonoDirViewer(ProtocolViewer):
         self._showChimera(OUTPUT_DOA_FILE_CHIMERA, CHIMERA_CMD_DOA)
         
     def _showVarianceSlices(self, param=None):
-        self._showSlices(OUTPUT_VARIANCE_FILE)
+        cm = DataView(self.protocol._getExtraPath(OUTPUT_VARIANCE_FILE))
+        
+        return [cm]          
+        #self._showSlices(OUTPUT_VARIANCE_FILE)
     
     def _showVarianceColorSlices(self, param=None):
         self._showColorSlices(OUTPUT_VARIANCE_FILE)
