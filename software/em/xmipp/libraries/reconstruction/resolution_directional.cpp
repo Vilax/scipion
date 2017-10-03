@@ -664,7 +664,7 @@ void ProgResDir::run()
 				else
 					counter = 2;//count_res-2;
 
-			std::cout << "Iteration " << iter << " Freq = " << freq << " Resolution = " << resolution << " (A)" << std::endl;
+			std::cout << "Iteration " << iter << " Freq = " << freq << " Resolution = " << sampling/freq << " (A)" << std::endl;
 
 			fnDebug = "Signal";
 
