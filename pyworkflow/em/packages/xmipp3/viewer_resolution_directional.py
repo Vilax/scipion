@@ -163,13 +163,6 @@ class XmippMonoDirViewer(ProtocolViewer):
 
     def _showDoASlices(self, param=None):
         cm = DataView(self.protocol._getExtraPath(OUTPUT_DOA_FILE))
-        
-        return [cm]  
-        #self.showSlices(OUTPUT_DOA_FILE)
-        
-    def showSlices(self, fileName):
-        cm = DataView(self.protocol._getExtraPath(fileName))
-        
         return [cm]  
  
     def _showDoAColorSlices(self, param=None):
@@ -180,10 +173,8 @@ class XmippMonoDirViewer(ProtocolViewer):
         
     def _showVarianceSlices(self, param=None):
         cm = DataView(self.protocol._getExtraPath(OUTPUT_VARIANCE_FILE))
-        
         return [cm]          
-        #self._showSlices(OUTPUT_VARIANCE_FILE)
-    
+
     def _showVarianceColorSlices(self, param=None):
         self._showColorSlices(OUTPUT_VARIANCE_FILE)
     
@@ -198,7 +189,6 @@ class XmippMonoDirViewer(ProtocolViewer):
         else:
             cm = DataView(self.protocol.inputVolumes.get().getFileName())
             return [cm]
-
    
     def _showColorSlices(self, fileName):
         imageFile = self.protocol._getExtraPath(fileName)

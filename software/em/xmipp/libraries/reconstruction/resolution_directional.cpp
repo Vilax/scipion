@@ -575,6 +575,11 @@ void ProgResDir::postProcessingLocalResolutions(MultidimArray<double> &resolutio
 		  DIRECT_MULTIDIM_ELEM(resolutionVol, n) = filling_value;
 		}
 	}
+	//#ifdef DEBUG_MASK
+	Image<int> imgMask;
+	imgMask = pMask;
+	imgMask.write(fnMaskOut);
+	//#endif
 }
 
 
