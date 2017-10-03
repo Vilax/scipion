@@ -644,6 +644,14 @@ void ProgResDir::run()
 				last_fourier_idx = fourier_idx;
 				std::cout << "DIGFREQ2FFT_IDX = " << fourier_idx << "  FFT_IDX2DIGFREQ = " <<
 								aux_frequency << std::endl;
+
+				DIGFREQ2FFT_IDX(freqL, ZSIZE(VRiesz), fourier_idx);
+				if (fourier_idx == last_fourier_idx)
+				{
+					DIGFREQ2FFT_IDX(freqL, ZSIZE(VRiesz), fourier_idx);
+					if (fourier_idx >1)
+						FFT_IDX2DIGFREQ(fourier_idx - 1, ZSIZE(VRiesz), R_);
+				}
 				freqL = sampling/((sampling/aux_frequency)+R_);
 				freq = aux_frequency;
 				freqH = sampling/((sampling/aux_frequency)-R_);
