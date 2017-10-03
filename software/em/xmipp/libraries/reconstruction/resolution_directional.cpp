@@ -652,10 +652,12 @@ void ProgResDir::run()
 					if (fourier_idx >1)
 						FFT_IDX2DIGFREQ(fourier_idx - 1, ZSIZE(VRiesz), R_);
 				}
-				freqL = sampling/((sampling/aux_frequency)+R_);
+				freqL = sampling/((sampling/aux_frequency)+(sampling/R_));
 				freq = aux_frequency;
-				freqH = sampling/((sampling/aux_frequency)-R_);
+				freqH = sampling/((sampling/aux_frequency)-(sampling/R_));
 			}
+
+			resolution = sampling/freq;
 
 			//std::cout << "resolution =  " << resolution << std::endl;
 			if (freq > 0.5)
