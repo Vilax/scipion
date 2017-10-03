@@ -121,28 +121,7 @@ void ProgResDir::produceSideInfo()
 	// Frequency volume
 	double uz, uy, ux, uz2, u2, uz2y2;
 	long n=0;
-//	for(size_t k=0; k<ZSIZE(fftV); ++k)
-//	{
-//		FFT_IDX2DIGFREQ(k,ZSIZE(inputVol),uz);
-//		uz2=uz*uz;
-//		for(size_t i=0; i<YSIZE(fftV); ++i)
-//		{
-//			FFT_IDX2DIGFREQ(i,YSIZE(inputVol),uy);
-//			uz2y2=uz2+uy*uy;
-//			for(size_t j=0; j<XSIZE(fftV); ++j)
-//			{
-//				FFT_IDX2DIGFREQ(j,XSIZE(inputVol),ux);
-//				u2=uz2y2+ux*ux;
-////				if ((fabs(uz) <= 0.1) || (fabs(uy) <= 0.1) )//|| (fabs(uz) <= 0.1))
-////					DIRECT_MULTIDIM_ELEM(iu,n) = ux;
-//				if ((k != 0) || (i != 0) || (j != 0))
-//					DIRECT_MULTIDIM_ELEM(iu,n) = 1.0/sqrt(u2);
-//				else
-//					DIRECT_MULTIDIM_ELEM(iu,n) = 1e38;
-//				++n;
-//			}
-//		}
-//	}
+
 	for(size_t k=0; k<ZSIZE(fftV); ++k)
 	{
 		FFT_IDX2DIGFREQ(k,ZSIZE(inputVol),uz);
@@ -596,11 +575,6 @@ void ProgResDir::postProcessingLocalResolutions(MultidimArray<double> &resolutio
 		  DIRECT_MULTIDIM_ELEM(resolutionVol, n) = filling_value;
 		}
 	}
-	//#ifdef DEBUG_MASK
-//	Image<int> imgMask;
-//	imgMask = pMask;
-//	imgMask.write(fnMaskOut);
-	//#endif
 }
 
 
@@ -638,7 +612,7 @@ void ProgResDir::run()
 		bool doNextIteration=true;
 		bool lefttrimming = false;
 
-		int iter = 0;
+		int fourier_idx, last_fourier_idx = 0, iter = 0;
 		int count_res = 0;
 		double criticalW=-1;
 		double angle_cone = ang_sampling;
@@ -655,12 +629,25 @@ void ProgResDir::run()
 		do
 		{
 			resolution = maxRes - count_res*R_;
-			freqL = sampling/(resolution+R_);
 			freq = sampling/resolution;
-			freqH = sampling/(resolution-R_);
+
 			++count_res;
 
+			double aux_frequency;
+			DIGFREQ2FFT_IDX(freq, ZSIZE(VRiesz), fourier_idx);
+			FFT_IDX2DIGFREQ(fourier_idx, ZSIZE(VRiesz), aux_frequency);
 
+			if (fourier_idx == last_fourier_idx)
+				continue;
+			else
+			{
+				last_fourier_idx = fourier_idx;
+				std::cout << "DIGFREQ2FFT_IDX = " << fourier_idx << "  FFT_IDX2DIGFREQ = " <<
+								aux_frequency << std::endl;
+				freqL = sampling/((sampling/aux_frequency)+R_);
+				freq = aux_frequency;
+				freqH = sampling/((sampling/aux_frequency)-R_);
+			}
 
 			//std::cout << "resolution =  " << resolution << std::endl;
 			if (freq > 0.5)
