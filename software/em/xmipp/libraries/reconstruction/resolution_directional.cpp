@@ -605,7 +605,7 @@ void ProgResDir::run()
 		MultidimArray<int> &pMask = mask_aux;
 		std::vector<double> list;
 		double resolution, last_resolution = 10000;  //A huge value for achieving last_resolution < resolution
-		double freq, freqH, freqL, resVal, counter;
+		double freq, freqH, freqL, resVal, counter, resolution_2;
 		double max_meanS = -1e38;
 		double cut_value = 0.025;
 
@@ -630,9 +630,11 @@ void ProgResDir::run()
 		{
 			resolution = maxRes - count_res*R_;
 			freq = sampling/resolution;
+//			freqL = sampling/(resolution + R_);
+//			freqH = sampling/(resolution - R_);
 
 			++count_res;
-
+			////////////////////
 			double aux_frequency;
 			DIGFREQ2FFT_IDX(freq, ZSIZE(VRiesz), fourier_idx);
 			FFT_IDX2DIGFREQ(fourier_idx, ZSIZE(VRiesz), aux_frequency);
@@ -649,7 +651,7 @@ void ProgResDir::run()
 				if (fourier_idx == last_fourier_idx)
 				{
 					DIGFREQ2FFT_IDX(freqL, ZSIZE(VRiesz), fourier_idx);
-					if (fourier_idx >1)
+					if (fourier_idx > 1)
 						FFT_IDX2DIGFREQ(fourier_idx - 1, ZSIZE(VRiesz), R_);
 				}
 				freqL = sampling/((sampling/aux_frequency)+(sampling/R_));
@@ -658,6 +660,7 @@ void ProgResDir::run()
 			}
 
 			resolution = sampling/freq;
+			///////////////////////////////
 
 			//std::cout << "resolution =  " << resolution << std::endl;
 			if (freq > 0.5)
@@ -818,7 +821,7 @@ void ProgResDir::run()
 							if (DIRECT_MULTIDIM_ELEM(pMask, n) >2)
 							{
 								DIRECT_MULTIDIM_ELEM(pMask, n) = -1;
-								DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution + counter*R_;//maxRes - counter*R_;
+								DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution_2; //resolution + counter*R_;
 							}
 						}
 				}
@@ -851,6 +854,8 @@ void ProgResDir::run()
 				}
 			}
 			iter++;
+			resolution_2 = last_resolution;
+			last_resolution = resolution;
 		}while(doNextIteration);
 
 		if (lefttrimming == false)
