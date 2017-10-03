@@ -156,13 +156,18 @@ class XmippMonoDirViewer(ProtocolViewer):
                 'doShowDoAColorSlices': self._showDoAColorSlices,
                 'doShowDoAChimera': self._showDoAChimera,
                 'doShowDoAHistogram': self._plotHistogram,
-                 'doShowVarianceSlices': self._showVarianceSlices,
-                 'doShowVarianceColorSlices': self._showVarianceColorSlices,
-                 'doShowVarianceChimera': self._showChimera
+                'doShowVarianceSlices': self._showVarianceSlices,
+                'doShowVarianceColorSlices': self._showVarianceColorSlices,
+                'doShowVarianceChimera': self._showChimera
                 }
 
     def _showDoASlices(self, param=None):
-        self._showSlices(OUTPUT_DOA_FILE)
+        self.showSlices(OUTPUT_DOA_FILE)
+        
+    def showSlices(self, fileName):
+        cm = DataView(self.protocol._getExtraPath(fileName))
+        
+        return [cm]  
  
     def _showDoAColorSlices(self, param=None):
         self._showColorSlices(OUTPUT_DOA_FILE)
@@ -178,11 +183,6 @@ class XmippMonoDirViewer(ProtocolViewer):
     
     def _showVarianceChimera(self, param=None):
         self._showChimera(OUTPUT_VARIANCE_FILE_CHIMERA, CHIMERA_CMD_VARIANCE)
-        
-    def _showSlices(self, fileName):
-        cm = DataView(self.protocol._getExtraPath(fileName))
-        
-        return [cm]        
        
     def _showOriginalVolumeSlices(self, param=None):
         if self.protocol.halfVolumes.get() is True:
