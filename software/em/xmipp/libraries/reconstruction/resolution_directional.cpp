@@ -604,7 +604,7 @@ void ProgResDir::run()
 		MultidimArray<int> mask_aux = mask();
 		MultidimArray<int> &pMask = mask_aux;
 		std::vector<double> list;
-		double resolution, last_resolution = 10000;  //A huge value for achieving last_resolution < resolution
+		double resolution, last_resolution = maxRes;  //A huge value for achieving last_resolution < resolution
 		double freq, freqH, freqL, resVal, counter, resolution_2;
 		double max_meanS = -1e38;
 		double cut_value = 0.025;
