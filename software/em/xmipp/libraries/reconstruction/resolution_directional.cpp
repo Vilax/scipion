@@ -288,7 +288,7 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 
 
 void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
-		double w1, double w1h, double w1l, MultidimArray<double> &amplitude, int count, int dir, FileName fnDebug,
+		double w1, double w1l, MultidimArray<double> &amplitude, int count, int dir, FileName fnDebug,
 		double angle_cone, double rot, double tilt)
 {
 	fftVRiesz.initZeros(myfftV);
@@ -307,23 +307,11 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	coneVol.initZeros(iu);
 	#endif
 
-	//	if (tilt<0)
-//	{
-//		std::cout << "tilt < 0" << std::endl;
-//		tilt= tilt + 180;
-//	}
-
 	double tilt_cone_plus = (tilt + 0.5*angle_cone)*PI/180;
 	double tilt_cone_minus = (tilt - 0.5*angle_cone)*PI/180;
 	double rot_cone_plus = (rot + 0.5*angle_cone)*PI/180;
 	double rot_cone_minus = (rot - 0.5*angle_cone)*PI/180;
 
-	std::cout << "------------------------" << std::endl;
-	std::cout << "tilt_cone_plus = " << tilt_cone_plus << std::endl;
-	std::cout << "tilt_cone_minus = " << tilt_cone_minus << std::endl;
-	std::cout << "rot_cone_plus = " << rot_cone_plus << std::endl;
-	std::cout << "rot_cone_minus = " << rot_cone_minus << std::endl;
-	std::cout << "------------------------" << std::endl;
 
 	bool tilt_extreme=false, rot_extreme = false;
 
@@ -348,9 +336,9 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 		rot_extreme = true;
 	}
 
-	std::cout << "tilt_cone_minus= " << tilt_cone_minus*180/PI << "   tilt_cone_plus= "
-			<< tilt_cone_plus*180/PI << "   rot_cone_minus="<< rot_cone_minus*180/PI <<
-			"   rot_cone_plus=" << rot_cone_plus*180/PI << std::endl;
+//	std::cout << "tilt_cone_minus= " << tilt_cone_minus*180/PI << "   tilt_cone_plus= "
+//			<< tilt_cone_plus*180/PI << "   rot_cone_minus="<< rot_cone_minus*180/PI <<
+//			"   rot_cone_plus=" << rot_cone_plus*180/PI << std::endl;
 
 	double x_dir, y_dir, z_dir;
 
@@ -518,7 +506,6 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	}
 	saveImg2.clear(); 
 	#endif // DEBUG
-
 }
 
 
@@ -526,7 +513,7 @@ void ProgResDir::postProcessingLocalResolutions(MultidimArray<double> &resolutio
 		std::vector<double> &list, MultidimArray<double> &resolutionChimera, double &cut_value, MultidimArray<int> &pMask)
 {
 	MultidimArray<double> resolutionVol_aux = resolutionVol;
-	double last_resolution_2 = sampling/list[(list.size()-1)];
+	double last_resolution_2 = list[(list.size()-1)];
 
 	// Count number of voxels with resolution
 	size_t N=0;
@@ -540,18 +527,18 @@ void ProgResDir::postProcessingLocalResolutions(MultidimArray<double> &resolutio
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
 		if (DIRECT_MULTIDIM_ELEM(resolutionVol, n)>(last_resolution_2-0.001))
 			DIRECT_MULTIDIM_ELEM(resolutions,N_iter++)=DIRECT_MULTIDIM_ELEM(resolutionVol, n);
+
 	// Sort value and get threshold
 	std::sort(&A1D_ELEM(resolutions,0),&A1D_ELEM(resolutions,N));
 	double filling_value = A1D_ELEM(resolutions, (int)(0.5*N)); //median value
 	double trimming_value = A1D_ELEM(resolutions, (int)((1-cut_value)*N));
-
 	double freq, res, init_res, last_res;
 
-	init_res = sampling/list[0];
-	last_res = sampling/list[(list.size()-1)];
-	
-	std::cout << "----------------------------------------------------------------------------------" << std::endl;
 
+
+	init_res = list[0];
+	last_res = list[(list.size()-1)];
+	
 	resolutionChimera = resolutionVol;
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
@@ -562,7 +549,9 @@ void ProgResDir::postProcessingLocalResolutions(MultidimArray<double> &resolutio
 			{
 				DIRECT_MULTIDIM_ELEM(resolutionVol, n) = filling_value;
 			}
-			else
+			else//	std::cout << "tilt_cone_minus= " << tilt_cone_minus*180/PI << "   tilt_cone_plus= "
+				//			<< tilt_cone_plus*180/PI << "   rot_cone_minus="<< rot_cone_minus*180/PI <<
+				//			"   rot_cone_plus=" << rot_cone_plus*180/PI << std::endl;
 			{
 				DIRECT_MULTIDIM_ELEM(resolutionVol, n) = 0;
 				DIRECT_MULTIDIM_ELEM(pMask,n) = 0;
@@ -591,6 +580,7 @@ void ProgResDir::run()
 
 	double criticalZ=icdf_gauss(significance);
 
+	double Nyquist = 2*sampling;
 	double range = maxRes-minRes;
 	double R_ = range/N_freq;
 
@@ -610,14 +600,15 @@ void ProgResDir::run()
 		MultidimArray<int> &pMask = mask_aux;
 		std::vector<double> list;
 		double resolution, last_resolution = maxRes;  //A huge value for achieving last_resolution < resolution
-		double freq, freqH, freqL, resVal, counter, resolution_2;
+		double freq, freqL, resVal, counter, resolution_2;
 		double max_meanS = -1e38;
 		double cut_value = 0.025;
 
 		bool doNextIteration=true;
 		bool lefttrimming = false;
 
-		int fourier_idx, last_fourier_idx = 0, iter = 0;
+
+		int fourier_idx, last_fourier_idx = 0, iter = 0, fourier_idx_2;
 		int count_res = 0;
 		double criticalW=-1;
 		double angle_cone = ang_sampling;
@@ -635,10 +626,8 @@ void ProgResDir::run()
 		{
 			resolution = maxRes - count_res*R_;
 			freq = sampling/resolution;
-//			freqL = sampling/(resolution + R_);
-//			freqH = sampling/(resolution - R_);
-
 			++count_res;
+
 			////////////////////
 			double aux_frequency;
 			DIGFREQ2FFT_IDX(freq, ZSIZE(VRiesz), fourier_idx);
@@ -646,54 +635,61 @@ void ProgResDir::run()
 
 			if (fourier_idx == last_fourier_idx)
 				continue;
-			else
-			{
-				last_fourier_idx = fourier_idx;
-				std::cout << "DIGFREQ2FFT_IDX = " << fourier_idx << "  FFT_IDX2DIGFREQ = " <<
-								aux_frequency << std::endl;
 
-				DIGFREQ2FFT_IDX(freqL, ZSIZE(VRiesz), fourier_idx);
-				if (fourier_idx == last_fourier_idx)
-				{
-					DIGFREQ2FFT_IDX(freqL, ZSIZE(VRiesz), fourier_idx);
-					if (fourier_idx > 1)
-						FFT_IDX2DIGFREQ(fourier_idx - 1, ZSIZE(VRiesz), R_);
-				}
-				freqL = sampling/((sampling/aux_frequency)+(sampling/R_));
-				freq = aux_frequency;
-				freqH = sampling/((sampling/aux_frequency)-(sampling/R_));
+			resolution = sampling/aux_frequency;
+
+			if (iter == 0)
+				last_resolution = resolution;
+
+			if ( ( resolution<Nyquist ) || (resolution > last_resolution) )
+			{
+				std::cout << "Nyquist limit reached" << std::endl;
+				break;
 			}
 
-			resolution = sampling/freq;
+			freqL = sampling/(resolution + R_);
+
+			DIGFREQ2FFT_IDX(freqL, ZSIZE(VRiesz), fourier_idx_2);
+			double caca, caca2;
+
+			if (fourier_idx_2 == fourier_idx)
+			{
+				if (fourier_idx > 0){
+					std::cout << " index low =  " << (fourier_idx - 1) << std::endl;
+					FFT_IDX2DIGFREQ(fourier_idx - 1, ZSIZE(VRiesz), freqL);
+				}
+				else{
+					freqL = sampling/(resolution + R_);
+				}
+			}
+
 			///////////////////////////////
 
-			//std::cout << "resolution =  " << resolution << std::endl;
+			std::cout << "iter = " << iter << "    resolution =  " << resolution <<
+				    "   resolution Low = " << sampling/freqL << "  idx = " << fourier_idx << std::endl;
+			std::cout << "-----------------------------------------------" << std::endl;
 			if (freq > 0.5)
 			{
 			  std::cout << "search stopped due to Nyquist limit has been reached" << std::endl;
 			  break;
 			}
 
-			if (count_res==1)
-				counter = 0; //maxRes/R_;
-			else
-				if (count_res==2)
-					counter = 1;
-				else
-					counter = 2;//count_res-2;
-
-			std::cout << "Iteration " << iter << " Freq = " << freq << " Resolution = " << sampling/freq << " (A)" << std::endl;
-
 			fnDebug = "Signal";
 
-			amplitudeMonogenicSignal3D(fftV, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, angle_cone, rot, tilt);
+			amplitudeMonogenicSignal3D(fftV, freq, freqL, amplitudeMS, iter, dir, fnDebug, angle_cone, rot, tilt);
 			if (halfMapsGiven)
 			{
 				fnDebug = "Noise";
-				amplitudeMonogenicSignal3D(*fftN, freq, freqH, freqL, amplitudeMN, iter, dir, fnDebug, angle_cone, rot, tilt);
+				amplitudeMonogenicSignal3D(*fftN, freq, freqL, amplitudeMN, iter, dir, fnDebug, angle_cone, rot, tilt);
 			}
 
-			list.push_back(freq);
+			list.push_back(sampling/freq);
+
+			if (iter <2)
+				resolution_2 = list[0];
+			else
+				resolution_2 = list[iter - 2];
+
 
 			double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
 			noiseValues.clear();
@@ -858,10 +854,11 @@ void ProgResDir::run()
 				}
 				}
 			}
+
 			iter++;
-			resolution_2 = last_resolution;
 			last_resolution = resolution;
 		}while(doNextIteration);
+
 
 		if (lefttrimming == false)
 		{
@@ -910,9 +907,11 @@ void ProgResDir::run()
 		#endif
 
 		MultidimArray<double> resolutionFiltered, resolutionChimera;
+		std::cout << "before postprocessing" << std::endl;
+		std::cout << "list = " << list[0] << std::endl;
 		postProcessingLocalResolutions(pOutputResolution, list, resolutionChimera, cut_value, pMask);
 
-
+		std::cout << "after postprocessing" << std::endl;
 		Image<double> VarianzeResolution, MaxResolution, MinResolution, AvgResolution;
 
 		FileName fn_dires;
@@ -997,6 +996,7 @@ void ProgResDir::run()
 		pMinResolution.clear();
 		pVarianzeResolution.clear();
 		list.clear();
+		std::cout << "----------------direction-finished----------------" << std::endl;
 	}
 	Image<double> VarianzeResolution, MaxResolution, MinResolution, AvgResolution;
 	AvgResolution.read(fnOut);
