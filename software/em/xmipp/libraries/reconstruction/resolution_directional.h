@@ -33,6 +33,7 @@
 //#include <data/symmetries.h>
 #include <data/sampling.h>
 #include <data/metadata.h>
+//#include <data/matrix2d.h>
 #include <data/xmipp_fft.h>
 #include <data/xmipp_fftw.h>
 #include <math.h>
@@ -77,11 +78,26 @@ public:
      * the monogenic amplitud is calculated and low pass filtered at frequency w1*/
     void amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
     		double w1, double w1l, MultidimArray<double> &amplitude,
-    		int count, int dir, FileName fnDebug, double angle_cone, double rot, double tilt);
+    		int count, int dir, FileName fnDebug, double angle_cone,
+    		double rot, double tilt);
     void postProcessingLocalResolutions(MultidimArray<double> &resolutionVol,
-    		std::vector<double> &list, MultidimArray<double> &resolutionChimera, double &cut_value, MultidimArray<int> &pMask);
+    		std::vector<double> &list, MultidimArray<double> &resolutionChimera,
+    		double &cut_value, MultidimArray<int> &pMask);
+    void inertiaMatrix(MultidimArray<double> &resolutionVol,
+			   MultidimArray<double> &Inertia_11,
+			   MultidimArray<double> &Inertia_12,
+			   MultidimArray<double> &Inertia_13,
+			   MultidimArray<double> &Inertia_22,
+			   MultidimArray<double> &Inertia_23,
+			   MultidimArray<double> &Inertia_33,
+			   double rot, double tilt);
+    void diagSymMatrix3x3(Matrix2D<double> A,
+			double &lambda_1, double &lambda_2, double &lambda_3);
+    void sphericity(double lambda_1, double lambda_2, double lambda_3,
+			double &sph);
     void generateGrid(const double N_points, Matrix2D<double> &angles);
-    void generateGridProjectionMatching(FileName fnVol_, double smprt, Matrix2D<double> &angles);
+    void generateGridProjectionMatching(FileName fnVol_, double smprt,
+    		Matrix2D<double> &angles);
     void run();
 
 public:

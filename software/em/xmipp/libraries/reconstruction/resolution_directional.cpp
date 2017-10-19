@@ -510,7 +510,8 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 
 void ProgResDir::postProcessingLocalResolutions(MultidimArray<double> &resolutionVol,
-		std::vector<double> &list, MultidimArray<double> &resolutionChimera, double &cut_value, MultidimArray<int> &pMask)
+				std::vector<double> &list, MultidimArray<double> &resolutionChimera,
+				double &cut_value, MultidimArray<int> &pMask)
 {
 	MultidimArray<double> resolutionVol_aux = resolutionVol;
 	double last_resolution_2 = list[(list.size()-1)];
@@ -572,13 +573,121 @@ void ProgResDir::postProcessingLocalResolutions(MultidimArray<double> &resolutio
 }
 
 
+void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
+							   MultidimArray<double> &Inertia_11,
+							   MultidimArray<double> &Inertia_12,
+							   MultidimArray<double> &Inertia_13,
+							   MultidimArray<double> &Inertia_22,
+							   MultidimArray<double> &Inertia_23,
+							   MultidimArray<double> &Inertia_33,
+							   double rot, double tilt)
+{
+	double x_dir, y_dir, z_dir, resVal2;
+	x_dir = sin(tilt*PI/180)*cos(rot*PI/180);
+	y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
+	z_dir = cos(tilt*PI/180);
+
+	std::cout << "x_dir = " << x_dir << "  y_dir = " << y_dir<< "  z_dir = " << z_dir << std::endl;
+
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
+	{
+		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
+		{
+		resVal2 = DIRECT_MULTIDIM_ELEM(resolutionVol,n);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
+		DIRECT_MULTIDIM_ELEM(Inertia_11,n) += resVal2*(1.0-x_dir*x_dir);
+		DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= resVal2*x_dir*y_dir;
+		DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= resVal2*x_dir*z_dir;
+		DIRECT_MULTIDIM_ELEM(Inertia_22,n) += resVal2*(1.0-y_dir*y_dir);
+		DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= resVal2*y_dir*z_dir;
+		DIRECT_MULTIDIM_ELEM(Inertia_33,n) += resVal2*(1.0-z_dir*z_dir);
+		}
+	}
+}
+
+void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A,
+					double &lambda_1, double &lambda_2, double &lambda_3)
+{
+	double b, c, d, p, q, Delta;
+
+	b = MAT_ELEM(A, 0, 0) + MAT_ELEM(A, 1, 1) + MAT_ELEM(A, 2, 2);
+	c = MAT_ELEM(A, 0, 0)*MAT_ELEM(A, 1, 1) +
+		MAT_ELEM(A, 0, 0)*MAT_ELEM(A, 2, 2) +
+		MAT_ELEM(A, 1, 1)*MAT_ELEM(A, 2, 2) -
+		MAT_ELEM(A, 0, 1)*MAT_ELEM(A, 0, 1) -
+		MAT_ELEM(A, 0, 2)*MAT_ELEM(A, 0, 2) -
+		MAT_ELEM(A, 1, 2)*MAT_ELEM(A, 1, 2);
+
+	d = MAT_ELEM(A, 0, 0)*MAT_ELEM(A, 1, 2)*MAT_ELEM(A, 1, 2) +
+		MAT_ELEM(A, 1, 1)*MAT_ELEM(A, 0, 2)*MAT_ELEM(A, 0, 2) +
+		MAT_ELEM(A, 2, 2)*MAT_ELEM(A, 0, 1)*MAT_ELEM(A, 0, 1) -
+		MAT_ELEM(A, 0, 0)*MAT_ELEM(A, 1, 1)*MAT_ELEM(A, 2, 2) -
+		2*MAT_ELEM(A, 0, 1)*MAT_ELEM(A, 0, 2)*MAT_ELEM(A, 1, 2);
+
+	p = b*b - 3*c;
+	q = 2*b*b*b - 9*b*c - 27*d;
+
+	Delta = acos(q/(2*sqrt(p*p*p)));
+
+	lambda_1 =(1.0/3)*(b+2*sqrt(p)*cos(Delta/3));
+	lambda_2 =(1.0/3)*(b+2*sqrt(p)*cos((Delta+2*PI)/3));
+	lambda_3 =(1.0/3)*(b+2*sqrt(p)*cos((Delta-2*PI)/3));
+}
+
+void ProgResDir::sphericity(double lambda_1, double lambda_2, double lambda_3,
+							double &sph)
+{
+	//This equation comes from Thomsen's formula, with an error lesser than 1.061%
+	double p = 1.6075;
+	double A_ellip, V_ellip;
+	double aux = (pow((lambda_1*lambda_2),p) + pow((lambda_1*lambda_3),p) +
+				pow((lambda_2*lambda_3),p));
+	A_ellip = 4.0*PI*pow(aux/3.0,1.0/p);
+	V_ellip = (4.0/3.0)*PI*lambda_1*lambda_2*lambda_3;
+	std::cout << "lambda_1  = " << lambda_1 << "  lambda_2  = " << lambda_2 << "  lambda_3  = " << lambda_3 << std::endl;
+	std::cout << "A_ellip  = " << A_ellip << "  V_ellip  = " << V_ellip << std::endl;
+	sph = pow(PI,(1.0/3.0))*pow(6.0*V_ellip,2.0/3.0)/A_ellip;
+}
+
+
 void ProgResDir::run()
 {
 	produceSideInfo();
 
+//	Matrix2D<double> A;
+//	double lambda_1;
+//	double lambda_2;
+//	double lambda_3;
+//
+//	A.initZeros(3,3);
+//
+//	MAT_ELEM(A, 0, 0) = 3;
+//	MAT_ELEM(A, 0, 1) = 7;
+//	MAT_ELEM(A, 0, 2) = 7;
+//	MAT_ELEM(A, 1, 0) = 7;
+//	MAT_ELEM(A, 1, 1) = 3;
+//	MAT_ELEM(A, 1, 2) = 7;
+//	MAT_ELEM(A, 2, 0) = 7;
+//	MAT_ELEM(A, 2, 1) = 7;
+//	MAT_ELEM(A, 2, 2) = 3;
+//
+//	diagSymMatrix3x3(A, lambda_1, lambda_2, lambda_3);
+//
+//	std::cout << "lambda_1 = " << lambda_1 << std::endl;
+//	std::cout << "lambda_2 = " << lambda_2 << std::endl;
+//	std::cout << "lambda_3 = " << lambda_3 << std::endl;
+//
+//	exit(0);
 	MetaData md;
 
 	double criticalZ=icdf_gauss(significance);
+	Image<double> Inertia_00, Inertia_01, Inertia_02, Inertia_11, Inertia_12, Inertia_22;
+
+	MultidimArray<double> &pInertia_00 = Inertia_00(), &pInertia_01 = Inertia_01(),
+						  &pInertia_02 = Inertia_02(), &pInertia_11 = Inertia_11(),
+						  &pInertia_12 = Inertia_12(), &pInertia_22 = Inertia_22();
+	FileName fnInertia_00 = "Inertia_00.vol", fnInertia_01 = "Inertia_01.vol",
+			 fnInertia_02 = "Inertia_02.vol", fnInertia_11 = "Inertia_11.vol",
+			 fnInertia_12 = "Inertia_12.vol", fnInertia_22 = "Inertia_22.vol";
 
 	double Nyquist = 2*sampling;
 	double range = maxRes-minRes;
@@ -907,9 +1016,49 @@ void ProgResDir::run()
 		#endif
 
 		MultidimArray<double> resolutionFiltered, resolutionChimera;
-		std::cout << "before postprocessing" << std::endl;
-		std::cout << "list = " << list[0] << std::endl;
 		postProcessingLocalResolutions(pOutputResolution, list, resolutionChimera, cut_value, pMask);
+
+
+		//////////////////////////////
+		//////////////////
+		//INERTIA MOMENT//
+		//////////////////
+		if (dir == 0)
+		{
+			pInertia_00.initZeros(pOutputResolution);
+			pInertia_01.initZeros(pOutputResolution);
+			pInertia_02.initZeros(pOutputResolution);
+			pInertia_11.initZeros(pOutputResolution);
+			pInertia_12.initZeros(pOutputResolution);
+			pInertia_22.initZeros(pOutputResolution);
+		}
+		else
+		{
+			Inertia_00.read(fnInertia_00);
+			Inertia_01.read(fnInertia_01);
+			Inertia_02.read(fnInertia_02);
+			Inertia_11.read(fnInertia_11);
+			Inertia_12.read(fnInertia_12);
+			Inertia_22.read(fnInertia_22);
+		}
+		inertiaMatrix(pOutputResolution, pInertia_00, pInertia_01,
+					pInertia_02, pInertia_11, pInertia_12, pInertia_22,
+					rot, tilt);
+
+		Inertia_00.write(fnInertia_00);
+		Inertia_01.write(fnInertia_01);
+		Inertia_02.write(fnInertia_02);
+		Inertia_11.write(fnInertia_11);
+		Inertia_12.write(fnInertia_12);
+		Inertia_22.write(fnInertia_22);
+
+		Inertia_00.clear();
+		Inertia_01.clear();
+		Inertia_02.clear();
+		Inertia_11.clear();
+		Inertia_12.clear();
+		Inertia_22.clear();
+		//////////////////////////////
 
 		std::cout << "after postprocessing" << std::endl;
 		Image<double> VarianzeResolution, MaxResolution, MinResolution, AvgResolution;
@@ -998,6 +1147,54 @@ void ProgResDir::run()
 		list.clear();
 		std::cout << "----------------direction-finished----------------" << std::endl;
 	}
+
+	Inertia_00.read(fnInertia_00);
+	Inertia_01.read(fnInertia_01);
+	Inertia_02.read(fnInertia_02);
+	Inertia_11.read(fnInertia_11);
+	Inertia_12.read(fnInertia_12);
+	Inertia_22.read(fnInertia_22);
+	Matrix2D<double> InertiaMatrix;
+	InertiaMatrix.initZeros(3,3);
+
+	double lambda_1, lambda_2, lambda_3, sph;
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pInertia_11)
+	{
+		if (DIRECT_MULTIDIM_ELEM(mask(),n) == 1 )
+		{
+			MAT_ELEM(InertiaMatrix, 0, 0) = DIRECT_MULTIDIM_ELEM(pInertia_00,n);
+			MAT_ELEM(InertiaMatrix, 0, 1) = DIRECT_MULTIDIM_ELEM(pInertia_01,n);
+			MAT_ELEM(InertiaMatrix, 0, 2) = DIRECT_MULTIDIM_ELEM(pInertia_02,n);
+			MAT_ELEM(InertiaMatrix, 1, 0) = DIRECT_MULTIDIM_ELEM(pInertia_01,n);//MAT_ELEM(InertiaMatrix, 0, 1);
+			MAT_ELEM(InertiaMatrix, 1, 1) = DIRECT_MULTIDIM_ELEM(pInertia_11,n);
+			MAT_ELEM(InertiaMatrix, 1, 2) = DIRECT_MULTIDIM_ELEM(pInertia_12,n);
+			MAT_ELEM(InertiaMatrix, 2, 0) = DIRECT_MULTIDIM_ELEM(pInertia_02,n);//MAT_ELEM(InertiaMatrix, 0, 2)
+			MAT_ELEM(InertiaMatrix, 2, 1) = DIRECT_MULTIDIM_ELEM(pInertia_12,n);//MAT_ELEM(InertiaMatrix, 1, 2)
+			MAT_ELEM(InertiaMatrix, 2, 2) = DIRECT_MULTIDIM_ELEM(pInertia_22,n);
+
+
+
+			diagSymMatrix3x3(InertiaMatrix, lambda_1, lambda_2, lambda_3);
+//			lambda_1 = abs(lambda_1);
+//			lambda_2 = abs(lambda_2);
+//			lambda_3 = abs(lambda_3);
+
+			DIRECT_MULTIDIM_ELEM(pInertia_00,n) = lambda_1;
+			DIRECT_MULTIDIM_ELEM(pInertia_01,n) = lambda_2;
+			DIRECT_MULTIDIM_ELEM(pInertia_02,n) = lambda_3;
+
+			sphericity(lambda_1, lambda_2, lambda_3, sph);
+
+			DIRECT_MULTIDIM_ELEM(pInertia_11,n) = sph;
+		}
+		else
+			DIRECT_MULTIDIM_ELEM(pInertia_11,n) = 0;
+	}
+	Inertia_00.write("lambda_1.vol");
+	Inertia_01.write("lambda_2.vol");
+	Inertia_02.write("lambda_3.vol");
+	Inertia_11.write("sphericity_volume.vol");
+
 	Image<double> VarianzeResolution, MaxResolution, MinResolution, AvgResolution;
 	AvgResolution.read(fnOut);
 	MultidimArray<double> &pAvgResolution = AvgResolution();
