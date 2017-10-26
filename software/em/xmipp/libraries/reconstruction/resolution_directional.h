@@ -90,8 +90,9 @@ public:
 			   MultidimArray<double> &Inertia_22,
 			   MultidimArray<double> &Inertia_23,
 			   MultidimArray<double> &Inertia_33,
+			   MultidimArray<double> &SumRes,
 			   double rot, double tilt);
-    void diagSymMatrix3x3(Matrix2D<double> A,
+    void diagSymMatrix3x3(Matrix2D<double> A, int Ndirections,
 			double &lambda_1, double &lambda_2, double &lambda_3);
     void sphericity(double lambda_1, double lambda_2, double lambda_3,
 			double &sph);

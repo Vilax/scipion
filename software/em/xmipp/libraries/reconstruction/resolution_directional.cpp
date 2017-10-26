@@ -271,18 +271,21 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 				MAT_ELEM(aux_angles,1, count) = tilt-180;
 			else
 				MAT_ELEM(aux_angles,1, count) = tilt;
+//			std::cout << "k = "<< count << "  rot = "  << rot <<
+//					  "  tilt = " << tilt << std::endl;
 			count++;
 		}
 	}
 
-	N_directions = count-1;
+	N_directions = count;
 	angles.initZeros(4,N_directions);
 
 	for (size_t k = 0; k<N_directions; k++)
 	{
 		MAT_ELEM(angles, 0, k) = MAT_ELEM(aux_angles,0, k);
 		MAT_ELEM(angles, 1, k) = MAT_ELEM(aux_angles,1, k);
-		std::cout << "k=" << k << "  rot = " << MAT_ELEM(angles, 0, k) << "  tilt = " << MAT_ELEM(angles, 1, k) << std::endl;
+		std::cout << "k=" << k << "  rot = "  << MAT_ELEM(angles, 0, k) <<
+								  "  tilt = " << MAT_ELEM(angles, 1, k) << std::endl;
 	}
 }
 
@@ -580,12 +583,16 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 							   MultidimArray<double> &Inertia_22,
 							   MultidimArray<double> &Inertia_23,
 							   MultidimArray<double> &Inertia_33,
+							   MultidimArray<double> &SumRes,
 							   double rot, double tilt)
 {
-	double x_dir, y_dir, z_dir, resVal2;
+	double x_dir, y_dir, z_dir, resVal, x_dir_sym, y_dir_sym, z_dir_sym;
 	x_dir = sin(tilt*PI/180)*cos(rot*PI/180);
 	y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
 	z_dir = cos(tilt*PI/180);
+	x_dir_sym = -sin(tilt*PI/180)*cos(rot*PI/180);
+	y_dir_sym = -sin(tilt*PI/180)*sin(rot*PI/180);
+	z_dir_sym = cos(tilt*PI/180);
 
 	std::cout << "x_dir = " << x_dir << "  y_dir = " << y_dir<< "  z_dir = " << z_dir << std::endl;
 
@@ -593,18 +600,27 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 	{
 		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
 		{
-		resVal2 = DIRECT_MULTIDIM_ELEM(resolutionVol,n);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
-		DIRECT_MULTIDIM_ELEM(Inertia_11,n) += resVal2*(1.0-x_dir*x_dir);
-		DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= resVal2*x_dir*y_dir;
-		DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= resVal2*x_dir*z_dir;
-		DIRECT_MULTIDIM_ELEM(Inertia_22,n) += resVal2*(1.0-y_dir*y_dir);
-		DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= resVal2*y_dir*z_dir;
-		DIRECT_MULTIDIM_ELEM(Inertia_33,n) += resVal2*(1.0-z_dir*z_dir);
+		resVal = DIRECT_MULTIDIM_ELEM(resolutionVol,n);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
+		//resVal = 1;
+		DIRECT_MULTIDIM_ELEM(Inertia_11,n) += resVal*(1.0-x_dir*x_dir);
+		DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= resVal*x_dir*y_dir;
+		DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= resVal*x_dir*z_dir;
+		DIRECT_MULTIDIM_ELEM(Inertia_22,n) += resVal*(1.0-y_dir*y_dir);
+		DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= resVal*y_dir*z_dir;
+		DIRECT_MULTIDIM_ELEM(Inertia_33,n) += resVal*(1.0-z_dir*z_dir);
+
+//		DIRECT_MULTIDIM_ELEM(Inertia_11,n) += resVal*(1.0-x_dir_sym*x_dir_sym);
+//		DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= resVal*x_dir_sym*y_dir_sym;
+//		DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= resVal*x_dir_sym*z_dir_sym;
+//		DIRECT_MULTIDIM_ELEM(Inertia_22,n) += resVal*(1.0-y_dir_sym*y_dir_sym);
+//		DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= resVal*y_dir_sym*z_dir_sym;
+//		DIRECT_MULTIDIM_ELEM(Inertia_33,n) += resVal*(1.0-z_dir_sym*z_dir_sym);
+		DIRECT_MULTIDIM_ELEM(SumRes,n) += resVal;
 		}
 	}
 }
 
-void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A,
+void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A, int Ndirections,
 					double &lambda_1, double &lambda_2, double &lambda_3)
 {
 	double b, c, d, p, q, Delta;
@@ -628,9 +644,9 @@ void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A,
 
 	Delta = acos(q/(2*sqrt(p*p*p)));
 
-	lambda_1 =(1.0/3)*(b+2*sqrt(p)*cos(Delta/3));
-	lambda_2 =(1.0/3)*(b+2*sqrt(p)*cos((Delta+2*PI)/3));
-	lambda_3 =(1.0/3)*(b+2*sqrt(p)*cos((Delta-2*PI)/3));
+	lambda_1 =(1.0/3)*(b+2.0*sqrt(p)*cos(Delta/3));
+	lambda_2 =(1.0/3)*(b+2.0*sqrt(p)*cos((Delta+2.0*PI)/3));
+	lambda_3 =(1.0/3)*(b+2.0*sqrt(p)*cos((Delta-2.0*PI)/3));
 }
 
 void ProgResDir::sphericity(double lambda_1, double lambda_2, double lambda_3,
@@ -680,11 +696,14 @@ void ProgResDir::run()
 	MetaData md;
 
 	double criticalZ=icdf_gauss(significance);
-	Image<double> Inertia_00, Inertia_01, Inertia_02, Inertia_11, Inertia_12, Inertia_22;
+	Image<double> Inertia_00, Inertia_01, Inertia_02, Inertia_11, Inertia_12, Inertia_22,
+					SumRes;
 
 	MultidimArray<double> &pInertia_00 = Inertia_00(), &pInertia_01 = Inertia_01(),
 						  &pInertia_02 = Inertia_02(), &pInertia_11 = Inertia_11(),
-						  &pInertia_12 = Inertia_12(), &pInertia_22 = Inertia_22();
+						  &pInertia_12 = Inertia_12(), &pInertia_22 = Inertia_22(),
+						  &pSumRes = SumRes();
+
 	FileName fnInertia_00 = "Inertia_00.vol", fnInertia_01 = "Inertia_01.vol",
 			 fnInertia_02 = "Inertia_02.vol", fnInertia_11 = "Inertia_11.vol",
 			 fnInertia_12 = "Inertia_12.vol", fnInertia_22 = "Inertia_22.vol";
@@ -1019,7 +1038,7 @@ void ProgResDir::run()
 		postProcessingLocalResolutions(pOutputResolution, list, resolutionChimera, cut_value, pMask);
 
 
-		//////////////////////////////
+		//////////////////
 		//////////////////
 		//INERTIA MOMENT//
 		//////////////////
@@ -1031,6 +1050,8 @@ void ProgResDir::run()
 			pInertia_11.initZeros(pOutputResolution);
 			pInertia_12.initZeros(pOutputResolution);
 			pInertia_22.initZeros(pOutputResolution);
+			pSumRes.initZeros(pOutputResolution);
+
 		}
 		else
 		{
@@ -1040,11 +1061,15 @@ void ProgResDir::run()
 			Inertia_11.read(fnInertia_11);
 			Inertia_12.read(fnInertia_12);
 			Inertia_22.read(fnInertia_22);
+
+			SumRes.read("sumRes.vol");
 		}
+
 		inertiaMatrix(pOutputResolution, pInertia_00, pInertia_01,
 					pInertia_02, pInertia_11, pInertia_12, pInertia_22,
-					rot, tilt);
+					pSumRes,	rot, tilt);
 
+		SumRes.write("sumRes.vol");
 		Inertia_00.write(fnInertia_00);
 		Inertia_01.write(fnInertia_01);
 		Inertia_02.write(fnInertia_02);
@@ -1058,6 +1083,7 @@ void ProgResDir::run()
 		Inertia_11.clear();
 		Inertia_12.clear();
 		Inertia_22.clear();
+		SumRes.clear();
 		//////////////////////////////
 
 		std::cout << "after postprocessing" << std::endl;
@@ -1154,27 +1180,39 @@ void ProgResDir::run()
 	Inertia_11.read(fnInertia_11);
 	Inertia_12.read(fnInertia_12);
 	Inertia_22.read(fnInertia_22);
+
+	SumRes.read("sumRes.vol");
+
+
 	Matrix2D<double> InertiaMatrix;
 	InertiaMatrix.initZeros(3,3);
+
+	Image<double> AvgResolution;
+	AvgResolution.read(fnOut);
+	//MultidimArray<double> &pAvgResolution = AvgResolution();
+
 
 	double lambda_1, lambda_2, lambda_3, sph;
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pInertia_11)
 	{
 		if (DIRECT_MULTIDIM_ELEM(mask(),n) == 1 )
 		{
-			MAT_ELEM(InertiaMatrix, 0, 0) = DIRECT_MULTIDIM_ELEM(pInertia_00,n);
-			MAT_ELEM(InertiaMatrix, 0, 1) = DIRECT_MULTIDIM_ELEM(pInertia_01,n);
-			MAT_ELEM(InertiaMatrix, 0, 2) = DIRECT_MULTIDIM_ELEM(pInertia_02,n);
-			MAT_ELEM(InertiaMatrix, 1, 0) = DIRECT_MULTIDIM_ELEM(pInertia_01,n);//MAT_ELEM(InertiaMatrix, 0, 1);
-			MAT_ELEM(InertiaMatrix, 1, 1) = DIRECT_MULTIDIM_ELEM(pInertia_11,n);
-			MAT_ELEM(InertiaMatrix, 1, 2) = DIRECT_MULTIDIM_ELEM(pInertia_12,n);
-			MAT_ELEM(InertiaMatrix, 2, 0) = DIRECT_MULTIDIM_ELEM(pInertia_02,n);//MAT_ELEM(InertiaMatrix, 0, 2)
-			MAT_ELEM(InertiaMatrix, 2, 1) = DIRECT_MULTIDIM_ELEM(pInertia_12,n);//MAT_ELEM(InertiaMatrix, 1, 2)
-			MAT_ELEM(InertiaMatrix, 2, 2) = DIRECT_MULTIDIM_ELEM(pInertia_22,n);
+			double val = 1/DIRECT_MULTIDIM_ELEM(pSumRes,n);
+
+			MAT_ELEM(InertiaMatrix, 0, 0) = DIRECT_MULTIDIM_ELEM(pInertia_00,n)*val;
+			MAT_ELEM(InertiaMatrix, 0, 1) = DIRECT_MULTIDIM_ELEM(pInertia_01,n)*val;
+			MAT_ELEM(InertiaMatrix, 0, 2) = DIRECT_MULTIDIM_ELEM(pInertia_02,n)*val;
+			MAT_ELEM(InertiaMatrix, 1, 0) = DIRECT_MULTIDIM_ELEM(pInertia_01,n)*val;//MAT_ELEM(InertiaMatrix, 0, 1);
+			MAT_ELEM(InertiaMatrix, 1, 1) = DIRECT_MULTIDIM_ELEM(pInertia_11,n)*val;
+			MAT_ELEM(InertiaMatrix, 1, 2) = DIRECT_MULTIDIM_ELEM(pInertia_12,n)*val;
+			MAT_ELEM(InertiaMatrix, 2, 0) = DIRECT_MULTIDIM_ELEM(pInertia_02,n)*val;//MAT_ELEM(InertiaMatrix, 0, 2)
+			MAT_ELEM(InertiaMatrix, 2, 1) = DIRECT_MULTIDIM_ELEM(pInertia_12,n)*val;//MAT_ELEM(InertiaMatrix, 1, 2)
+			MAT_ELEM(InertiaMatrix, 2, 2) = DIRECT_MULTIDIM_ELEM(pInertia_22,n)*val;
 
 
+			std::cout << "InertiaMatrix = " << InertiaMatrix << std::endl;
 
-			diagSymMatrix3x3(InertiaMatrix, lambda_1, lambda_2, lambda_3);
+			diagSymMatrix3x3(InertiaMatrix, N_directions, lambda_1, lambda_2, lambda_3);
 //			lambda_1 = abs(lambda_1);
 //			lambda_2 = abs(lambda_2);
 //			lambda_3 = abs(lambda_3);
@@ -1195,7 +1233,7 @@ void ProgResDir::run()
 	Inertia_02.write("lambda_3.vol");
 	Inertia_11.write("sphericity_volume.vol");
 
-	Image<double> VarianzeResolution, MaxResolution, MinResolution, AvgResolution;
+	Image<double> VarianzeResolution, MaxResolution, MinResolution;
 	AvgResolution.read(fnOut);
 	MultidimArray<double> &pAvgResolution = AvgResolution();
 
