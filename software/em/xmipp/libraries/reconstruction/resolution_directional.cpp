@@ -602,25 +602,26 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 	{
 		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
 		{
+			resVal = DIRECT_MULTIDIM_ELEM(resolutionVol,n);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
 			if (idx == 20)
 				std::cout << "resVal = " << resVal << std::endl;
-		resVal = DIRECT_MULTIDIM_ELEM(resolutionVol,n);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
-		//resVal = 1;
-		DIRECT_MULTIDIM_ELEM(Inertia_11,n) += resVal*(1.0-x_dir*x_dir);
-		DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= resVal*x_dir*y_dir;
-		DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= resVal*x_dir*z_dir;
-		DIRECT_MULTIDIM_ELEM(Inertia_22,n) += resVal*(1.0-y_dir*y_dir);
-		DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= resVal*y_dir*z_dir;
-		DIRECT_MULTIDIM_ELEM(Inertia_33,n) += resVal*(1.0-z_dir*z_dir);
 
-//		DIRECT_MULTIDIM_ELEM(Inertia_11,n) += resVal*(1.0-x_dir_sym*x_dir_sym);
-//		DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= resVal*x_dir_sym*y_dir_sym;
-//		DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= resVal*x_dir_sym*z_dir_sym;
-//		DIRECT_MULTIDIM_ELEM(Inertia_22,n) += resVal*(1.0-y_dir_sym*y_dir_sym);
-//		DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= resVal*y_dir_sym*z_dir_sym;
-//		DIRECT_MULTIDIM_ELEM(Inertia_33,n) += resVal*(1.0-z_dir_sym*z_dir_sym);
-		DIRECT_MULTIDIM_ELEM(SumRes,n) += resVal;
-		idx++;
+			//resVal = 1;
+			DIRECT_MULTIDIM_ELEM(Inertia_11,n) += resVal*(1.0-x_dir*x_dir);
+			DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= resVal*x_dir*y_dir;
+			DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= resVal*x_dir*z_dir;
+			DIRECT_MULTIDIM_ELEM(Inertia_22,n) += resVal*(1.0-y_dir*y_dir);
+			DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= resVal*y_dir*z_dir;
+			DIRECT_MULTIDIM_ELEM(Inertia_33,n) += resVal*(1.0-z_dir*z_dir);
+
+	//		DIRECT_MULTIDIM_ELEM(Inertia_11,n) += resVal*(1.0-x_dir_sym*x_dir_sym);
+	//		DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= resVal*x_dir_sym*y_dir_sym;
+	//		DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= resVal*x_dir_sym*z_dir_sym;
+	//		DIRECT_MULTIDIM_ELEM(Inertia_22,n) += resVal*(1.0-y_dir_sym*y_dir_sym);
+	//		DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= resVal*y_dir_sym*z_dir_sym;
+	//		DIRECT_MULTIDIM_ELEM(Inertia_33,n) += resVal*(1.0-z_dir_sym*z_dir_sym);
+			DIRECT_MULTIDIM_ELEM(SumRes,n) += resVal;
+			idx++;
 		}
 	}
 }
