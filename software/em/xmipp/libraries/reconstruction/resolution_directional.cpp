@@ -594,12 +594,16 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 	y_dir_sym = -sin(tilt*PI/180)*sin(rot*PI/180);
 	z_dir_sym = cos(tilt*PI/180);
 
-	std::cout << "x_dir = " << x_dir << "  y_dir = " << y_dir<< "  z_dir = " << z_dir << std::endl;
+	//std::cout << "x_dir = " << x_dir << "  y_dir = " << y_dir<< "  z_dir = " << z_dir << std::endl;
+
+	int idx = 0;
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
 	{
 		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
 		{
+			if (idx == 20)
+				std::cout << "resVal = " << resVal << std::endl;
 		resVal = DIRECT_MULTIDIM_ELEM(resolutionVol,n);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
 		//resVal = 1;
 		DIRECT_MULTIDIM_ELEM(Inertia_11,n) += resVal*(1.0-x_dir*x_dir);
@@ -616,6 +620,7 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 //		DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= resVal*y_dir_sym*z_dir_sym;
 //		DIRECT_MULTIDIM_ELEM(Inertia_33,n) += resVal*(1.0-z_dir_sym*z_dir_sym);
 		DIRECT_MULTIDIM_ELEM(SumRes,n) += resVal;
+		idx++;
 		}
 	}
 }
@@ -783,7 +788,7 @@ void ProgResDir::run()
 			if (fourier_idx_2 == fourier_idx)
 			{
 				if (fourier_idx > 0){
-					std::cout << " index low =  " << (fourier_idx - 1) << std::endl;
+					//std::cout << " index low =  " << (fourier_idx - 1) << std::endl;
 					FFT_IDX2DIGFREQ(fourier_idx - 1, ZSIZE(VRiesz), freqL);
 				}
 				else{
@@ -1210,7 +1215,7 @@ void ProgResDir::run()
 			MAT_ELEM(InertiaMatrix, 2, 2) = DIRECT_MULTIDIM_ELEM(pInertia_22,n)*val;
 
 
-			std::cout << "InertiaMatrix = " << InertiaMatrix << std::endl;
+			//std::cout << "InertiaMatrix = " << InertiaMatrix << std::endl;
 
 			diagSymMatrix3x3(InertiaMatrix, N_directions, lambda_1, lambda_2, lambda_3);
 //			lambda_1 = abs(lambda_1);
