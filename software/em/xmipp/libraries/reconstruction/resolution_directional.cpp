@@ -675,30 +675,6 @@ void ProgResDir::run()
 {
 	produceSideInfo();
 
-//	Matrix2D<double> A;
-//	double lambda_1;
-//	double lambda_2;
-//	double lambda_3;
-//
-//	A.initZeros(3,3);
-//
-//	MAT_ELEM(A, 0, 0) = 3;
-//	MAT_ELEM(A, 0, 1) = 7;
-//	MAT_ELEM(A, 0, 2) = 7;
-//	MAT_ELEM(A, 1, 0) = 7;
-//	MAT_ELEM(A, 1, 1) = 3;
-//	MAT_ELEM(A, 1, 2) = 7;
-//	MAT_ELEM(A, 2, 0) = 7;
-//	MAT_ELEM(A, 2, 1) = 7;
-//	MAT_ELEM(A, 2, 2) = 3;
-//
-//	diagSymMatrix3x3(A, lambda_1, lambda_2, lambda_3);
-//
-//	std::cout << "lambda_1 = " << lambda_1 << std::endl;
-//	std::cout << "lambda_2 = " << lambda_2 << std::endl;
-//	std::cout << "lambda_3 = " << lambda_3 << std::endl;
-//
-//	exit(0);
 	MetaData md;
 
 	double criticalZ=icdf_gauss(significance);
@@ -1040,8 +1016,8 @@ void ProgResDir::run()
 		saveImg.clear();
 		#endif
 
-		MultidimArray<double> resolutionFiltered, resolutionChimera;
-		postProcessingLocalResolutions(pOutputResolution, list, resolutionChimera, cut_value, pMask);
+		//MultidimArray<double> resolutionFiltered, resolutionChimera;
+		//postProcessingLocalResolutions(pOutputResolution, list, resolutionChimera, cut_value, pMask);
 
 
 		//////////////////
@@ -1094,10 +1070,6 @@ void ProgResDir::run()
 
 		std::cout << "after postprocessing" << std::endl;
 		Image<double> VarianzeResolution, MaxResolution, MinResolution, AvgResolution;
-
-		FileName fn_dires;
-		fn_dires = formatString("resolution_direcion_%i.vol", dir);
-		//dirResVol.write(fn_dires);
 
 		//They were initialized in producesideinfo()
 		MaxResolution.read(fnMaxVol);
