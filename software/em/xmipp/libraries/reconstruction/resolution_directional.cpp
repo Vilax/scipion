@@ -354,18 +354,18 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
 		FFT_IDX2DIGFREQ(k,ZSIZE(amplitude),uz);
-		if (uz ==0)
-			uz = 1e-38;
+//		if (uz ==0)
+//			uz = 1e-38;
 		for(size_t i=0; i<YSIZE(myfftV); ++i)
 		{
 			FFT_IDX2DIGFREQ(i,YSIZE(amplitude),uy);
-			if (uy ==0)
-				uy = 1e-38;
+//			if (uy ==0)
+//				uy = 1e-38;
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
 				FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
-				if (ux ==0)
-					ux = 1e-38;
+//				if (ux ==0)
+//					ux = 1e-38;
 
 //
 //				double tilt_freq = atan(sqrt(ux*ux + uy*uy)/uz);
@@ -377,14 +377,15 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 //				yy = sin(tilt_freq)*sin(rot_freq);
 //				zz = cos(tilt_freq);
 
+				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 
-				double modulus = sqrt(ux*ux + uy*uy + uz*uz);
+				//double modulus = sqrt(ux*ux + uy*uy + uz*uz);
 				double dotproduct;
-				dotproduct = (ux*x_dir + uy*y_dir + uz*z_dir)/modulus;
+				dotproduct = (ux*x_dir + uy*y_dir + uz*z_dir)*iun;
 //				std::cout << "--------------------------" << std::endl;
 //				std::cout << "ux = " << ux << "   uy = " << uy << "   uz = " << uz << std::endl;
 
-				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
+
 				double acosine = acos(fabs(dotproduct));
 
 //				std::cout << "acosine = " << acosine*180/PI << std::endl;
@@ -734,7 +735,7 @@ void ProgResDir::resolution2eval(int &count_res, double step,
 
 	freq = aux_frequency;
 
-//	std::cout << "Fourier index = " << fourier_idx << "   new freq = " << aux_frequency << std::endl;
+	std::cout << "freq = " << freq << "   new freq = " << aux_frequency << std::endl;
 
 	if (fourier_idx == last_fourier_idx)
 	{
