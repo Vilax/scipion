@@ -716,7 +716,7 @@ void ProgResDir::resolution2eval(int &count_res, double step,
 								double &resolution, double &last_resolution,
 								double &freq, double &freqL,
 								int &last_fourier_idx,
-								bool &continueIter,	bool &breakIter)
+								bool &continueIter,	bool &breakIter, bool &doNextIteration)
 {
 	resolution = maxRes - count_res*step;
 	freq = sampling/resolution;
@@ -755,6 +755,12 @@ void ProgResDir::resolution2eval(int &count_res, double step,
 	{
 		//std::cout << "Nyquist limit reached" << std::endl;
 		breakIter = true;
+		return;
+	}
+	if ( ( freq>0.49))// || (resolution > last_resolution) )
+	{
+		std::cout << "Nyquist limit reached" << std::endl;
+		doNextIteration = false;
 		return;
 	}
 
@@ -850,7 +856,7 @@ void ProgResDir::run()
 			resolution2eval(count_res, step,
 							resolution, last_resolution,
 							freq, freqL,
-							last_fourier_idx, continueIter, breakIter);
+							last_fourier_idx, continueIter, breakIter, doNextIteration);
 			std::cout << count_res << std::endl;
 			if (continueIter)
 				continue;

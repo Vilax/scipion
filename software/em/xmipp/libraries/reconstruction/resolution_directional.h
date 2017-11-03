@@ -105,7 +105,7 @@ public:
 			double &resolution, double &last_resolution,
 			double &freq, double &freqL,
 			int &last_fourier_idx,
-			bool &continueIter, bool &breakIter);
+			bool &continueIter, bool &breakIter, bool &doNextIteration);
 
     void generateGrid(const double N_points, Matrix2D<double> &angles);
 
