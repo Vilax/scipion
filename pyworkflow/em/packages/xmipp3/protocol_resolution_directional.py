@@ -46,6 +46,7 @@ OUTPUT_RESOLUTION_MAX_FILE = 'maxResolution.vol'
 OUTPUT_RESOLUTION_MIN_FILE = 'minResolution.vol'
 OUTPUT_DOA_FILE = 'local_anisotropy.vol'
 OUTPUT_VARIANCE_FILE = 'resolution_variance.vol'
+OUTPUT_SPH_FILE = 'sphericity.vol'
 
 
 class XmippProtMonoDir(ProtAnalysis3D):
@@ -257,16 +258,17 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params += ' --significance %f' % self.significance.get()
         params += ' --md_resdir %s' % self._getExtraPath(METADATA_ANGLES_FILE)
         params += ' --doa_vol %s' % self._getExtraPath(OUTPUT_DOA_FILE)
+        params += ' --sphericity %s' % self._getExtraPath(OUTPUT_SPH_FILE)
 
         self.runJob('xmipp_resolution_directional', params)
 
 
     def createHistrogram(self):
 
-        params = ' -i %s' % self._getExtraPath(OUTPUT_DOA_FILE)
-        params += ' --mask binary_file %s' % self._getExtraPath(OUTPUT_MASK_FILE)
+        params = ' -i %s' % self._getExtraPath(OUTPUT_SPH_FILE)
+        params += ' --mask binary_file %s' % self.maskFn
         params += ' --steps %f' % 30
-        params += ' -o %s' % self._getExtraPath('hist_DoA.xmd')
+        params += ' -o %s' % self._getExtraPath('hist_Sph.xmd')
         #params += ' --range %f %f' % (self.minRes.get(), self.maxRes.get())#(self.minRes.get(), self.maxRes.get())
         
 
@@ -277,43 +279,51 @@ class XmippProtMonoDir(ProtAnalysis3D):
         volume_path_max = self._getExtraPath(OUTPUT_RESOLUTION_MAX_FILE)
         volume_path_min = self._getExtraPath(OUTPUT_RESOLUTION_MIN_FILE)
         volume_path_doa = self._getExtraPath(OUTPUT_DOA_FILE)
+        volume_path_sph = self._getExtraPath(OUTPUT_SPH_FILE)
         volume_path_var = self._getExtraPath(OUTPUT_VARIANCE_FILE)
         
         self.volumesSet_max = self._createSetOfVolumes('resolutionMaxVol')
         self.volumesSet_min = self._createSetOfVolumes('resolutionMinVol')
         self.volumesSet_doa = self._createSetOfVolumes('doaVol')
         self.volumesSet_var = self._createSetOfVolumes('varianceVol')
+        self.volumesSet_sph = self._createSetOfVolumes('sphericityVol')
         
         if (self.halfVolumes):
             self.volumesSet_min.setSamplingRate(self.inputVolume.get().getSamplingRate())
             self.volumesSet_max.setSamplingRate(self.inputVolume.get().getSamplingRate())
             self.volumesSet_doa.setSamplingRate(self.inputVolume.get().getSamplingRate())
+            self.volumesSet_sph.setSamplingRate(self.inputVolume.get().getSamplingRate())
             self.volumesSet_var.setSamplingRate(self.inputVolume.get().getSamplingRate())
             
         else:
             self.volumesSet_min.setSamplingRate(self.inputVolumes.get().getSamplingRate())
             self.volumesSet_max.setSamplingRate(self.inputVolumes.get().getSamplingRate())
             self.volumesSet_doa.setSamplingRate(self.inputVolumes.get().getSamplingRate())
+            self.volumesSet_sph.setSamplingRate(self.inputVolumes.get().getSamplingRate())
             self.volumesSet_var.setSamplingRate(self.inputVolumes.get().getSamplingRate())
 
         readSetOfVolumes(volume_path_min, self.volumesSet_min)
         readSetOfVolumes(volume_path_max, self.volumesSet_max)
         readSetOfVolumes(volume_path_doa, self.volumesSet_doa)
+        readSetOfVolumes(volume_path_sph, self.volumesSet_sph)
         readSetOfVolumes(volume_path_var, self.volumesSet_var)
         self._defineOutputs(outputVolume_max=self.volumesSet_max)
         self._defineOutputs(outputVolume_min=self.volumesSet_min)
         self._defineOutputs(outputVolume_doa=self.volumesSet_doa)
+        self._defineOutputs(outputVolume_doa=self.volumesSet_sph)
         self._defineOutputs(outputVolume_var=self.volumesSet_var)
         
         if (self.halfVolumes):
             self._defineSourceRelation(self.inputVolume, self.volumesSet_max)
             self._defineSourceRelation(self.inputVolume, self.volumesSet_min)
             self._defineSourceRelation(self.inputVolume, self.volumesSet_doa)
+            self._defineSourceRelation(self.inputVolume, self.volumesSet_sph)
             self._defineSourceRelation(self.inputVolume, self.volumesSet_var)
         else:
             self._defineSourceRelation(self.inputVolumes, self.volumesSet_max)
             self._defineSourceRelation(self.inputVolumes, self.volumesSet_min)
             self._defineSourceRelation(self.inputVolumes, self.volumesSet_doa)
+            self._defineSourceRelation(self.inputVolumes, self.volumesSet_sph)
             self._defineSourceRelation(self.inputVolumes, self.volumesSet_var)
 
     # --------------------------- INFO functions ------------------------------

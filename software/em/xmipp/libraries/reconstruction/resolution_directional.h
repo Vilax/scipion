@@ -54,7 +54,7 @@ class ProgResDir : public XmippProgram
 public:
 	 /** Filenames */
 	FileName fnOut, fnVol, fnVol2, fnMask, fnchim, fnSym, fnMeanVol, fnMaskOut, fnMaxVol,
-	fnMinVol, fnMd, fnVar, fnDoA;
+	fnMinVol, fnMd, fnVar, fnDoA, fnSph;
 
 	/** sampling rate, minimum resolution, and maximum resolution */
 	double sampling, minRes, maxRes, R, ang_sampling, N_points, pepep, N_directions;
@@ -80,9 +80,11 @@ public:
     		double w1, double w1l, MultidimArray<double> &amplitude,
     		int count, int dir, FileName fnDebug, double angle_cone,
     		double rot, double tilt);
+
     void postProcessingLocalResolutions(MultidimArray<double> &resolutionVol,
     		std::vector<double> &list, MultidimArray<double> &resolutionChimera,
     		double &cut_value, MultidimArray<int> &pMask);
+
     void inertiaMatrix(MultidimArray<double> &resolutionVol,
 			   MultidimArray<double> &Inertia_11,
 			   MultidimArray<double> &Inertia_12,
@@ -92,13 +94,24 @@ public:
 			   MultidimArray<double> &Inertia_33,
 			   MultidimArray<double> &SumRes,
 			   double rot, double tilt);
+
     void diagSymMatrix3x3(Matrix2D<double> A, int Ndirections,
 			double &lambda_1, double &lambda_2, double &lambda_3);
+
     void sphericity(double lambda_1, double lambda_2, double lambda_3,
 			double &sph);
+
+    void resolution2eval(int &count_res, double step,
+			double &resolution, double &last_resolution,
+			double &freq, double &freqL,
+			int &last_fourier_idx,
+			bool &continueIter, bool &breakIter);
+
     void generateGrid(const double N_points, Matrix2D<double> &angles);
+
     void generateGridProjectionMatching(FileName fnVol_, double smprt,
     		Matrix2D<double> &angles);
+
     void run();
 
 public:

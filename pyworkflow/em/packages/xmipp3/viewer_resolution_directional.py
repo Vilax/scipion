@@ -44,6 +44,7 @@ OUTPUT_RESOLUTION_FILE_CHIMERA = 'MG_Chimera_resolution.vol'
 OUTPUT_VARIANCE_FILE_CHIMERA = 'MG_Chimera_resolution.vol'
 CHIMERA_CMD_DOA = 'chimera_DoA.cmd'
 CHIMERA_CMD_VARIANCE = 'chimera_Variance.cmd'
+CHIMERA_CMD_SPH = 'chimera_Sph.cmd'
 
 
 OUTPUT_RESOLUTION_MEAN = 'mean_volume.vol'
@@ -51,6 +52,7 @@ OUTPUT_RESOLUTION_MAX_FILE = 'maxResolution.vol'
 OUTPUT_RESOLUTION_MIN_FILE = 'minResolution.vol'
 OUTPUT_VARIANCE_FILE = 'resolution_variance.vol'
 OUTPUT_DOA_FILE = 'local_anisotropy.vol'
+OUTPUT_SPH_FILE = 'sphericity.vol'
 
 #TODO: prepare volumes for chimera
 OUTPUT_VARIANCE_FILE_CHIMERA = 'varResolution_Chimera.vol'
@@ -122,6 +124,19 @@ class XmippMonoDirViewer(ProtocolViewer):
         groupDoA.addParam('doShowDoAChimera', LabelParam,
                        label="Show DoA map in Chimera")
         
+        groupSph = form.addGroup('Sphericity information')
+        groupSph.addParam('doShowSphSlices', LabelParam,
+                      label="Show Sphericity slices")
+        
+        groupSph.addParam('doShowSphHistogram', LabelParam,
+              label="Show Sphericity histogram")
+        
+        groupSph.addParam('doShowSphColorSlices', LabelParam,
+               label="Show Sphericity colored slices")
+        
+        groupSph.addParam('doShowSphChimera', LabelParam,
+                       label="Show Sphericity map in Chimera")
+        
         groupVariance = form.addGroup('Variance information')
         groupVariance.addParam('doShowVarianceSlices', LabelParam,
               label="Show variance slices")
@@ -155,6 +170,10 @@ class XmippMonoDirViewer(ProtocolViewer):
                 'doShowDoASlices': self._showDoASlices,
                 'doShowDoAColorSlices': self._showDoAColorSlices,
                 'doShowDoAChimera': self._showDoAChimera,
+                'doShowSphSlices': self._showDoASlices,
+                'doShowSphColorSlices': self._showDoAColorSlices,
+                'doShowSphChimera': self._showDoAChimera,
+                'doShowSphHistogram': self._plotHistogram,
                 'doShowDoAHistogram': self._plotHistogram,
                 'doShowVarianceSlices': self._showVarianceSlices,
                 'doShowVarianceColorSlices': self._showVarianceColorSlices,
@@ -170,6 +189,17 @@ class XmippMonoDirViewer(ProtocolViewer):
 
     def _showDoAChimera(self, param=None):
         self._showChimera(OUTPUT_DOA_FILE_CHIMERA, CHIMERA_CMD_DOA)
+        
+    def _showSphSlices(self, param=None):
+        cm = DataView(self.protocol._getExtraPath(OUTPUT_SPH_FILE))
+        return [cm]  
+ 
+    def _showSphColorSlices(self, param=None):
+        self._showColorSlices(OUTPUT_SPH_FILE)
+
+    def _showSphChimera(self, param=None):
+        self._showChimera(OUTPUT_DOA_FILE_CHIMERA, CHIMERA_CMD_SPH)
+
         
     def _showVarianceSlices(self, param=None):
         cm = DataView(self.protocol._getExtraPath(OUTPUT_VARIANCE_FILE))
@@ -196,7 +226,7 @@ class XmippMonoDirViewer(ProtocolViewer):
         imgData = img.getData()
         max_Res = np.amax(imgData)
 
-        imgData2 = np.ma.masked_where(imgData < 0.1, imgData, copy=True)
+        imgData2 = np.ma.masked_where(imgData < 0.001, imgData, copy=True)
         
         min_Res = np.amin(imgData2)
         fig, im = self._plotVolumeSlices('MonoDir slices', imgData2,
@@ -210,7 +240,7 @@ class XmippMonoDirViewer(ProtocolViewer):
 
     def _plotHistogram(self, param=None):
         md = MetaData()
-        md.read(self.protocol._getPath('extra/hist_DoA.xmd'))
+        md.read(self.protocol._getPath('extra/hist_Sph.xmd'))
         x_axis = []
         y_axis = []
 
