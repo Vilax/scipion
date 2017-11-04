@@ -1150,16 +1150,12 @@ void ProgResDir::run()
 		//////////////////////////////
 
 //		std::cout << "after postprocessing" << std::endl;
-		Image<double> VarianzeResolution, MaxResolution, MinResolution, AvgResolution;
+		Image<double> VarianzeResolution, AvgResolution;
 
 		//They were initialized in producesideinfo()
-		MaxResolution.read(fnMaxVol);
-		MinResolution.read(fnMinVol);
 		AvgResolution.read(fnOut);
 		VarianzeResolution.read(fnVar);
 
-		MultidimArray<double> &pMaxResolution = MaxResolution();
-		MultidimArray<double> &pMinResolution = MinResolution();
 		MultidimArray<double> &pAvgResolution = AvgResolution();
 		MultidimArray<double> &pVarianzeResolution = VarianzeResolution();
 
@@ -1171,22 +1167,14 @@ void ProgResDir::run()
 			double Resvoxel = DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
 			DIRECT_MULTIDIM_ELEM(pAvgResolution, n) += Resvoxel;
 			DIRECT_MULTIDIM_ELEM(pVarianzeResolution, n) += Resvoxel*Resvoxel;
-			if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)<DIRECT_MULTIDIM_ELEM(pMinResolution, n))
-				DIRECT_MULTIDIM_ELEM(pMinResolution, n) = DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
-			if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n)>DIRECT_MULTIDIM_ELEM(pMaxResolution, n))
-				DIRECT_MULTIDIM_ELEM(pMaxResolution, n) = DIRECT_MULTIDIM_ELEM(pOutputResolution, n);
 			}
 			else
 			{
-				DIRECT_MULTIDIM_ELEM(pMinResolution, n) = 0;
-				DIRECT_MULTIDIM_ELEM(pMaxResolution, n) = 0;
 				DIRECT_MULTIDIM_ELEM(pAvgResolution, n) = 0;
 				DIRECT_MULTIDIM_ELEM(pVarianzeResolution, n) = 0;
 			}
 		}
 
-		MaxResolution.write(fnMaxVol);
-		MinResolution.write(fnMinVol);
 		AvgResolution.write(fnOut);
 		VarianzeResolution.write(fnVar);
 
@@ -1226,8 +1214,6 @@ void ProgResDir::run()
 		#endif
 
 		pOutputResolution.clear();
-		pMaxResolution.clear();
-		pMinResolution.clear();
 		pVarianzeResolution.clear();
 		list.clear();
 
@@ -1275,21 +1261,26 @@ void ProgResDir::run()
 
 			diagSymMatrix3x3(InertiaMatrix, N_directions, lambda_1, lambda_2, lambda_3);
 
-			DIRECT_MULTIDIM_ELEM(pInertia_00,n) = lambda_1;
-			DIRECT_MULTIDIM_ELEM(pInertia_01,n) = lambda_2;
-			DIRECT_MULTIDIM_ELEM(pInertia_02,n) = lambda_3;
+//			DIRECT_MULTIDIM_ELEM(pInertia_00,n) = lambda_1;
+//			DIRECT_MULTIDIM_ELEM(pInertia_01,n) = lambda_2;
+//			DIRECT_MULTIDIM_ELEM(pInertia_02,n) = lambda_3;
 
 			sphericity(lambda_1, lambda_2, lambda_3, sph);
 
 			DIRECT_MULTIDIM_ELEM(pInertia_11,n) = sph;
+			DIRECT_MULTIDIM_ELEM(pInertia_12,n) = (lambda_1-lambda_3)/(lambda_1+lambda_3);
 		}
 		else
+		{
 			DIRECT_MULTIDIM_ELEM(pInertia_11,n) = 0;
+			DIRECT_MULTIDIM_ELEM(pInertia_12,n) =0;
+		}
 	}
-	Inertia_00.write("lambda_1.vol");
-	Inertia_01.write("lambda_2.vol");
-	Inertia_02.write("lambda_3.vol");
+//	Inertia_00.write("lambda_1.vol");
+//	Inertia_01.write("lambda_2.vol");
+//	Inertia_02.write("lambda_3.vol");
 	Inertia_11.write(fnSph);
+	Inertia_12.write(fnDoA);
 
 	Image<double> VarianzeResolution, MaxResolution, MinResolution;
 	AvgResolution.read(fnOut);
@@ -1308,13 +1299,8 @@ void ProgResDir::run()
 	saveImg_int.write("maskfinalk.vol");
 	saveImg_int.clear();
 	#endif
-
-	MaxResolution.read(fnMaxVol);
-	MinResolution.read(fnMinVol);
 	VarianzeResolution.read(fnVar);
 
-	MultidimArray<double> &pMaxResolution = MaxResolution();
-	MultidimArray<double> &pMinResolution = MinResolution();
 	MultidimArray<double> &pVarianzeResolution = VarianzeResolution();
 
 	double max_voxel, min_voxel;
@@ -1322,17 +1308,10 @@ void ProgResDir::run()
 	{
 		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
 		{
-			max_voxel = DIRECT_MULTIDIM_ELEM(pMaxResolution, n);
-			min_voxel = DIRECT_MULTIDIM_ELEM(pMinResolution, n);
 			double resmean = DIRECT_MULTIDIM_ELEM(pAvgResolution, n);
 			DIRECT_MULTIDIM_ELEM(pVarianzeResolution, n) = (DIRECT_MULTIDIM_ELEM(pVarianzeResolution, n)/N_directions) - (resmean*resmean/(N_directions*N_directions));
-			DIRECT_MULTIDIM_ELEM(pAvgResolution, n) = (max_voxel - min_voxel)/(max_voxel + min_voxel);
-		}
-		else
-		{
-			DIRECT_MULTIDIM_ELEM(pAvgResolution, n) = 0;
 		}
 	}
-	AvgResolution.write(fnDoA);
+//	AvgResolution.write(fnDoA);
 	VarianzeResolution.write(fnVar);
 }
