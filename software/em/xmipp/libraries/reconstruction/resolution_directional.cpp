@@ -233,20 +233,16 @@ void ProgResDir::produceSideInfo()
 	{
 		fftN=&fftV;
 	}
-	V.clear();
+
 
 	freq_fourier.initZeros(ZSIZE(inputVol));
+	V.clear();
 
 	int size = ZSIZE(inputVol);
 
 	int size_fourier(XSIZE(fftV));
 	for(size_t k=0; k<size_fourier; ++k)
 		FFT_IDX2DIGFREQ(k,size,VEC_ELEM(freq_fourier,k));
-
-
-
-
-
 }
 
 
