@@ -236,11 +236,17 @@ void ProgResDir::produceSideInfo()
 
 
 	freq_fourier.initZeros(ZSIZE(inputVol));
+	int size = ZSIZE(inputVol);
 	V.clear();
 
-	int size = ZSIZE(inputVol);
+
 	double u;
 	int size_fourier(ZSIZE(fftV));
+
+	std::cout << "XSIZE(fftV) " << XSIZE(fftV) << std::endl;
+	std::cout << "YSIZE(fftV) " << YSIZE(fftV) << std::endl;
+	std::cout << "ZSIZE(fftV) " << ZSIZE(fftV) << std::endl;
+
 	for(size_t k=0; k<size_fourier; ++k)
 	{
 		FFT_IDX2DIGFREQ(k,size, u);
