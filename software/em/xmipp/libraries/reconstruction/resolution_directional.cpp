@@ -239,7 +239,8 @@ void ProgResDir::produceSideInfo()
 
 	int size = ZSIZE(inputVol);
 
-	for(size_t k=0; k<ZSIZE(fftV); ++k)
+	int size_fourier(XSIZE(fftV));
+	for(size_t k=0; k<size_fourier; ++k)
 		FFT_IDX2DIGFREQ(k,size,VEC_ELEM(freq_fourier,k));
 
 
