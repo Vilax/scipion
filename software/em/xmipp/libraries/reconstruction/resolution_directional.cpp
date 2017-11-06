@@ -243,15 +243,11 @@ void ProgResDir::produceSideInfo()
 	double u;
 	int size_fourier(ZSIZE(fftV));
 
-	std::cout << "XSIZE(fftV) " << XSIZE(fftV) << std::endl;
-	std::cout << "YSIZE(fftV) " << YSIZE(fftV) << std::endl;
-	std::cout << "ZSIZE(fftV) " << ZSIZE(fftV) << std::endl;
-
 	for(size_t k=0; k<size_fourier; ++k)
 	{
 		FFT_IDX2DIGFREQ(k,size, u);
 		VEC_ELEM(freq_fourier,k) = u;
-		std::cout << "freq_fourier = " << u  << std::endl;
+//		std::cout << "freq_fourier = " << u  << std::endl;
 	}
 }
 
@@ -407,7 +403,10 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 				//double modulus = sqrt(ux*ux + uy*uy + uz*uz);
 				double dotproduct;
-				dotproduct = (ux*x_dir + uy*y_dir + uz*z_dir)*iun;
+
+				//BE CAREFULL with the order
+				dotproduct = (uy*x_dir + ux*y_dir + uz*z_dir)*iun;
+
 //				std::cout << "--------------------------" << std::endl;
 //				std::cout << "ux = " << ux << "   uy = " << uy << "   uz = " << uz << std::endl;
 
