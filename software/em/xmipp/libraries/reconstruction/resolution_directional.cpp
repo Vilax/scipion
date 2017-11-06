@@ -397,7 +397,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 				//double modulus = sqrt(ux*ux + uy*uy + uz*uz);
 				double dotproduct;
-				dotproduct = (uy*x_dir + ux*y_dir + uz*z_dir)*iun;
+				dotproduct = (ux*x_dir + uy*y_dir + uz*z_dir)*iun;
 //				std::cout << "--------------------------" << std::endl;
 //				std::cout << "ux = " << ux << "   uy = " << uy << "   uz = " << uz << std::endl;
 
