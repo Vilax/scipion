@@ -124,6 +124,7 @@ public:
 	bool halfMapsGiven;
 	Sampling mysampling;
 	Matrix2D<double> angles;
+	Matrix1D<double> freq_fourier;
 
 };
 //@}
