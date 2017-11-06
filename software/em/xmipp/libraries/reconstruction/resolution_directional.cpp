@@ -455,7 +455,8 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
 				FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
-				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= VEC_ELEM(freq_fourier,j)*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+//				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= VEC_ELEM(freq_fourier,j)*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= ux*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
 				++n;
 			}
 		}
@@ -472,10 +473,11 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	{
 		for(size_t i=0; i<YSIZE(myfftV); ++i)
 		{
-//			FFT_IDX2DIGFREQ(i,YSIZE(amplitude),uy);
+			FFT_IDX2DIGFREQ(i,YSIZE(amplitude),uy);
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
-			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= VEC_ELEM(freq_fourier,i)*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+//			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= VEC_ELEM(freq_fourier,i)*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= uy*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
 			++n;
 			}
 		}
@@ -489,12 +491,13 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	n=0;
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
-//		FFT_IDX2DIGFREQ(k,ZSIZE(amplitude),uz);
+		FFT_IDX2DIGFREQ(k,ZSIZE(amplitude),uz);
 		for(size_t i=0; i<YSIZE(myfftV); ++i)
 		{
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
-				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= VEC_ELEM(freq_fourier,k)*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+//				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= VEC_ELEM(freq_fourier,k)*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= uz*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
 				++n;
 			}
 		}
