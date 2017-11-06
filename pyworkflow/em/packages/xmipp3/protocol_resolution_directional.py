@@ -269,7 +269,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params += ' --mask binary_file %s' % self.maskFn
         params += ' --steps %f' % 30
         params += ' -o %s' % self._getExtraPath('hist_Sph.xmd')
-        #params += ' --range %f %f' % (self.minRes.get(), self.maxRes.get())#(self.minRes.get(), self.maxRes.get())
+        params += ' --range %f %f' % (0, 1)#(self.minRes.get(), self.maxRes.get())
         
 
         self.runJob('xmipp_image_histogram', params)
