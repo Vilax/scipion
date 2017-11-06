@@ -307,10 +307,10 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	double iwl=1.0/w1l;
 	double ideltal=PI/(w1-w1l);
 
-//	#ifdef DEBUG_DIR
-//	MultidimArray<double> coneVol;
-//	coneVol.initZeros(iu);
-//	#endif
+	#ifdef DEBUG_DIR
+	MultidimArray<double> coneVol;
+	coneVol.initZeros(iu);
+	#endif
 
 	double tilt_cone_plus = (tilt + 0.5*angle_cone)*PI/180;
 	double tilt_cone_minus = (tilt - 0.5*angle_cone)*PI/180;
@@ -393,7 +393,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 				double arg_exp = acosine*acosine*acosine*acosine/(0.12*0.12*0.12*0.12);
 				double un=1.0/iun;
 
-				//DIRECT_MULTIDIM_ELEM(coneVol, n) = exp(-arg_exp);
+				DIRECT_MULTIDIM_ELEM(coneVol, n) = exp(-arg_exp);
 
 				if (w1l<=un && un<=w1)
 				{
@@ -412,14 +412,14 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 		}
 	}
 
-//	#ifdef DEBUG_DIR
-//	if ( (count == 0) )
-//	{
-//		Image<double> direction;
-//		direction = coneVol;
-//		direction.write(formatString("cone_%i.vol", dir));
-//	}
-//	#endif
+	#ifdef DEBUG_DIR
+	if ( (count == 0) )
+	{
+		Image<double> direction;
+		direction = coneVol;
+		direction.write(formatString("cone_%i.vol", dir));
+	}
+	#endif
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
@@ -1276,9 +1276,9 @@ void ProgResDir::run()
 			DIRECT_MULTIDIM_ELEM(pInertia_12,n) =0;
 		}
 	}
-//	Inertia_00.write("lambda_1.vol");
-//	Inertia_01.write("lambda_2.vol");
-//	Inertia_02.write("lambda_3.vol");
+	Inertia_00.write("lambda_1.vol");
+	Inertia_01.write("lambda_2.vol");
+	Inertia_02.write("lambda_3.vol");
 	Inertia_11.write(fnSph);
 	Inertia_12.write(fnDoA);
 
