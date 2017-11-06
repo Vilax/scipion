@@ -240,12 +240,12 @@ void ProgResDir::produceSideInfo()
 
 	int size = ZSIZE(inputVol);
 	double u;
-	int size_fourier(XSIZE(fftV));
+	int size_fourier(ZSIZE(fftV));
 	for(size_t k=0; k<size_fourier; ++k)
 	{
 		FFT_IDX2DIGFREQ(k,size, u);
 		VEC_ELEM(freq_fourier,k) = u;
-		std::cout << "freq_fourier = " << VEC_ELEM(freq_fourier,k)  << std::endl;
+		std::cout << "freq_fourier = " << u  << std::endl;
 	}
 }
 
