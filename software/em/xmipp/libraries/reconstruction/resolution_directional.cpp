@@ -458,7 +458,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
 				FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
-				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= VEC_ELEM(freq_fourier,j)DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= VEC_ELEM(freq_fourier,j)*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
 				++n;
 			}
 		}
