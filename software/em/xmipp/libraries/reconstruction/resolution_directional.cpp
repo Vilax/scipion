@@ -244,7 +244,7 @@ void ProgResDir::produceSideInfo()
 	for(size_t k=0; k<size_fourier; ++k)
 	{
 		FFT_IDX2DIGFREQ(k,size,VEC_ELEM(freq_fourier,k));
-		std::cout << "freq_fourier = VEC_ELEM(freq_fourier,k)"  << std::endl;
+		std::cout << "freq_fourier = " << VEC_ELEM(freq_fourier,k)  << std::endl;
 	}
 }
 
