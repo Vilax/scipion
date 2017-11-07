@@ -322,10 +322,10 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	double iwl=1.0/w1l;
 	double ideltal=PI/(w1-w1l);
 
-	#ifdef DEBUG_DIR
-	MultidimArray<double> coneVol;
-	coneVol.initZeros(iu);
-	#endif
+//	#ifdef DEBUG_DIR
+//	MultidimArray<double> coneVol;
+//	coneVol.initZeros(iu);
+//	#endif
 
 	double tilt_cone_plus = (tilt + 0.5*angle_cone)*PI/180;
 	double tilt_cone_minus = (tilt - 0.5*angle_cone)*PI/180;
@@ -418,7 +418,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 				double arg_exp = acosine*acosine*acosine*acosine/(0.12*0.12*0.12*0.12);
 				double un=1.0/iun;
 
-				DIRECT_MULTIDIM_ELEM(coneVol, n) = exp(-arg_exp);
+//				DIRECT_MULTIDIM_ELEM(coneVol, n) = exp(-arg_exp);
 
 				if (w1l<=un && un<=w1)
 				{
@@ -437,25 +437,25 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 		}
 	}
 
-	#ifdef DEBUG_DIR
-	if ( (count == 0) )
-	{
-		Image<double> direction;
-		direction = coneVol;
-		direction.write(formatString("cone_%i.vol", dir));
-	}
-	#endif
+//	#ifdef DEBUG_DIR
+//	if ( (count == 0) )
+//	{
+//		Image<double> direction;
+//		direction = coneVol;
+//		direction.write(formatString("cone_%i.vol", dir));
+//	}
+//	#endif
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
-	#ifdef DEBUG_DIR
-	if (count == 0)
-	{
-		Image<double> filteredvolume;
-		filteredvolume = VRiesz;
-		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
-	}
-	#endif
+//	#ifdef DEBUG_DIR
+//	if (count == 0)
+//	{
+//		Image<double> filteredvolume;
+//		filteredvolume = VRiesz;
+//		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
+//	}
+//	#endif
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 		DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
