@@ -368,52 +368,21 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	n=0;
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
-//		FFT_IDX2DIGFREQ(k,ZSIZE(amplitude),uz);
-//		if (uz ==0)
-//			uz = 1e-38;
 		uz = VEC_ELEM(freq_fourier,k);
 		for(size_t i=0; i<YSIZE(myfftV); ++i)
 		{
-//			FFT_IDX2DIGFREQ(i,YSIZE(amplitude),uy);
-//			if (uy ==0)
-//				uy = 1e-38;
 			uy = VEC_ELEM(freq_fourier,i);
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
-//				FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
-//				if (ux ==0)
-//					ux = 1e-38;
-
-//
-//				double tilt_freq = atan(sqrt(ux*ux + uy*uy)/uz);
-//				double rot_freq = acos(uy/sqrt(ux*ux + uy*uy));
-//
-//				//directional vector
-//				double xx, yy, zz;
-//				xx = sin(tilt_freq)*cos(rot_freq);
-//				yy = sin(tilt_freq)*sin(rot_freq);
-//				zz = cos(tilt_freq);
-
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 
 				ux = VEC_ELEM(freq_fourier,j);
-
-
-
-
-				//double modulus = sqrt(ux*ux + uy*uy + uz*uz);
 				double dotproduct;
 
 				//BE CAREFULL with the order
 				dotproduct = (uy*x_dir + ux*y_dir + uz*z_dir)*iun;
 
-//				std::cout << "--------------------------" << std::endl;
-//				std::cout << "ux = " << ux << "   uy = " << uy << "   uz = " << uz << std::endl;
-
-
 				double acosine = acos(fabs(dotproduct));
-
-//				std::cout << "acosine = " << acosine*180/PI << std::endl;
 
 				double arg_exp = acosine*acosine*acosine*acosine/(0.12*0.12*0.12*0.12);
 				double un=1.0/iun;
@@ -470,10 +439,8 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 		{
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
-//				FFT_IDX2DIGFREQ(j,XSIZE(amplitude),ux);
 				ux = VEC_ELEM(freq_fourier,j);
 				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= ux*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
-//				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= ux*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
 				++n;
 			}
 		}
@@ -490,7 +457,6 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	{
 		for(size_t i=0; i<YSIZE(myfftV); ++i)
 		{
-//			FFT_IDX2DIGFREQ(i,YSIZE(amplitude),uy);
 			uy = VEC_ELEM(freq_fourier,i);
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
@@ -508,14 +474,12 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	n=0;
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
-//		FFT_IDX2DIGFREQ(k,ZSIZE(amplitude),uz);
 		uz = VEC_ELEM(freq_fourier,k);
 		for(size_t i=0; i<YSIZE(myfftV); ++i)
 		{
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
 				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= uz*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
-//				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= uz*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
 				++n;
 			}
 		}
@@ -637,13 +601,13 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 							   MultidimArray<double> &SumRes,
 							   double rot, double tilt)
 {
-	double x_dir, y_dir, z_dir, resVal, x_dir_sym, y_dir_sym, z_dir_sym;
+	double x_dir, y_dir, z_dir, resVal, x_dir_sym, y_dir_sym, z_dir_sym, r_xyz2;
 	x_dir = sin(tilt*PI/180)*cos(rot*PI/180);
 	y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
 	z_dir = cos(tilt*PI/180);
 	x_dir_sym = -sin(tilt*PI/180)*cos(rot*PI/180);
 	y_dir_sym = -sin(tilt*PI/180)*sin(rot*PI/180);
-	z_dir_sym = cos(tilt*PI/180);
+	z_dir_sym = -cos(tilt*PI/180);
 
 	//std::cout << "x_dir = " << x_dir << "  y_dir = " << y_dir<< "  z_dir = " << z_dir << std::endl;
 
@@ -654,6 +618,32 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
 		{
 			resVal = DIRECT_MULTIDIM_ELEM(resolutionVol,n);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
+			r_xyz2 = resVal*resVal;
+			r_xyz2 = 1;
+//			DIRECT_MULTIDIM_ELEM(Inertia_11,n) += resVal*(r_xyz2-x_dir*x_dir);
+//			DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= resVal*x_dir*y_dir;
+//			DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= resVal*x_dir*z_dir;
+//			DIRECT_MULTIDIM_ELEM(Inertia_22,n) += resVal*(r_xyz2-y_dir*y_dir);
+//			DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= resVal*y_dir*z_dir;
+//			DIRECT_MULTIDIM_ELEM(Inertia_33,n) += resVal*(r_xyz2-z_dir*z_dir);
+
+			DIRECT_MULTIDIM_ELEM(Inertia_11,n) += r_xyz2*(1-x_dir*x_dir);
+			DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= r_xyz2*x_dir*y_dir;
+			DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= r_xyz2*x_dir*z_dir;
+			DIRECT_MULTIDIM_ELEM(Inertia_22,n) += r_xyz2*(1-y_dir*y_dir);
+			DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= r_xyz2*y_dir*z_dir;
+			DIRECT_MULTIDIM_ELEM(Inertia_33,n) += r_xyz2*(1-z_dir*z_dir);
+
+			DIRECT_MULTIDIM_ELEM(Inertia_11,n) += r_xyz2*(1-x_dir_sym*x_dir_sym);
+			DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= r_xyz2*x_dir_sym*y_dir_sym;
+			DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= r_xyz2*x_dir_sym*z_dir_sym;
+			DIRECT_MULTIDIM_ELEM(Inertia_22,n) += r_xyz2*(1-y_dir_sym*y_dir_sym);
+			DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= r_xyz2*y_dir_sym*z_dir_sym;
+			DIRECT_MULTIDIM_ELEM(Inertia_33,n) += r_xyz2*(1-z_dir_sym*z_dir_sym);
+
+			DIRECT_MULTIDIM_ELEM(SumRes,n) += 2;
+			idx++;
+
 //			if (idx == 34)
 //			{
 //				MetaData md;
@@ -671,21 +661,7 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 //			}
 
 			//resVal = 1;
-			DIRECT_MULTIDIM_ELEM(Inertia_11,n) += resVal*(1.0-x_dir*x_dir);
-			DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= resVal*x_dir*y_dir;
-			DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= resVal*x_dir*z_dir;
-			DIRECT_MULTIDIM_ELEM(Inertia_22,n) += resVal*(1.0-y_dir*y_dir);
-			DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= resVal*y_dir*z_dir;
-			DIRECT_MULTIDIM_ELEM(Inertia_33,n) += resVal*(1.0-z_dir*z_dir);
 
-	//		DIRECT_MULTIDIM_ELEM(Inertia_11,n) += resVal*(1.0-x_dir_sym*x_dir_sym);
-	//		DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= resVal*x_dir_sym*y_dir_sym;
-	//		DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= resVal*x_dir_sym*z_dir_sym;
-	//		DIRECT_MULTIDIM_ELEM(Inertia_22,n) += resVal*(1.0-y_dir_sym*y_dir_sym);
-	//		DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= resVal*y_dir_sym*z_dir_sym;
-	//		DIRECT_MULTIDIM_ELEM(Inertia_33,n) += resVal*(1.0-z_dir_sym*z_dir_sym);
-			DIRECT_MULTIDIM_ELEM(SumRes,n) += resVal;
-			idx++;
 		}
 	}
 }
@@ -719,7 +695,7 @@ void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A, int Ndirections,
 	lambda_3 =(1.0/3)*(b+2.0*sqrt(p)*cos((Delta-2.0*PI)/3));
 }
 
-void ProgResDir::sphericity(double lambda_1, double lambda_2, double lambda_3,
+void ProgResDir::sphericity(double &lambda_1, double &lambda_2, double &lambda_3,
 							double &sph)
 {
 	//This equation comes from Thomsen's formula, with an error lesser than 1.061%
@@ -738,7 +714,41 @@ void ProgResDir::sphericity(double lambda_1, double lambda_2, double lambda_3,
 	if (lambda_1<lambda_3)
 		std::cout << "CAGUEN lambda_3 < 0" << std::endl;
 
-	sph = (lambda_2*lambda_3)/(lambda_1*lambda_1);
+	Matrix2D<double> invA;
+	Matrix1D<double> inertia_vector(3), ellipsoid_axes(3);
+	invA.initConstant(3,3,0.5);
+
+	MAT_ELEM(invA, 0, 0) = -0.5;
+	MAT_ELEM(invA, 1, 1) = -0.5;
+	MAT_ELEM(invA, 2, 2) = -0.5;
+
+	VEC_ELEM(inertia_vector, 0) = 3*lambda_1;
+	VEC_ELEM(inertia_vector, 1) = 3*lambda_2;
+	VEC_ELEM(inertia_vector, 2) = 3*lambda_3;
+
+	ellipsoid_axes = invA*inertia_vector;
+
+	lambda_1 = VEC_ELEM(ellipsoid_axes, 0);
+	lambda_2 = VEC_ELEM(ellipsoid_axes, 1);
+	lambda_3 = VEC_ELEM(ellipsoid_axes, 2);
+
+	double p = 1.6075;
+	double A_ellip, V_ellip;
+	double aux = (pow((lambda_1*lambda_2),p) + pow((lambda_1*lambda_3),p) +
+				pow((lambda_2*lambda_3),p));
+	A_ellip = 4.0*PI*pow(aux/3.0,1.0/p);
+	V_ellip = (4.0/3.0)*PI*lambda_1*lambda_2*lambda_3;
+//	std::cout << "lambda_1  = " << lambda_1 << "  lambda_2  = " << lambda_2 << "  lambda_3  = " << lambda_3 << std::endl;
+//	std::cout << "A_ellip  = " << A_ellip << "  V_ellip  = " << V_ellip << std::endl;
+	sph = pow(PI,(1.0/3.0))*pow(6.0*V_ellip,2.0/3.0)/A_ellip;
+
+	//std::cout << "invA = " << invA << std::endl;
+
+
+
+
+
+	//sph = (lambda_2*lambda_3)/(lambda_1*lambda_1);
 }
 
 
@@ -841,7 +851,7 @@ void ProgResDir::run()
 
 		std::cout << "Analyzing directions" << std::endl;
 
-//		N_directions=18;
+//		N_directions=1;
 
 	for (size_t dir=0; dir<N_directions; dir++)
 	{
@@ -924,10 +934,10 @@ void ProgResDir::run()
 				{
 					FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
 					{
-						double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-						double amplitudeValueN=DIRECT_MULTIDIM_ELEM(amplitudeMN, n);
 						if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 						{
+							double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+							double amplitudeValueN=DIRECT_MULTIDIM_ELEM(amplitudeMN, n);
 							sumS  += amplitudeValue;
 							sumS2 += amplitudeValue*amplitudeValue;
 							++NS;
@@ -941,16 +951,16 @@ void ProgResDir::run()
 				{
 					FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
 					{
-						double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-						double amplitudeValueN=DIRECT_MULTIDIM_ELEM(amplitudeMN, n);
 						if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 						{
+							double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
 							sumS  += amplitudeValue;
 							sumS2 += amplitudeValue*amplitudeValue;
 							++NS;
 						}
 						if (DIRECT_MULTIDIM_ELEM(pMask, n)>=0)
 						{
+							double amplitudeValueN=DIRECT_MULTIDIM_ELEM(amplitudeMN, n);
 							sumN  += amplitudeValueN;
 							sumN2 += amplitudeValueN*amplitudeValueN;
 							++NN;
@@ -962,15 +972,17 @@ void ProgResDir::run()
 			{
 				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
 				{
-					double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+
 					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 					{
+						double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
 						sumS  += amplitudeValue;
 						sumS2 += amplitudeValue*amplitudeValue;
 						++NS;
 					}
 					else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
 					{
+						double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
 						sumN  += amplitudeValue;
 						sumN2 += amplitudeValue*amplitudeValue;
 						++NN;
@@ -1251,6 +1263,7 @@ void ProgResDir::run()
 		std::cout << "----------------direction-finished----------------" << std::endl;
 	}
 
+
 	Inertia_00.read(fnInertia_00);
 	Inertia_01.read(fnInertia_01);
 	Inertia_02.read(fnInertia_02);
@@ -1260,14 +1273,12 @@ void ProgResDir::run()
 
 	SumRes.read("sumRes.vol");
 
-
 	Matrix2D<double> InertiaMatrix;
 	InertiaMatrix.initZeros(3,3);
 
 	Image<double> AvgResolution;
 	AvgResolution.read(fnOut);
 	//MultidimArray<double> &pAvgResolution = AvgResolution();
-
 
 	double lambda_1, lambda_2, lambda_3, sph;
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pInertia_11)
@@ -1291,14 +1302,19 @@ void ProgResDir::run()
 
 			diagSymMatrix3x3(InertiaMatrix, N_directions, lambda_1, lambda_2, lambda_3);
 
-//			DIRECT_MULTIDIM_ELEM(pInertia_00,n) = lambda_1;
-//			DIRECT_MULTIDIM_ELEM(pInertia_01,n) = lambda_2;
-//			DIRECT_MULTIDIM_ELEM(pInertia_02,n) = lambda_3;
+			std::cout << "lambda_1 = " << lambda_1 <<
+					   "  lambda_2 = " << lambda_2 <<
+					   "  lambda_3 = " << lambda_3 << std::endl;
 
 			sphericity(lambda_1, lambda_2, lambda_3, sph);
 
+			DIRECT_MULTIDIM_ELEM(pInertia_00,n) = lambda_1;
+			DIRECT_MULTIDIM_ELEM(pInertia_01,n) = lambda_2;
+			DIRECT_MULTIDIM_ELEM(pInertia_02,n) = lambda_3;
+
 			DIRECT_MULTIDIM_ELEM(pInertia_11,n) = sph;
 			DIRECT_MULTIDIM_ELEM(pInertia_12,n) = (lambda_1-lambda_3)/(lambda_1+lambda_3);
+
 		}
 		else
 		{
@@ -1311,6 +1327,7 @@ void ProgResDir::run()
 	Inertia_02.write("lambda_3.vol");
 	Inertia_11.write(fnSph);
 	Inertia_12.write(fnDoA);
+
 
 	Image<double> VarianzeResolution, MaxResolution, MinResolution;
 	AvgResolution.read(fnOut);

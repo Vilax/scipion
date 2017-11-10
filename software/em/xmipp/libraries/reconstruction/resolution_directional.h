@@ -98,7 +98,7 @@ public:
     void diagSymMatrix3x3(Matrix2D<double> A, int Ndirections,
 			double &lambda_1, double &lambda_2, double &lambda_3);
 
-    void sphericity(double lambda_1, double lambda_2, double lambda_3,
+    void sphericity(double &lambda_1, double &lambda_2, double &lambda_3,
 			double &sph);
 
     void resolution2eval(int &count_res, double step,
