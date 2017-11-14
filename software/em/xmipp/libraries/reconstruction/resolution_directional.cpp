@@ -27,9 +27,9 @@
 #include "resolution_directional.h"
 //#define DEBUG
 //#define DEBUG_MASK
-#define DEBUG_DIR
+//#define DEBUG_DIR
 //define DEBUG_FILTER
-//define MONO_AMPLITUDE
+#define MONO_AMPLITUDE
 //define DEBUG_SYMMETRY
 
 void ProgResDir::readParams()
@@ -322,10 +322,10 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	double iwl=1.0/w1l;
 	double ideltal=PI/(w1-w1l);
 
-//	#ifdef DEBUG_DIR
-//	MultidimArray<double> coneVol;
-//	coneVol.initZeros(iu);
-//	#endif
+	#ifdef DEBUG_DIR
+	MultidimArray<double> coneVol;
+	coneVol.initZeros(iu);
+	#endif
 
 	double tilt_cone_plus = (tilt + 0.5*angle_cone)*PI/180;
 	double tilt_cone_minus = (tilt - 0.5*angle_cone)*PI/180;
@@ -361,8 +361,6 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	x_dir = sin(tilt*PI/180)*cos(rot*PI/180);
 	y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
 	z_dir = cos(tilt*PI/180);
-
-//	std::cout << "x_dir = " << x_dir  << "  y_dir = " << y_dir << "  z_dir = " << z_dir << std::endl;
 
 	double uz, uy, ux, uxxuyy;
 	n=0;
@@ -406,25 +404,25 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 		}
 	}
 
-//	#ifdef DEBUG_DIR
-//	if ( (count == 0) )
-//	{
-//		Image<double> direction;
-//		direction = coneVol;
-//		direction.write(formatString("cone_%i.vol", dir));
-//	}
-//	#endif
+	#ifdef DEBUG_DIR
+	if ( (count == 0) )
+	{
+		Image<double> direction;
+		direction = coneVol;
+		direction.write(formatString("cone_%i.vol", dir));
+	}
+	#endif
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
-//	#ifdef DEBUG_DIR
-//	if (count == 0)
-//	{
-//		Image<double> filteredvolume;
-//		filteredvolume = VRiesz;
-//		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
-//	}
-//	#endif
+	#ifdef DEBUG_DIR
+	if (count == 0)
+	{
+		Image<double> filteredvolume;
+		filteredvolume = VRiesz;
+		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
+	}
+	#endif
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 		DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
@@ -466,8 +464,13 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 		}
 	}
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
+
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
-	DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+		DIRECT_MULTIDIM_ELEM(amplitude,n)+= DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+
+	//transformer_inv.inverseFourierTransform(fftVRiesz_aux, VRiesz);
+
+
 
 	// Calculate third component of Riesz vector
 	fftVRiesz.initZeros(myfftV);
@@ -485,45 +488,122 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 		}
 	}
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
+
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 	{
 		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 		DIRECT_MULTIDIM_ELEM(amplitude,n)=sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
 	}
 
-//#ifdef DEBUG_DIR
-//if ( (count == 0) )
-//{
-//	Image<double> direction;
-//	direction = amplitude;
-//	direction.write(formatString("amplitude_%i_i.vol", dir, count));
-//}
-//#endif
+//	Image<double> saveImg2;
+//	saveImg2 = amplitude;
+//	FileName fnSaveImg2;
+//	FileName iternumber;
+//	if (dir <10)
+//	{
 //	#ifdef MONO_AMPLITUDE
+//
 //	if (fnDebug.c_str() != "")
 //	{
-//	Image<double> saveImg;
-//	saveImg = amplitude;
-//	iternumber = formatString("_Amplitude_%i.vol", count);
-//	saveImg.write(fnDebug+iternumber);
-//	saveImg.clear();
+//		iternumber = formatString("No_Filtered_Amplitude_%i_%i.vol", dir, count);
+//		saveImg2.write(fnDebug+iternumber);
 //	}
+//	#endif
+//	}
+
+
+	size_t Ydim, Xdim, Zdim, Ndim;
+	amplitude.getDimensions(Xdim, Ydim, Zdim, Ndim);
+
+
+
+	int N_smoothing = 15;
+	n=0;
+	//Creating mask for smoothing
+		for (size_t i = 0; i< Xdim; i++)
+		{
+			for (size_t j = 0; j< Ydim; j++)
+			{
+				for (size_t k = 0; k< Zdim; k++)
+				{
+					if (i<= N_smoothing)
+						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing-i)/(N_smoothing)));
+					if (j<= N_smoothing)
+						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing-j)/(N_smoothing)));
+					if (k<= N_smoothing)
+						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing-k)/(N_smoothing)));
+					if (i>= (Xdim - N_smoothing))
+						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing+Xdim-i)/(N_smoothing)));
+					if (j>= (Ydim - N_smoothing))
+						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing+Ydim-j)/(N_smoothing)));
+					if (k>= (Zdim - N_smoothing))
+						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing+Zdim-k)/(N_smoothing)));
+					++n;
+				}
+			}
+		}
+
+//if (dir <10)
+//{
+//	#ifdef MONO_AMPLITUDE
+//	saveImg2 = amplitude;
+//	if (fnDebug.c_str() != "")
+//	{
+//		iternumber = formatString("smoothed_volume_%i_%i.vol", dir, count);
+//		saveImg2.write(fnDebug+iternumber);
+//	}
+//	saveImg2.clear();
+//}
 //	#endif // DEBUG
+
+
+//	FileName fnfiltered_amplitude;
+//	fnfiltered_amplitude = formatString("smoothed_amplitude_%i_%i.vol",dir, count);
+//	saveImg2 = amplitude;
+//	saveImg2.write(fnfiltered_amplitude);
+
+
+//	amplitude.setXmippOrigin();
+//	MultidimArray< std::complex<double> > aux3D;
+//    transformer_direct.FourierTransform(amplitude, aux3D, false);
+//
+//    double raised_w = 0.01;
+//
+//	for (size_t k=0; k<ZSIZE(aux3D); k++)
+//	{
+//		for (size_t i=0; i<YSIZE(aux3D); i++)
+//		{
+//			for (size_t j=0; j<XSIZE(aux3D); j++)
+//			{
+//				double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
+//				if (un<w1)
+//					DIRECT_MULTIDIM_ELEM(aux3D,n)*= 1;
+//				else
+//					if (un<w1+raised_w)
+//						DIRECT_MULTIDIM_ELEM(aux3D,n)*= 0.5*(1 + cos(PI/raised_w*(un-w1)));
+//				n++;
+//			}
+//		}
+//	}
+//    transformer_inv.inverseFourierTransform();
+
+
 	// Low pass filter the monogenic amplitude
-	lowPassFilter.w1 = w1;
 	amplitude.setXmippOrigin();
+	lowPassFilter.w1 = w1;
+
 	lowPassFilter.applyMaskSpace(amplitude);
 
-	#ifdef MONO_AMPLITUDE
-	saveImg2 = amplitude;
-	FileName fnSaveImg2;
-	if (fnDebug.c_str() != "")
-	{
-		iternumber = formatString("_Filtered_Amplitude_%i.vol", count);
-		saveImg2.write(fnDebug+iternumber);
-	}
-	saveImg2.clear(); 
-	#endif // DEBUG
+//	#ifdef MONO_AMPLITUDE
+//	saveImg2 = amplitude;
+//
+//	if (fnDebug.c_str() != "")
+//	{
+//		iternumber = formatString("_Filtered_Amplitude_%i.vol", count);
+//		saveImg2.write(fnDebug+iternumber);
+//	}
+//	saveImg2.clear();
+//	#endif // DEBUG
 }
 
 
@@ -568,9 +648,7 @@ void ProgResDir::postProcessingLocalResolutions(MultidimArray<double> &resolutio
 			{
 				DIRECT_MULTIDIM_ELEM(resolutionVol, n) = filling_value;
 			}
-			else//	std::cout << "tilt_cone_minus= " << tilt_cone_minus*180/PI << "   tilt_cone_plus= "
-				//			<< tilt_cone_plus*180/PI << "   rot_cone_minus="<< rot_cone_minus*180/PI <<
-				//			"   rot_cone_plus=" << rot_cone_plus*180/PI << std::endl;
+			else
 			{
 				DIRECT_MULTIDIM_ELEM(resolutionVol, n) = 0;
 				DIRECT_MULTIDIM_ELEM(pMask,n) = 0;
@@ -619,13 +697,7 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 		{
 			resVal = DIRECT_MULTIDIM_ELEM(resolutionVol,n);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
 			r_xyz2 = resVal*resVal;
-			r_xyz2 = 1;
-//			DIRECT_MULTIDIM_ELEM(Inertia_11,n) += resVal*(r_xyz2-x_dir*x_dir);
-//			DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= resVal*x_dir*y_dir;
-//			DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= resVal*x_dir*z_dir;
-//			DIRECT_MULTIDIM_ELEM(Inertia_22,n) += resVal*(r_xyz2-y_dir*y_dir);
-//			DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= resVal*y_dir*z_dir;
-//			DIRECT_MULTIDIM_ELEM(Inertia_33,n) += resVal*(r_xyz2-z_dir*z_dir);
+			r_xyz2 = 10;
 
 			DIRECT_MULTIDIM_ELEM(Inertia_11,n) += r_xyz2*(1-x_dir*x_dir);
 			DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= r_xyz2*x_dir*y_dir;
@@ -644,21 +716,21 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 			DIRECT_MULTIDIM_ELEM(SumRes,n) += 2;
 			idx++;
 
-//			if (idx == 34)
-//			{
-//				MetaData md;
-//				md.read("res.xmd");
-//				size_t objId;
-//				objId = md.addObject();
-//				md.setValue(MDL_ANGLE_ROT, rot, objId);
-//				md.setValue(MDL_ANGLE_TILT, tilt, objId);
-//				md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
-//
-//
-//				md.write("res.xmd");
-//
-//				std::cout << "resVal = " << resVal << std::endl;
-//			}
+			if (idx == 34)
+			{
+				MetaData md;
+				md.read("res.xmd");
+				size_t objId;
+				objId = md.addObject();
+				md.setValue(MDL_ANGLE_ROT, rot, objId);
+				md.setValue(MDL_ANGLE_TILT, tilt, objId);
+				md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
+
+
+				md.write("res.xmd");
+
+				std::cout << "resVal = " << resVal << std::endl;
+			}
 
 			//resVal = 1;
 
@@ -710,9 +782,9 @@ void ProgResDir::sphericity(double &lambda_1, double &lambda_2, double &lambda_3
 	sph = pow(PI,(1.0/3.0))*pow(6.0*V_ellip,2.0/3.0)/A_ellip;
 	*/
 	if (lambda_1<lambda_2)
-		std::cout << "CAGUEN lambda_2 < 0" << std::endl;
+		std::cout << "ERROR lambda_2 < 0" << std::endl;
 	if (lambda_1<lambda_3)
-		std::cout << "CAGUEN lambda_3 < 0" << std::endl;
+		std::cout << "ERROR lambda_3 < 0" << std::endl;
 
 	Matrix2D<double> invA;
 	Matrix1D<double> inertia_vector(3), ellipsoid_axes(3);
@@ -728,9 +800,9 @@ void ProgResDir::sphericity(double &lambda_1, double &lambda_2, double &lambda_3
 
 	ellipsoid_axes = invA*inertia_vector;
 
-	lambda_1 = VEC_ELEM(ellipsoid_axes, 0);
-	lambda_2 = VEC_ELEM(ellipsoid_axes, 1);
-	lambda_3 = VEC_ELEM(ellipsoid_axes, 2);
+	lambda_1 = sqrt(VEC_ELEM(ellipsoid_axes, 0));
+	lambda_2 = sqrt(VEC_ELEM(ellipsoid_axes, 1));
+	lambda_3 = sqrt(VEC_ELEM(ellipsoid_axes, 2));
 
 	double p = 1.6075;
 	double A_ellip, V_ellip;
@@ -851,7 +923,7 @@ void ProgResDir::run()
 
 		std::cout << "Analyzing directions" << std::endl;
 
-//		N_directions=1;
+//	N_directions=1;
 
 	for (size_t dir=0; dir<N_directions; dir++)
 	{
@@ -928,6 +1000,7 @@ void ProgResDir::run()
 			double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
 			noiseValues.clear();
 
+			double amplitudeValue;
 			if (halfMapsGiven)
 			{
 				if (noiseOnlyInHalves)
@@ -936,7 +1009,7 @@ void ProgResDir::run()
 					{
 						if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 						{
-							double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+							amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
 							double amplitudeValueN=DIRECT_MULTIDIM_ELEM(amplitudeMN, n);
 							sumS  += amplitudeValue;
 							sumS2 += amplitudeValue*amplitudeValue;
@@ -953,7 +1026,7 @@ void ProgResDir::run()
 					{
 						if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 						{
-							double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+							amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
 							sumS  += amplitudeValue;
 							sumS2 += amplitudeValue*amplitudeValue;
 							++NS;
@@ -975,14 +1048,14 @@ void ProgResDir::run()
 
 					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 					{
-						double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+						amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
 						sumS  += amplitudeValue;
 						sumS2 += amplitudeValue*amplitudeValue;
 						++NS;
 					}
 					else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
 					{
-						double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+						amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
 						sumN  += amplitudeValue;
 						sumN2 += amplitudeValue*amplitudeValue;
 						++NN;

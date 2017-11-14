@@ -118,7 +118,7 @@ public:
     Image<int> mask;
     MultidimArray<double> iu, VRiesz; // Inverse of the frequency
 	MultidimArray< std::complex<double> > fftV, *fftN; // Fourier transform of the input volume
-	FourierTransformer transformer_inv;
+	FourierTransformer transformer_inv, transformer_direct;
 	MultidimArray< std::complex<double> > fftVRiesz, fftVRiesz_aux;
 	FourierFilter lowPassFilter, FilterBand;
 	bool halfMapsGiven;
