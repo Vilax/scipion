@@ -122,6 +122,7 @@ public:
 	MultidimArray< std::complex<double> > fftVRiesz, fftVRiesz_aux;
 	FourierFilter lowPassFilter, FilterBand;
 	bool halfMapsGiven;
+	int N_smoothing;
 	Sampling mysampling;
 	Matrix2D<double> angles;
 	Matrix1D<double> freq_fourier;

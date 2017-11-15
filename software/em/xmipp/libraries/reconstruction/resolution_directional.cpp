@@ -201,12 +201,13 @@ void ProgResDir::produceSideInfo()
 	AvgResoltion.clear();
 	VarianzeResolution.clear();
 
+	N_smoothing = 15;
 	NVoxelsOriginalMask = 0;
 	FOR_ALL_ELEMENTS_IN_ARRAY3D(pMask)
 	{
 		if (A3D_ELEM(pMask, k, i, j) == 1)
 			NVoxelsOriginalMask++;
-		if (i*i+j*j+k*k > R*R)
+		if (i*i+j*j+k*k > (R-N_smoothing)*(R-N_smoothing))
 			A3D_ELEM(pMask, k, i, j) = -1;
 	}
 
@@ -415,14 +416,13 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
-	#ifdef DEBUG_DIR
-	if (count == 0)
-	{
+	//#ifdef DEBUG_DIR
+
 		Image<double> filteredvolume;
 		filteredvolume = VRiesz;
 		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
-	}
-	#endif
+
+	//#endif
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 		DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
@@ -495,21 +495,20 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 		DIRECT_MULTIDIM_ELEM(amplitude,n)=sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
 	}
 
-//	Image<double> saveImg2;
+	Image<double> saveImg2;
 //	saveImg2 = amplitude;
-//	FileName fnSaveImg2;
-//	FileName iternumber;
-//	if (dir <10)
-//	{
-//	#ifdef MONO_AMPLITUDE
-//
-//	if (fnDebug.c_str() != "")
-//	{
-//		iternumber = formatString("No_Filtered_Amplitude_%i_%i.vol", dir, count);
-//		saveImg2.write(fnDebug+iternumber);
-//	}
-//	#endif
-//	}
+	FileName fnSaveImg2;
+	FileName iternumber;
+
+	#ifdef MONO_AMPLITUDE
+
+	if (fnDebug.c_str() != "")
+	{
+		saveImg2 = amplitude;
+		iternumber = formatString("No_Filtered_Amplitude_%i_%i.vol", dir, count);
+		saveImg2.write(fnDebug+iternumber);
+	}
+	#endif
 
 
 	size_t Ydim, Xdim, Zdim, Ndim;
@@ -517,7 +516,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 
 
-	int N_smoothing = 15;
+
 	n=0;
 	//Creating mask for smoothing
 		for (size_t i = 0; i< Xdim; i++)
@@ -543,67 +542,68 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 			}
 		}
 
-//if (dir <10)
-//{
-//	#ifdef MONO_AMPLITUDE
-//	saveImg2 = amplitude;
-//	if (fnDebug.c_str() != "")
+
+		#ifdef MONO_AMPLITUDE
+		saveImg2 = amplitude;
+		if (fnDebug.c_str() != "")
+		{
+			iternumber = formatString("smoothed_volume_%i_%i.vol", dir, count);
+			saveImg2.write(fnDebug+iternumber);
+		}
+//		saveImg2.clear();
+		#endif
+
+
+
+	amplitude.setXmippOrigin();
+
+	transformer_inv.FourierTransform(amplitude, fftVRiesz, false);
+
+    double raised_w = PI/0.02;
+//    w1 = 0.4;
+	n=0;
+	for (size_t k=0; k<ZSIZE(fftVRiesz); k++)
+	{
+		for (size_t i=0; i<YSIZE(fftVRiesz); i++)
+		{
+			for (size_t j=0; j<XSIZE(fftVRiesz); j++)
+			{
+//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fftVRiesz)
 //	{
-//		iternumber = formatString("smoothed_volume_%i_%i.vol", dir, count);
-//		saveImg2.write(fnDebug+iternumber);
-//	}
-//	saveImg2.clear();
-//}
-//	#endif // DEBUG
+			//double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
+			double un=1.0/DIRECT_A3D_ELEM(iu,k,i,j);
+//			if ((w1<=un) && (un<=(w1+0.02)))
+			if ((w1+0.02)>=un && un>=w1)
+				DIRECT_A3D_ELEM(fftVRiesz,k,i,j) *= 0.5*(1 + cos(raised_w*(un-w1)));
+			else
+				DIRECT_A3D_ELEM(fftVRiesz,k,i,j) = 0;
 
-
-//	FileName fnfiltered_amplitude;
-//	fnfiltered_amplitude = formatString("smoothed_amplitude_%i_%i.vol",dir, count);
-//	saveImg2 = amplitude;
-//	saveImg2.write(fnfiltered_amplitude);
-
-
-//	amplitude.setXmippOrigin();
-//	MultidimArray< std::complex<double> > aux3D;
-//    transformer_direct.FourierTransform(amplitude, aux3D, false);
-//
-//    double raised_w = 0.01;
-//
-//	for (size_t k=0; k<ZSIZE(aux3D); k++)
-//	{
-//		for (size_t i=0; i<YSIZE(aux3D); i++)
-//		{
-//			for (size_t j=0; j<XSIZE(aux3D); j++)
-//			{
-//				double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
-//				if (un<w1)
-//					DIRECT_MULTIDIM_ELEM(aux3D,n)*= 1;
-//				else
-//					if (un<w1+raised_w)
-//						DIRECT_MULTIDIM_ELEM(aux3D,n)*= 0.5*(1 + cos(PI/raised_w*(un-w1)));
-//				n++;
-//			}
-//		}
-//	}
-//    transformer_inv.inverseFourierTransform();
+			n++;
+			}
+		}
+	}
+	std::cout << "llego 3" << std::endl;
+	transformer_inv.inverseFourierTransform();
 
 
 	// Low pass filter the monogenic amplitude
-	amplitude.setXmippOrigin();
-	lowPassFilter.w1 = w1;
-
-	lowPassFilter.applyMaskSpace(amplitude);
+//	amplitude.setXmippOrigin();
+//	lowPassFilter.w1 = w1;
+//
+//	lowPassFilter.applyMaskSpace(amplitude);
 
 //	#ifdef MONO_AMPLITUDE
-//	saveImg2 = amplitude;
-//
-//	if (fnDebug.c_str() != "")
-//	{
-//		iternumber = formatString("_Filtered_Amplitude_%i.vol", count);
-//		saveImg2.write(fnDebug+iternumber);
-//	}
-//	saveImg2.clear();
+
+	saveImg2 = amplitude;
+
+	if (fnDebug.c_str() != "")
+	{
+		iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir, count);
+		saveImg2.write(fnDebug+iternumber);
+	}
+	saveImg2.clear();
 //	#endif // DEBUG
+
 }
 
 
@@ -697,7 +697,7 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 		{
 			resVal = DIRECT_MULTIDIM_ELEM(resolutionVol,n);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
 			r_xyz2 = resVal*resVal;
-			r_xyz2 = 10;
+//			r_xyz2 = 10;
 
 			DIRECT_MULTIDIM_ELEM(Inertia_11,n) += r_xyz2*(1-x_dir*x_dir);
 			DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= r_xyz2*x_dir*y_dir;
@@ -923,7 +923,7 @@ void ProgResDir::run()
 
 		std::cout << "Analyzing directions" << std::endl;
 
-//	N_directions=1;
+	N_directions=1;
 
 	for (size_t dir=0; dir<N_directions; dir++)
 	{
@@ -976,7 +976,6 @@ void ProgResDir::run()
 			if (breakIter)
 				break;
 
-//			std::cout << "iter = " << iter << std::endl;
 			std::cout << "resolution = " << resolution << "  resolutionL = " << sampling/(freqL) << std::endl;
 
 
@@ -1320,13 +1319,13 @@ void ProgResDir::run()
 		md.write(fnMd);
 
 		/////////////////////////
-		#ifdef DEBUG_DIR
+//		#ifdef DEBUG_DIR
 		Image<double> saveImg;
 		saveImg = pOutputResolution;
 		FileName fnres = formatString("resolution_dir_%i.vol", dir);
 		saveImg.write(fnres);
 		saveImg.clear();
-		#endif
+//		#endif
 
 		pOutputResolution.clear();
 		pVarianzeResolution.clear();
