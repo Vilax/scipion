@@ -888,7 +888,7 @@ void ProgResDir::run()
 
 		std::cout << "Analyzing directions" << std::endl;
 
-	N_directions=1;
+	//N_directions=1;
 
 	for (size_t dir=0; dir<N_directions; dir++)
 	{
@@ -1042,11 +1042,13 @@ void ProgResDir::run()
 				MultidimArray<double> coneVol;
 				coneVol.initZeros(amplitudeMS);
 				int n=0;
-				for(size_t k=0; k<ZSIZE(amplitudeMS); ++k)
+				for(size_t k=STARTINGZ(amplitudeMS); k<FINISHINGZ(amplitudeMS); ++k)
 				{
-					for(size_t i=0; i<YSIZE(amplitudeMS); ++i)
+					uz = k;
+					for(size_t i=STARTINGY(amplitudeMS); i<FINISHINGY(amplitudeMS); ++i)
 					{
-						for(size_t j=0; j<XSIZE(amplitudeMS); ++j)
+						uy = i;
+						for(size_t j=STARTINGX(amplitudeMS); j<FINISHINGX(amplitudeMS); ++j)
 						{
 							if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 							{
@@ -1057,14 +1059,12 @@ void ProgResDir::run()
 							}
 							else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
 							{
-								double dotproduct;
+								ux = j;
 
-								ux = j-0.5*XSIZE(amplitudeMS);
-								uy = i-0.5*YSIZE(amplitudeMS);
-								uz = k-0.5*ZSIZE(amplitudeMS);
 								double iun = 1/sqrt(ux*ux + uy*uy + uz*uz);
 
 								//BE CAREFULL with the order
+								double dotproduct;
 								dotproduct = (ux*y_dir + uy*x_dir + uz*z_dir)*iun;
 
 								double acosine = acos(fabs(dotproduct));
