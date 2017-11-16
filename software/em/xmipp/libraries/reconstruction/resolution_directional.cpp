@@ -319,8 +319,6 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 	// Filter the input volume and add it to amplitude
 	long n=0;
-	double iw=1.0/w1;
-	double iwl=1.0/w1l;
 	double ideltal=PI/(w1-w1l);
 
 	#ifdef DEBUG_DIR
@@ -328,34 +326,6 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	coneVol.initZeros(iu);
 	#endif
 
-	double tilt_cone_plus = (tilt + 0.5*angle_cone)*PI/180;
-	double tilt_cone_minus = (tilt - 0.5*angle_cone)*PI/180;
-	double rot_cone_plus = (rot + 0.5*angle_cone)*PI/180;
-	double rot_cone_minus = (rot - 0.5*angle_cone)*PI/180;
-
-
-	bool tilt_extreme=false, rot_extreme = false;
-
-	if (tilt_cone_plus>=PI/2)
-	{
-		tilt_cone_plus = tilt_cone_plus - PI;
-		tilt_extreme = true;
-	}
-	if (tilt_cone_minus<=-PI/2)
-	{
-		tilt_cone_minus = tilt_cone_minus + PI;
-		tilt_extreme = true;
-	}
-	if (rot_cone_plus>=PI)
-	{
-		rot_cone_plus = rot_cone_plus - PI;
-		rot_extreme = true;
-	}
-	if (rot_cone_minus<=0)
-	{
-		rot_cone_minus = rot_cone_minus + PI;
-		rot_extreme = true;
-	}
 
 	double x_dir, y_dir, z_dir;
 
@@ -515,8 +485,6 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	amplitude.getDimensions(Xdim, Ydim, Zdim, Ndim);
 
 
-
-
 	n=0;
 	//Creating mask for smoothing
 		for (size_t i = 0; i< Xdim; i++)
@@ -554,35 +522,34 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 		#endif
 
 
-
 	amplitude.setXmippOrigin();
 
 	transformer_inv.FourierTransform(amplitude, fftVRiesz, false);
 
     double raised_w = PI/0.02;
 //    w1 = 0.4;
-	n=0;
-	for (size_t k=0; k<ZSIZE(fftVRiesz); k++)
-	{
-		for (size_t i=0; i<YSIZE(fftVRiesz); i++)
-		{
-			for (size_t j=0; j<XSIZE(fftVRiesz); j++)
-			{
-//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fftVRiesz)
-//	{
-			//double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
-			double un=1.0/DIRECT_A3D_ELEM(iu,k,i,j);
-//			if ((w1<=un) && (un<=(w1+0.02)))
-			if ((w1+0.02)>=un && un>=w1)
-				DIRECT_A3D_ELEM(fftVRiesz,k,i,j) *= 0.5*(1 + cos(raised_w*(un-w1)));
-			else
-				DIRECT_A3D_ELEM(fftVRiesz,k,i,j) = 0;
 
-			n++;
-			}
-		}
+//	for (size_t k=0; k<ZSIZE(fftVRiesz); k++)
+//	{
+//		for (size_t i=0; i<YSIZE(fftVRiesz); i++)
+//		{
+//			for (size_t j=0; j<XSIZE(fftVRiesz); j++)
+//			{
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fftVRiesz)
+	{
+			double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
+//			double un=1.0/DIRECT_A3D_ELEM(iu,k,i,j);
+
+			if ((w1+0.02)>=un && un>=w1)
+				DIRECT_MULTIDIM_ELEM(fftVRiesz,n) *= 0.5*(1 + cos(raised_w*(un-w1)));
+			else
+				if (un>(w1+0.02))
+					DIRECT_MULTIDIM_ELEM(fftVRiesz,n) = 0;
+//			n++;
+//			}
+//		}
+//	}
 	}
-	std::cout << "llego 3" << std::endl;
 	transformer_inv.inverseFourierTransform();
 
 
@@ -847,8 +814,6 @@ void ProgResDir::resolution2eval(int &count_res, double step,
 
 	freq = aux_frequency;
 
-	std::cout << "freq = " << freq << "   new freq = " << aux_frequency << std::endl;
-
 	if (fourier_idx == last_fourier_idx)
 	{
 //		std::cout << "entro en el if"  << std::endl;
@@ -969,7 +934,7 @@ void ProgResDir::run()
 							resolution, last_resolution,
 							freq, freqL,
 							last_fourier_idx, continueIter, breakIter, doNextIteration);
-			std::cout << count_res << std::endl;
+
 			if (continueIter)
 				continue;
 
@@ -1042,25 +1007,95 @@ void ProgResDir::run()
 			}
 			else
 			{
-				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
-				{
+//				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
+//				{
+//
+//					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
+//					{
+//						amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+//						sumS  += amplitudeValue;
+//						sumS2 += amplitudeValue*amplitudeValue;
+//						++NS;
+//					}
+//					else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
+//					{
+//						amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+//						sumN  += amplitudeValue;
+//						sumN2 += amplitudeValue*amplitudeValue;
+//						++NN;
+//					}
+//				}
+				double x_dir, y_dir, z_dir;
 
-					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
+				x_dir = sin(tilt*PI/180)*cos(rot*PI/180);
+				y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
+				z_dir = cos(tilt*PI/180);
+
+				double uz, uy, ux;
+
+				amplitudeMS.setXmippOrigin();
+
+				std::cout << "ZSIZE(amplitudeMS) =  " << ZSIZE(amplitudeMS) <<
+						"  XSIZE(amplitudeMS) =  " << XSIZE(amplitudeMS) <<
+						"  YSIZE(amplitudeMS) =  " << YSIZE(amplitudeMS) << std::endl;
+
+				MultidimArray<double> coneVol;
+				coneVol.initZeros(amplitudeMS);
+				int n=0;
+				for(size_t k=0; k<ZSIZE(amplitudeMS); ++k)
+				{
+					for(size_t i=0; i<YSIZE(amplitudeMS); ++i)
 					{
-						amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-						sumS  += amplitudeValue;
-						sumS2 += amplitudeValue*amplitudeValue;
-						++NS;
-					}
-					else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
-					{
-						amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-						sumN  += amplitudeValue;
-						sumN2 += amplitudeValue*amplitudeValue;
-						++NN;
+						for(size_t j=0; j<XSIZE(amplitudeMS); ++j)
+						{
+							if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
+							{
+								amplitudeValue=DIRECT_A3D_ELEM(amplitudeMS, k,i,j);
+								sumS  += amplitudeValue;
+								sumS2 += amplitudeValue*amplitudeValue;
+								++NS;
+							}
+							else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
+							{
+								double dotproduct;
+
+								ux = j-0.5*XSIZE(amplitudeMS);
+								uy = i-0.5*YSIZE(amplitudeMS);
+								uz = k-0.5*ZSIZE(amplitudeMS);
+								double iun = 1/sqrt(ux*ux + uy*uy + uz*uz);
+
+								//BE CAREFULL with the order
+								dotproduct = (ux*y_dir + uy*x_dir + uz*z_dir)*iun;
+
+								double acosine = acos(fabs(dotproduct));
+
+								//DIRECT_A3D_ELEM(coneVol, k,i,j) = 1;
+
+								if (acosine<(PI*20/180))
+								{
+									DIRECT_A3D_ELEM(coneVol, k,i,j) = 1;
+									amplitudeValue=DIRECT_A3D_ELEM(amplitudeMS, k,i,j);
+									sumN  += amplitudeValue;
+									sumN2 += amplitudeValue*amplitudeValue;
+									++NN;
+								}
+							}
+							n++;
+						}
 					}
 				}
+
+				if (iter == 0)
+				{
+				Image<double> img;
+
+				FileName iternumber;
+				iternumber = formatString("cone_%i.vol", dir);
+				img = coneVol;
+				img.write(iternumber);
+				}
 			}
+
 
 
 			if ( (NS/NVoxelsOriginalMask)<cut_value ) //when the 2.5% is reached then the iterative process stops
@@ -1143,12 +1178,12 @@ void ProgResDir::run()
 
 				// Is the mean inside the signal significantly different from the noise?
 				double z=(meanS-meanN)/sqrt(sigma2S/NS+sigma2N/NN);
-				#ifdef DEBUG
+				//#ifdef DEBUG
 					std::cout << "thresholdNoise = " << thresholdNoise << std::endl;
 					std::cout << "  meanS= " << meanS << " sigma2S= " << sigma2S << " NS= " << NS << std::endl;
 					std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
 					std::cout << "  z= " << z << " (" << criticalZ << ")" << std::endl;
-				#endif
+				//#endif
 				if (z<criticalZ)
 				{
 					criticalW = freq;
@@ -1374,9 +1409,11 @@ void ProgResDir::run()
 
 			diagSymMatrix3x3(InertiaMatrix, N_directions, lambda_1, lambda_2, lambda_3);
 
+			/*
 			std::cout << "lambda_1 = " << lambda_1 <<
 					   "  lambda_2 = " << lambda_2 <<
 					   "  lambda_3 = " << lambda_3 << std::endl;
+			 */
 
 			sphericity(lambda_1, lambda_2, lambda_3, sph);
 
