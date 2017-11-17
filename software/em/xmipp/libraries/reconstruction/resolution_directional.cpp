@@ -1035,10 +1035,11 @@ void ProgResDir::run()
 
 				amplitudeMS.setXmippOrigin();
 
+
 				MultidimArray<double> coneVol;
 				coneVol.initZeros(amplitudeMS);
 				int n=0;
-				std::cout << "STARTINGZ(amplitudeMS) = " << STARTINGZ(amplitudeMS) << std::endl;
+				std::cout << "STARTINGZ(amplitudeMS)f = " << STARTINGZ(amplitudeMS) << std::endl;
 				std::cout << "STARTINGY(amplitudeMS) = " << STARTINGY(amplitudeMS) << std::endl;
 				std::cout << "STARTINGX(amplitudeMS) = " << STARTINGX(amplitudeMS) << std::endl;
 				std::cout << "FINISHINGZ(amplitudeMS) = " << FINISHINGZ(amplitudeMS) << std::endl;
