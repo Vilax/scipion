@@ -1039,15 +1039,10 @@ void ProgResDir::run()
 				MultidimArray<double> coneVol;
 				coneVol.initZeros(amplitudeMS);
 				int n=0;
-				std::cout << "STARTINGZ(amplitudeMS)f __= " << STARTINGZ(amplitudeMS) << std::endl;
-				std::cout << "STARTINGY(amplitudeMS) = " << STARTINGY(amplitudeMS) << std::endl;
-				std::cout << "STARTINGX(amplitudeMS) = " << STARTINGX(amplitudeMS) << std::endl;
-				std::cout << "FINISHINGZ(amplitudeMS) = " << FINISHINGZ(amplitudeMS) << std::endl;
-				std::cout << "FINISHINGY(amplitudeMS) = " << FINISHINGY(amplitudeMS) << std::endl;
-				std::cout << "FINISHINGX(amplitudeMS) = " << FINISHINGX(amplitudeMS) << std::endl;
-				size_t z_size = ZSIZE(amplitudeMS);
-				size_t x_size = XSIZE(amplitudeMS);
-				size_t y_size = YSIZE(amplitudeMS);
+				int z_size = ZSIZE(amplitudeMS);
+				int x_size = XSIZE(amplitudeMS);
+				int y_size = YSIZE(amplitudeMS);
+
 				for(int k=0; k<z_size; ++k)
 				{
 					for(int i=0; i<y_size; ++i)
@@ -1063,19 +1058,18 @@ void ProgResDir::run()
 							}
 							else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
 							{
-								uz = k - z_size;
-								ux = j - x_size;
-								uy = i - y_size;
+								uz = (k - z_size*0.5);
+								ux = (j - x_size*0.5);
+								uy = (i - y_size*0.5);
 
+								std::cout <<"uz = " << uz << " ux = " << ux << " uy = " << uy << std::endl;
 
 								double iun = 1/sqrt(ux*ux + uy*uy + uz*uz);
 
 								//BE CAREFULL with the order
 								double dotproduct;
 								dotproduct = (ux*y_dir + uy*x_dir + uz*z_dir)*iun;
-								std::cout << "ZSIZE(amplitudeMS) =  " << ZSIZE(amplitudeMS) <<
-										"  XSIZE(amplitudeMS) =  " << XSIZE(amplitudeMS) <<
-										"  YSIZE(amplitudeMS) =  " << YSIZE(amplitudeMS) << std::endl;
+
 								double acosine = acos(fabs(dotproduct));
 
 								//DIRECT_A3D_ELEM(coneVol, k,i,j) = 1;
