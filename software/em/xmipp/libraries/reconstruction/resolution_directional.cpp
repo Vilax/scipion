@@ -387,11 +387,11 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
 	//#ifdef DEBUG_DIR
-
+/*
 		Image<double> filteredvolume;
 		filteredvolume = VRiesz;
 		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
-
+*/
 	//#endif
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
@@ -888,7 +888,7 @@ void ProgResDir::run()
 
 		std::cout << "Analyzing directions" << std::endl;
 
-	//N_directions=1;
+	N_directions=1;
 
 	for (size_t dir=0; dir<N_directions; dir++)
 	{
@@ -1035,20 +1035,23 @@ void ProgResDir::run()
 
 				amplitudeMS.setXmippOrigin();
 
-				std::cout << "ZSIZE(amplitudeMS) =  " << ZSIZE(amplitudeMS) <<
-						"  XSIZE(amplitudeMS) =  " << XSIZE(amplitudeMS) <<
-						"  YSIZE(amplitudeMS) =  " << YSIZE(amplitudeMS) << std::endl;
-
 				MultidimArray<double> coneVol;
 				coneVol.initZeros(amplitudeMS);
 				int n=0;
-				for(size_t k=STARTINGZ(amplitudeMS); k<FINISHINGZ(amplitudeMS); ++k)
+				std::cout << "STARTINGZ(amplitudeMS) = " << STARTINGZ(amplitudeMS) << std::endl;
+				std::cout << "STARTINGY(amplitudeMS) = " << STARTINGY(amplitudeMS) << std::endl;
+				std::cout << "STARTINGX(amplitudeMS) = " << STARTINGX(amplitudeMS) << std::endl;
+				std::cout << "FINISHINGZ(amplitudeMS) = " << FINISHINGZ(amplitudeMS) << std::endl;
+				std::cout << "FINISHINGY(amplitudeMS) = " << FINISHINGY(amplitudeMS) << std::endl;
+				std::cout << "FINISHINGX(amplitudeMS) = " << FINISHINGX(amplitudeMS) << std::endl;
+				size_t z_size = ZSIZE(amplitudeMS);
+				size_t x_size = XSIZE(amplitudeMS);
+				size_t y_size = YSIZE(amplitudeMS);
+				for(int k=0; k<z_size; ++k)
 				{
-					uz = k;
-					for(size_t i=STARTINGY(amplitudeMS); i<FINISHINGY(amplitudeMS); ++i)
+					for(int i=0; i<y_size; ++i)
 					{
-						uy = i;
-						for(size_t j=STARTINGX(amplitudeMS); j<FINISHINGX(amplitudeMS); ++j)
+						for(int j=0; j<x_size; ++j)
 						{
 							if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 							{
@@ -1059,14 +1062,19 @@ void ProgResDir::run()
 							}
 							else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
 							{
-								ux = j;
+								uz = k - z_size;
+								ux = j - x_size;
+								uy = i - y_size;
+
 
 								double iun = 1/sqrt(ux*ux + uy*uy + uz*uz);
 
 								//BE CAREFULL with the order
 								double dotproduct;
 								dotproduct = (ux*y_dir + uy*x_dir + uz*z_dir)*iun;
-
+								std::cout << "ZSIZE(amplitudeMS) =  " << ZSIZE(amplitudeMS) <<
+										"  XSIZE(amplitudeMS) =  " << XSIZE(amplitudeMS) <<
+										"  YSIZE(amplitudeMS) =  " << YSIZE(amplitudeMS) << std::endl;
 								double acosine = acos(fabs(dotproduct));
 
 								//DIRECT_A3D_ELEM(coneVol, k,i,j) = 1;
