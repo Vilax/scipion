@@ -77,7 +77,7 @@ public:
     /* Mogonogenid amplitud of a volume, given an input volume,
      * the monogenic amplitud is calculated and low pass filtered at frequency w1*/
     void amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
-    		double w1, double w1l, MultidimArray<double> &amplitude,
+    		double w1, double w1l, double wH, MultidimArray<double> &amplitude,
     		int count, int dir, FileName fnDebug, double angle_cone,
     		double rot, double tilt);
 
@@ -103,7 +103,7 @@ public:
 
     void resolution2eval(int &count_res, double step,
 			double &resolution, double &last_resolution,
-			double &freq, double &freqL,
+			double &freq, double &freqL, double &freqH,
 			int &last_fourier_idx,
 			bool &continueIter, bool &breakIter, bool &doNextIteration);
 

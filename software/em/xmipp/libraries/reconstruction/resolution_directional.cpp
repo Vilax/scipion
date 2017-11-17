@@ -309,7 +309,7 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 
 
 void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
-		double w1, double w1l, MultidimArray<double> &amplitude, int count, int dir, FileName fnDebug,
+		double w1, double w1l, double wH, MultidimArray<double> &amplitude, int count, int dir, FileName fnDebug,
 		double angle_cone, double rot, double tilt)
 {
 	fftVRiesz.initZeros(myfftV);
@@ -486,25 +486,51 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 
 	n=0;
-	//Creating mask for smoothing
-		for (size_t i = 0; i< Xdim; i++)
+//	//Creating mask for smoothing
+//		for (size_t i = 0; i< Xdim; i++)
+//		{
+//			for (size_t j = 0; j< Ydim; j++)
+//			{
+//				for (size_t k = 0; k< Zdim; k++)
+//				{
+//					if (i<= N_smoothing)
+//						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing-i)/(N_smoothing)));
+//					if (j<= N_smoothing)
+//						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing-j)/(N_smoothing)));
+//					if (k<= N_smoothing)
+//						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing-k)/(N_smoothing)));
+//					if (i>= (Xdim - N_smoothing))
+//						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing+Xdim-i)/(N_smoothing)));
+//					if (j>= (Ydim - N_smoothing))
+//						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing+Ydim-j)/(N_smoothing)));
+//					if (k>= (Zdim - N_smoothing))
+//						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing+Zdim-k)/(N_smoothing)));
+//					++n;
+//				}
+//			}
+//		}
+
+		amplitude.setXmippOrigin();
+		int z_size = ZSIZE(amplitude);
+		int x_size = XSIZE(amplitude);
+		int y_size = YSIZE(amplitude);
+
+		std::cout << "z_size = " << z_size << std::endl;
+		double limit_radius = (z_size/2-N_smoothing);
+		for(int k=0; k<z_size; ++k)
 		{
-			for (size_t j = 0; j< Ydim; j++)
+			uz = (k - z_size*0.5);
+			for(int i=0; i<y_size; ++i)
 			{
-				for (size_t k = 0; k< Zdim; k++)
+				uy = (i - y_size*0.5);
+				for(int j=0; j<x_size; ++j)
 				{
-					if (i<= N_smoothing)
-						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing-i)/(N_smoothing)));
-					if (j<= N_smoothing)
-						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing-j)/(N_smoothing)));
-					if (k<= N_smoothing)
-						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing-k)/(N_smoothing)));
-					if (i>= (Xdim - N_smoothing))
-						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing+Xdim-i)/(N_smoothing)));
-					if (j>= (Ydim - N_smoothing))
-						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing+Ydim-j)/(N_smoothing)));
-					if (k>= (Zdim - N_smoothing))
-						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing+Zdim-k)/(N_smoothing)));
+					ux = (j - x_size*0.5);
+					double radius = sqrt(ux*ux + uy*uy + uz*uz);
+					if ((radius>=limit_radius) && (radius<=(z_size*0.5)))
+						DIRECT_MULTIDIM_ELEM(amplitude, n) *= 0.5*(1+cos(PI*(limit_radius-radius)/(N_smoothing)));
+					else if (radius>(0.5*z_size))
+						DIRECT_MULTIDIM_ELEM(amplitude, n) = 0;
 					++n;
 				}
 			}
@@ -526,7 +552,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 	transformer_inv.FourierTransform(amplitude, fftVRiesz, false);
 
-    double raised_w = PI/0.02;
+    double raised_w = PI/(wH-w1);
 //    w1 = 0.4;
 
 //	for (size_t k=0; k<ZSIZE(fftVRiesz); k++)
@@ -540,10 +566,10 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 			double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
 //			double un=1.0/DIRECT_A3D_ELEM(iu,k,i,j);
 
-			if ((w1+0.02)>=un && un>=w1)
+			if ((wH)>=un && un>=w1)
 				DIRECT_MULTIDIM_ELEM(fftVRiesz,n) *= 0.5*(1 + cos(raised_w*(un-w1)));
 			else
-				if (un>(w1+0.02))
+				if (un>(wH))
 					DIRECT_MULTIDIM_ELEM(fftVRiesz,n) = 0;
 //			n++;
 //			}
@@ -793,26 +819,35 @@ void ProgResDir::sphericity(double &lambda_1, double &lambda_2, double &lambda_3
 
 void ProgResDir::resolution2eval(int &count_res, double step,
 								double &resolution, double &last_resolution,
-								double &freq, double &freqL,
+								double &freq, double &freqL, double &freqH,
 								int &last_fourier_idx,
 								bool &continueIter,	bool &breakIter, bool &doNextIteration)
 {
 	resolution = maxRes - count_res*step;
 	freq = sampling/resolution;
+
+
 	++count_res;
 
 	double Nyquist = 2*sampling;
-	double aux_frequency;
+	double aux_frequency, aux_frequency_next;
 	int fourier_idx;
 
 	DIGFREQ2FFT_IDX(freq, ZSIZE(VRiesz), fourier_idx);
+
 
 //	std::cout << "Resolution = " << resolution << "   iter = " << count_res-1 << std::endl;
 //	std::cout << "freq = " << freq << "   Fourier index = " << fourier_idx << std::endl;
 
 	FFT_IDX2DIGFREQ(fourier_idx, ZSIZE(VRiesz), aux_frequency);
 
+	/////////////////////
+	FFT_IDX2DIGFREQ((fourier_idx+1), ZSIZE(VRiesz), aux_frequency_next);
+	/////////////////////
+
 	freq = aux_frequency;
+	freqH = aux_frequency_next;
+
 
 	if (fourier_idx == last_fourier_idx)
 	{
@@ -901,7 +936,7 @@ void ProgResDir::run()
 		MultidimArray<int> &pMask = mask_aux;
 		std::vector<double> list;
 		double resolution, last_resolution = maxRes;  //A huge value for achieving last_resolution < resolution
-		double freq, freqL, resVal, counter, resolution_2;
+		double freq, freqL, freqH, resVal, counter, resolution_2;
 		double max_meanS = -1e38;
 		double cut_value = 0.025;
 
@@ -932,7 +967,7 @@ void ProgResDir::run()
 
 			resolution2eval(count_res, step,
 							resolution, last_resolution,
-							freq, freqL,
+							freq, freqL, freqH,
 							last_fourier_idx, continueIter, breakIter, doNextIteration);
 
 			if (continueIter)
@@ -941,7 +976,10 @@ void ProgResDir::run()
 			if (breakIter)
 				break;
 
-			std::cout << "resolution = " << resolution << "  resolutionL = " << sampling/(freqL) << std::endl;
+			std::cout << "resolution = " << resolution << "  resolutionL = " <<
+					sampling/(freqL) << "  resolutionH = " << sampling/freqH << "  " << freqH << std::endl;
+
+			std::cout << "\n"<< std::endl;
 
 
 			list.push_back(resolution);
@@ -953,11 +991,11 @@ void ProgResDir::run()
 
 			fnDebug = "Signal";
 
-			amplitudeMonogenicSignal3D(fftV, freq, freqL, amplitudeMS, iter, dir, fnDebug, angle_cone, rot, tilt);
+			amplitudeMonogenicSignal3D(fftV, freq, freqL, freqH, amplitudeMS, iter, dir, fnDebug, angle_cone, rot, tilt);
 			if (halfMapsGiven)
 			{
 				fnDebug = "Noise";
-				amplitudeMonogenicSignal3D(*fftN, freq, freqL, amplitudeMN, iter, dir, fnDebug, angle_cone, rot, tilt);
+				amplitudeMonogenicSignal3D(*fftN, freq, freqL, freqH, amplitudeMN, iter, dir, fnDebug, angle_cone, rot, tilt);
 			}
 
 
@@ -1062,8 +1100,6 @@ void ProgResDir::run()
 								ux = (j - x_size*0.5);
 								uy = (i - y_size*0.5);
 
-								std::cout <<"uz = " << uz << " ux = " << ux << " uy = " << uy << std::endl;
-
 								double iun = 1/sqrt(ux*ux + uy*uy + uz*uz);
 
 								//BE CAREFULL with the order
@@ -1108,13 +1144,15 @@ void ProgResDir::run()
 				Nvoxels = 0;
 				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
 				{
-				  if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n) == 0)
-					DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
-				  else
-				  {
-					Nvoxels++;
+//				  if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n) == 0)
+//					DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
+//				  else
+//				  {
+//					Nvoxels++;
+//					DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
+//				  }
+				  if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n) > 0)
 					DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
-				  }
 				}
 			#ifdef DEBUG_MASK
 			mask.write("partial_mask.vol");
@@ -1139,8 +1177,10 @@ void ProgResDir::run()
 			if (meanS>max_meanS)
 				max_meanS = meanS;
 
-			if (meanS<0.001*max_meanS)
+			if (meanS<0.00001*max_meanS)
 			{
+				std::cout << "  meanS= " << meanS << " sigma2S= " << sigma2S << " NS= " << NS << std::endl;
+				std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
 				std::cout << "Search of resolutions stopped due to too low signal" << std::endl;
 				doNextIteration = false;
 			}
