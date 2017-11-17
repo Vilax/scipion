@@ -472,13 +472,13 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 	#ifdef MONO_AMPLITUDE
 
-	if (fnDebug.c_str() != "")
-	{
-		saveImg2 = amplitude;
-		iternumber = formatString("No_Filtered_Amplitude_%i_%i.vol", dir, count);
-		saveImg2.write(fnDebug+iternumber);
-	}
-	#endif
+//	if (fnDebug.c_str() != "")
+//	{
+//		saveImg2 = amplitude;
+//		iternumber = formatString("No_Filtered_Amplitude_%i_%i.vol", dir, count);
+//		saveImg2.write(fnDebug+iternumber);
+//	}
+//	#endif
 
 
 	size_t Ydim, Xdim, Zdim, Ndim;
@@ -537,15 +537,15 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 		}
 
 
-		#ifdef MONO_AMPLITUDE
-		saveImg2 = amplitude;
-		if (fnDebug.c_str() != "")
-		{
-			iternumber = formatString("smoothed_volume_%i_%i.vol", dir, count);
-			saveImg2.write(fnDebug+iternumber);
-		}
-//		saveImg2.clear();
-		#endif
+//		#ifdef MONO_AMPLITUDE
+//		saveImg2 = amplitude;
+//		if (fnDebug.c_str() != "")
+//		{
+//			iternumber = formatString("smoothed_volume_%i_%i.vol", dir, count);
+//			saveImg2.write(fnDebug+iternumber);
+//		}
+////		saveImg2.clear();
+//		#endif
 
 
 	amplitude.setXmippOrigin();
@@ -589,13 +589,13 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 	saveImg2 = amplitude;
 
-	if (fnDebug.c_str() != "")
-	{
-		iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir, count);
-		saveImg2.write(fnDebug+iternumber);
-	}
-	saveImg2.clear();
-//	#endif // DEBUG
+//	if (fnDebug.c_str() != "")
+//	{
+//		iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir, count);
+//		saveImg2.write(fnDebug+iternumber);
+//	}
+//	saveImg2.clear();
+////	#endif // DEBUG
 
 }
 
