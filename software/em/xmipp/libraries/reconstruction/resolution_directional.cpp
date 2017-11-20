@@ -388,9 +388,9 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 	//#ifdef DEBUG_DIR
 
-		Image<double> filteredvolume;
-		filteredvolume = VRiesz;
-		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
+//		Image<double> filteredvolume;
+//		filteredvolume = VRiesz;
+//		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
 
 	//#endif
 
@@ -538,12 +538,12 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 
 //		#ifdef MONO_AMPLITUDE
-		saveImg2 = amplitude;
-		if (fnDebug.c_str() != "")
-		{
-			iternumber = formatString("smoothed_volume_%i_%i.vol", dir, count);
-			saveImg2.write(fnDebug+iternumber);
-		}
+//		saveImg2 = amplitude;
+//		if (fnDebug.c_str() != "")
+//		{
+//			iternumber = formatString("smoothed_volume_%i_%i.vol", dir, count);
+//			saveImg2.write(fnDebug+iternumber);
+//		}
 ////		saveImg2.clear();
 //		#endif
 
@@ -587,13 +587,13 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 //	#ifdef MONO_AMPLITUDE
 
-	saveImg2 = amplitude;
-
-	if (fnDebug.c_str() != "")
-	{
-		iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir, count);
-		saveImg2.write(fnDebug+iternumber);
-	}
+//	saveImg2 = amplitude;
+//
+//	if (fnDebug.c_str() != "")
+//	{
+//		iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir, count);
+//		saveImg2.write(fnDebug+iternumber);
+//	}
 //	saveImg2.clear();
 ////	#endif // DEBUG
 
@@ -923,7 +923,7 @@ void ProgResDir::run()
 
 		std::cout << "Analyzing directions" << std::endl;
 
-	//N_directions=1;
+	N_directions=1;
 
 	for (size_t dir=0; dir<N_directions; dir++)
 	{
@@ -1124,15 +1124,15 @@ void ProgResDir::run()
 					}
 				}
 
-				if (iter == 0)
-				{
-				Image<double> img;
-
-				FileName iternumber;
-				iternumber = formatString("cone_%i.vol", dir);
-				img = coneVol;
-				img.write(iternumber);
-				}
+//				if (iter == 0)
+//				{
+//				Image<double> img;
+//
+//				FileName iternumber;
+//				iternumber = formatString("cone_%i.vol", dir);
+//				img = coneVol;
+//				img.write(iternumber);
+//				}
 			}
 
 
@@ -1452,13 +1452,17 @@ void ProgResDir::run()
 
 			diagSymMatrix3x3(InertiaMatrix, N_directions, lambda_1, lambda_2, lambda_3);
 
-			/*
+
 			std::cout << "lambda_1 = " << lambda_1 <<
 					   "  lambda_2 = " << lambda_2 <<
 					   "  lambda_3 = " << lambda_3 << std::endl;
-			 */
+
 
 			sphericity(lambda_1, lambda_2, lambda_3, sph);
+
+			std::cout << "LAMBDA_1 = " << lambda_1 <<
+					   "  LAMBDA_2 = " << lambda_2 <<
+					   "  LAMBDA_3 = " << lambda_3 << std::endl;
 
 			DIRECT_MULTIDIM_ELEM(pInertia_00,n) = lambda_1;
 			DIRECT_MULTIDIM_ELEM(pInertia_01,n) = lambda_2;
