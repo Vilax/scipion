@@ -923,7 +923,7 @@ void ProgResDir::run()
 
 		std::cout << "Analyzing directions" << std::endl;
 
-	N_directions=1;
+	//N_directions=1;
 
 	for (size_t dir=0; dir<N_directions; dir++)
 	{
