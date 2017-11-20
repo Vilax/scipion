@@ -470,7 +470,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	FileName fnSaveImg2;
 	FileName iternumber;
 
-	#ifdef MONO_AMPLITUDE
+//	#ifdef MONO_AMPLITUDE
 
 //	if (fnDebug.c_str() != "")
 //	{
