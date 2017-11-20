@@ -387,11 +387,11 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
 	//#ifdef DEBUG_DIR
-/*
+
 		Image<double> filteredvolume;
 		filteredvolume = VRiesz;
 		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
-*/
+
 	//#endif
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
@@ -538,12 +538,12 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 
 //		#ifdef MONO_AMPLITUDE
-//		saveImg2 = amplitude;
-//		if (fnDebug.c_str() != "")
-//		{
-//			iternumber = formatString("smoothed_volume_%i_%i.vol", dir, count);
-//			saveImg2.write(fnDebug+iternumber);
-//		}
+		saveImg2 = amplitude;
+		if (fnDebug.c_str() != "")
+		{
+			iternumber = formatString("smoothed_volume_%i_%i.vol", dir, count);
+			saveImg2.write(fnDebug+iternumber);
+		}
 ////		saveImg2.clear();
 //		#endif
 
@@ -589,11 +589,11 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 	saveImg2 = amplitude;
 
-//	if (fnDebug.c_str() != "")
-//	{
-//		iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir, count);
-//		saveImg2.write(fnDebug+iternumber);
-//	}
+	if (fnDebug.c_str() != "")
+	{
+		iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir, count);
+		saveImg2.write(fnDebug+iternumber);
+	}
 //	saveImg2.clear();
 ////	#endif // DEBUG
 
