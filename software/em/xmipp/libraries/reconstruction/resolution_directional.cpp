@@ -787,9 +787,9 @@ void ProgResDir::sphericity(double &lambda_1, double &lambda_2, double &lambda_3
 	MAT_ELEM(invA, 1, 1) = -0.5;
 	MAT_ELEM(invA, 2, 2) = -0.5;
 
-	VEC_ELEM(inertia_vector, 0) = 3*lambda_1;
-	VEC_ELEM(inertia_vector, 1) = 3*lambda_2;
-	VEC_ELEM(inertia_vector, 2) = 3*lambda_3;
+	VEC_ELEM(inertia_vector, 0) = 3.0*lambda_1;
+	VEC_ELEM(inertia_vector, 1) = 3.0*lambda_2;
+	VEC_ELEM(inertia_vector, 2) = 3.0*lambda_3;
 
 	ellipsoid_axes = invA*inertia_vector;
 
