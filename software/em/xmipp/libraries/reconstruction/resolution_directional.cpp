@@ -93,6 +93,11 @@ void ProgResDir::defineParams()
 void ProgResDir::produceSideInfo()
 {
 	std::cout << "Starting..." << std::endl;
+
+	std::cout << "sqrt(0) " << sqrt(0) << std::endl;
+	std::cout << "sqrt(0) " << sqrt(-0) << std::endl;
+	std::cout << "sqrt(0) " << sqrt(0.5-0.5) << std::endl;
+
 	Image<double> V;
 	if ((fnVol !="") && (fnVol2 !=""))
 	{
