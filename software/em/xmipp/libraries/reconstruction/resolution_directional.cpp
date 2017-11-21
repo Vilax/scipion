@@ -798,14 +798,14 @@ void ProgResDir::sphericity(double &lambda_1, double &lambda_2, double &lambda_3
 
 	ellipsoid_axes = invA*inertia_vector;
 
-	std::cout << "mat = " << -0.5*3.0*lambda_1 + 0.5*3.0*lambda_2  + 0.5*3.0*lambda_3 << std::endl;
-	std::cout << "mat3-1 = " << -0.5*3.0*lambda_1 + 0.5*3.0*lambda_3 << std::endl;
-	std::cout << "mat1-3 = " << 0.5*3.0*lambda_1 - 0.5*3.0*lambda_3 << std::endl;
+//	std::cout << "mat = " << -0.5*3.0*lambda_1 + 0.5*3.0*lambda_2  + 0.5*3.0*lambda_3 << std::endl;
+//	std::cout << "mat3-1 = " << -0.5*3.0*lambda_1 + 0.5*3.0*lambda_3 << std::endl;
+//	std::cout << "mat1-3 = " << 0.5*3.0*lambda_1 - 0.5*3.0*lambda_3 << std::endl;
 
 
-	lambda_1 = sqrt(VEC_ELEM(ellipsoid_axes, 0));
-	lambda_2 = sqrt(VEC_ELEM(ellipsoid_axes, 1));
-	lambda_3 = sqrt(VEC_ELEM(ellipsoid_axes, 2));
+	lambda_1 = sqrt(round(VEC_ELEM(ellipsoid_axes, 0)*100.0)/100.0);
+	lambda_2 = sqrt(round(VEC_ELEM(ellipsoid_axes, 1)*100.0)/100.0);
+	lambda_3 = sqrt(round(VEC_ELEM(ellipsoid_axes, 2)*100.0)/100.0);
 
 
 	double p = 1.6075;
@@ -1464,9 +1464,9 @@ void ProgResDir::run()
 			diagSymMatrix3x3(InertiaMatrix, N_directions, lambda_1, lambda_2, lambda_3);
 
 
-			std::cout << "lambda_1 = " << lambda_1 <<
-					   "  lambda_2 = " << lambda_2 <<
-					   "  lambda_3 = " << lambda_3 << std::endl;
+//			std::cout << "lambda_1 = " << lambda_1 <<
+//					   "  lambda_2 = " << lambda_2 <<
+//					   "  lambda_3 = " << lambda_3 << std::endl;
 
 
 			sphericity(lambda_1, lambda_2, lambda_3, sph);
