@@ -1408,11 +1408,11 @@ void ProgResDir::run()
 
 		/////////////////////////
 //		#ifdef DEBUG_DIR
-		Image<double> saveImg;
-		saveImg = pOutputResolution;
-		FileName fnres = formatString("resolution_dir_%i.vol", dir);
-		saveImg.write(fnres);
-		saveImg.clear();
+//		Image<double> saveImg;
+//		saveImg = pOutputResolution;
+//		FileName fnres = formatString("resolution_dir_%i.vol", dir);
+//		saveImg.write(fnres);
+//		saveImg.clear();
 //		#endif
 
 		pOutputResolution.clear();
