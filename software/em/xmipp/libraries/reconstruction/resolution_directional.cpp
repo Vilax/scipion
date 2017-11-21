@@ -807,24 +807,23 @@ void ProgResDir::sphericity(double &lambda_1, double &lambda_2, double &lambda_3
 	lambda_2 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 1)*100.0)/100.0));
 	lambda_3 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 2)*100.0)/100.0));
 
-
+/*
 	double p = 1.6075;
 	double A_ellip, V_ellip;
 	double aux = (pow((lambda_1*lambda_2),p) + pow((lambda_1*lambda_3),p) +
 				pow((lambda_2*lambda_3),p));
 	A_ellip = 4.0*PI*pow(aux/3.0,1.0/p);
 	V_ellip = (4.0/3.0)*PI*lambda_1*lambda_2*lambda_3;
-//	std::cout << "lambda_1  = " << lambda_1 << "  lambda_2  = " << lambda_2 << "  lambda_3  = " << lambda_3 << std::endl;
-//	std::cout << "A_ellip  = " << A_ellip << "  V_ellip  = " << V_ellip << std::endl;
 	sph = pow(PI,(1.0/3.0))*pow(6.0*V_ellip,2.0/3.0)/A_ellip;
+*/
+	if ((lambda_3>lambda_2) && (lambda_3>lambda_1))
+		sph = (lambda_1*lambda_2)/(lambda_3*lambda_3);
+	else if ((lambda_2>lambda_3) && (lambda_2>lambda_1))
+		sph = (lambda_1*lambda_3)/(lambda_2*lambda_2);
+		else if ((lambda_1>lambda_2) && (lambda_1>lambda_3))
+			sph = (lambda_2*lambda_3)/(lambda_1*lambda_1);
 
-	//std::cout << "invA = " << invA << std::endl;
 
-
-
-
-
-	//sph = (lambda_2*lambda_3)/(lambda_1*lambda_1);
 }
 
 
