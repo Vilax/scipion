@@ -714,21 +714,21 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 			DIRECT_MULTIDIM_ELEM(SumRes,n) += 2;
 			idx++;
 
-			if (idx == 34)
-			{
-				MetaData md;
-				md.read("res.xmd");
-				size_t objId;
-				objId = md.addObject();
-				md.setValue(MDL_ANGLE_ROT, rot, objId);
-				md.setValue(MDL_ANGLE_TILT, tilt, objId);
-				md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
-
-
-				md.write("res.xmd");
-
-				std::cout << "resVal = " << resVal << std::endl;
-			}
+//			if (idx == 34)
+//			{
+//				MetaData md;
+//				md.read("res.xmd");
+//				size_t objId;
+//				objId = md.addObject();
+//				md.setValue(MDL_ANGLE_ROT, rot, objId);
+//				md.setValue(MDL_ANGLE_TILT, tilt, objId);
+//				md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
+//
+//
+//				md.write("res.xmd");
+//
+//				std::cout << "resVal = " << resVal << std::endl;
+//			}
 
 			//resVal = 1;
 
@@ -934,7 +934,7 @@ void ProgResDir::run()
 
 		std::cout << "Analyzing directions" << std::endl;
 
-	N_directions=1;
+//	N_directions=1;
 
 	for (size_t dir=0; dir<N_directions; dir++)
 	{
