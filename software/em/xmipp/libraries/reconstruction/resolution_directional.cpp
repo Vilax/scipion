@@ -803,9 +803,9 @@ void ProgResDir::sphericity(double &lambda_1, double &lambda_2, double &lambda_3
 //	std::cout << "mat1-3 = " << 0.5*3.0*lambda_1 - 0.5*3.0*lambda_3 << std::endl;
 
 
-	lambda_1 = sqrt(round(VEC_ELEM(ellipsoid_axes, 0)*100.0)/100.0);
-	lambda_2 = sqrt(round(VEC_ELEM(ellipsoid_axes, 1)*100.0)/100.0);
-	lambda_3 = sqrt(round(VEC_ELEM(ellipsoid_axes, 2)*100.0)/100.0);
+	lambda_1 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 0)*100.0)/100.0));
+	lambda_2 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 1)*100.0)/100.0));
+	lambda_3 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 2)*100.0)/100.0));
 
 
 	double p = 1.6075;
