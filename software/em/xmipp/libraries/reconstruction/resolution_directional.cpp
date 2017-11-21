@@ -96,7 +96,7 @@ void ProgResDir::produceSideInfo()
 
 	std::cout << "sqrt(0) " << sqrt(0) << std::endl;
 	std::cout << "sqrt(0) " << sqrt(-0) << std::endl;
-	std::cout << "sqrt(0) " << sqrt(0.5-0.5) << std::endl;
+	std::cout << "sqrt(0) " << sqrt(0.5*541.62 - 0.5*541.62) << std::endl;
 
 	Image<double> V;
 	if ((fnVol !="") && (fnVol2 !=""))
