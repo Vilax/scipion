@@ -798,10 +798,9 @@ void ProgResDir::sphericity(double &lambda_1, double &lambda_2, double &lambda_3
 
 	ellipsoid_axes = invA*inertia_vector;
 
-	std::cout << "3.0*lambda_1 = " << 3.0*lambda_1 << std::endl;
-	std::cout << "3.0*lambda_2 = " << 3.0*lambda_2 << std::endl;
-	std::cout << "3.0*lambda_3 = " << 3.0*lambda_3 << std::endl;
 	std::cout << "mat = " << -0.5*3.0*lambda_1 + 0.5*3.0*lambda_2  + 0.5*3.0*lambda_3 << std::endl;
+	std::cout << "mat3-1 = " << -0.5*3.0*lambda_1 + 0.5*3.0*lambda_3 << std::endl;
+	std::cout << "mat1-3 = " << 0.5*3.0*lambda_1 - 0.5*3.0*lambda_3 << std::endl;
 
 
 	lambda_1 = sqrt(VEC_ELEM(ellipsoid_axes, 0));
