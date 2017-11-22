@@ -98,8 +98,8 @@ public:
     void diagSymMatrix3x3(Matrix2D<double> A, int Ndirections,
 			double &lambda_1, double &lambda_2, double &lambda_3);
 
-    void sphericity(double &lambda_1, double &lambda_2, double &lambda_3,
-			double &sph);
+    void degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &lambda_3,
+			double &doa);
 
     void resolution2eval(int &count_res, double step,
 			double &resolution, double &last_resolution,
@@ -111,6 +111,8 @@ public:
 
     void generateGridProjectionMatching(FileName fnVol_, double smprt,
     		Matrix2D<double> &angles);
+
+    void createVectorField(Image<double> volume);
 
     void run();
 

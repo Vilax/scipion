@@ -46,8 +46,6 @@ void ProgResDir::readParams()
 	R = getDoubleParam("--volumeRadius");
 	minRes = getDoubleParam("--minRes");
 	maxRes = getDoubleParam("--maxRes");
-	fnMaxVol = getParam("--maxVol");
-	fnMinVol = getParam("--minVol");
 	fnVar = getParam("--varVol");
 	fnSym = getParam("--sym");
 	N_freq = getDoubleParam("--number_frequencies");
@@ -55,7 +53,6 @@ void ProgResDir::readParams()
 	significance = getDoubleParam("--significance");
 	fnMd = getParam("--md_resdir");
 	fnDoA = getParam("--doa_vol");
-	fnSph = getParam("--sphericity");
 }
 
 
@@ -93,10 +90,6 @@ void ProgResDir::defineParams()
 void ProgResDir::produceSideInfo()
 {
 	std::cout << "Starting..." << std::endl;
-
-	std::cout << "sqrt(0) " << sqrt(0) << std::endl;
-	std::cout << "sqrt(0) " << sqrt(-0) << std::endl;
-	std::cout << "sqrt(0) " << sqrt(0.5*541.62 - 0.5*541.62) << std::endl;
 
 	Image<double> V;
 	if ((fnVol !="") && (fnVol2 !=""))
@@ -183,26 +176,15 @@ void ProgResDir::produceSideInfo()
 	}
 
 	//use the mask for preparing resolution volumes
-	Image<double> MaxResolution, MinResolution, AvgResoltion, VarianzeResolution;
-	MaxResolution().resizeNoCopy(inputVol);
-	MinResolution().resizeNoCopy(inputVol);
+	Image<double> AvgResoltion, VarianzeResolution;
 	AvgResoltion().resizeNoCopy(inputVol);
 	VarianzeResolution().resizeNoCopy(inputVol);
-	MinResolution().initConstant(maxRes);
-	MaxResolution().initConstant(1);
 	AvgResoltion().initZeros();
 	VarianzeResolution().initZeros();
 
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(MaxResolution())
-		DIRECT_MULTIDIM_ELEM(MaxResolution(),n)*=DIRECT_MULTIDIM_ELEM(pMask,n);
-
-	MaxResolution.write(fnMaxVol);
-	MinResolution.write(fnMinVol);
 	AvgResoltion.write(fnOut);
 	VarianzeResolution.write(fnVar);
 
-	MaxResolution.clear();
-	MinResolution.clear();
 	AvgResoltion.clear();
 	VarianzeResolution.clear();
 
@@ -765,8 +747,8 @@ void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A, int Ndirections,
 	lambda_3 =(1.0/3)*(b+2.0*sqrt(p)*cos((Delta-2.0*PI)/3));
 }
 
-void ProgResDir::sphericity(double &lambda_1, double &lambda_2, double &lambda_3,
-							double &sph)
+void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &lambda_3,
+							double &doa)
 {
 	//This equation comes from Thomsen's formula, with an error lesser than 1.061%
 	/*double p = 1.6075;
@@ -779,10 +761,23 @@ void ProgResDir::sphericity(double &lambda_1, double &lambda_2, double &lambda_3
 //	std::cout << "A_ellip  = " << A_ellip << "  V_ellip  = " << V_ellip << std::endl;
 	sph = pow(PI,(1.0/3.0))*pow(6.0*V_ellip,2.0/3.0)/A_ellip;
 	*/
-	if (lambda_1<lambda_2)
-		std::cout << "ERROR lambda_2 < 0" << std::endl;
-	if (lambda_1<lambda_3)
-		std::cout << "ERROR lambda_3 < 0" << std::endl;
+	MultidimArray<double> eigs(3);
+	A1D_ELEM(eigs,0) = lambda_1;
+	A1D_ELEM(eigs,1) = lambda_2;
+	A1D_ELEM(eigs,2) = lambda_3;
+
+	// Sort value and get threshold
+	std::sort(&A1D_ELEM(eigs,0),&A1D_ELEM(eigs,2));
+
+	double max = 1/sqrt(A1D_ELEM(eigs,0));
+	double min = 1/sqrt(A1D_ELEM(eigs,2));
+
+
+	//Defining DoA
+	doa = (max-min)/(max+min);
+
+
+	/*
 
 	Matrix2D<double> invA;
 	Matrix1D<double> inertia_vector(3), ellipsoid_axes(3);
@@ -798,24 +793,11 @@ void ProgResDir::sphericity(double &lambda_1, double &lambda_2, double &lambda_3
 
 	ellipsoid_axes = invA*inertia_vector;
 
-//	std::cout << "mat = " << -0.5*3.0*lambda_1 + 0.5*3.0*lambda_2  + 0.5*3.0*lambda_3 << std::endl;
-//	std::cout << "mat3-1 = " << -0.5*3.0*lambda_1 + 0.5*3.0*lambda_3 << std::endl;
-//	std::cout << "mat1-3 = " << 0.5*3.0*lambda_1 - 0.5*3.0*lambda_3 << std::endl;
-
 
 	lambda_1 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 0)*100.0)/100.0));
 	lambda_2 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 1)*100.0)/100.0));
 	lambda_3 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 2)*100.0)/100.0));
 
-/*
-	double p = 1.6075;
-	double A_ellip, V_ellip;
-	double aux = (pow((lambda_1*lambda_2),p) + pow((lambda_1*lambda_3),p) +
-				pow((lambda_2*lambda_3),p));
-	A_ellip = 4.0*PI*pow(aux/3.0,1.0/p);
-	V_ellip = (4.0/3.0)*PI*lambda_1*lambda_2*lambda_3;
-	sph = pow(PI,(1.0/3.0))*pow(6.0*V_ellip,2.0/3.0)/A_ellip;
-*/
 	if ((lambda_3>lambda_2) && (lambda_3>lambda_1))
 		sph = (lambda_1*lambda_2)/(lambda_3*lambda_3);
 	else if ((lambda_2>lambda_3) && (lambda_2>lambda_1))
@@ -823,7 +805,7 @@ void ProgResDir::sphericity(double &lambda_1, double &lambda_2, double &lambda_3
 		else if ((lambda_1>lambda_2) && (lambda_1>lambda_3))
 			sph = (lambda_2*lambda_3)/(lambda_1*lambda_1);
 
-
+*/
 }
 
 
@@ -904,6 +886,17 @@ void ProgResDir::resolution2eval(int &count_res, double step,
 		}
 	}
 }
+
+
+void ProgResDir::createVectorField(Image<double> volume)
+{
+	size_t Xdim, Ydim, Zdim, Ndim;
+	volume.getDimensions(Xdim, Ydim, Zdim, Ndim);
+
+
+
+}
+
 
 void ProgResDir::run()
 {
@@ -1468,7 +1461,7 @@ void ProgResDir::run()
 //					   "  lambda_3 = " << lambda_3 << std::endl;
 
 
-			sphericity(lambda_1, lambda_2, lambda_3, sph);
+			degreeOfAnisotropy(lambda_1, lambda_2, lambda_3, sph);
 
 			std::cout << "LAMBDA_1 = " << lambda_1 <<
 					   "  LAMBDA_2 = " << lambda_2 <<
@@ -1491,11 +1484,10 @@ void ProgResDir::run()
 	Inertia_00.write("lambda_1.vol");
 	Inertia_01.write("lambda_2.vol");
 	Inertia_02.write("lambda_3.vol");
-	Inertia_11.write(fnSph);
 	Inertia_12.write(fnDoA);
 
 
-	Image<double> VarianzeResolution, MaxResolution, MinResolution;
+	Image<double> VarianzeResolution;
 	AvgResolution.read(fnOut);
 	MultidimArray<double> &pAvgResolution = AvgResolution();
 
@@ -1516,7 +1508,6 @@ void ProgResDir::run()
 
 	MultidimArray<double> &pVarianzeResolution = VarianzeResolution();
 
-	double max_voxel, min_voxel;
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pAvgResolution)
 	{
 		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)

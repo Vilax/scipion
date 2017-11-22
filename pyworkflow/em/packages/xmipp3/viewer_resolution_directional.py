@@ -124,19 +124,6 @@ class XmippMonoDirViewer(ProtocolViewer):
         groupDoA.addParam('doShowDoAChimera', LabelParam,
                        label="Show DoA map in Chimera")
         
-        groupSph = form.addGroup('Sphericity information')
-        groupSph.addParam('doShowSphSlices', LabelParam,
-                      label="Show Sphericity slices")
-        
-        groupSph.addParam('doShowSphHistogram', LabelParam,
-              label="Show Sphericity histogram")
-        
-        groupSph.addParam('doShowSphColorSlices', LabelParam,
-               label="Show Sphericity colored slices")
-        
-        groupSph.addParam('doShowSphChimera', LabelParam,
-                       label="Show Sphericity map in Chimera")
-        
         groupVariance = form.addGroup('Variance information')
         groupVariance.addParam('doShowVarianceSlices', LabelParam,
               label="Show variance slices")
@@ -170,10 +157,6 @@ class XmippMonoDirViewer(ProtocolViewer):
                 'doShowDoASlices': self._showDoASlices,
                 'doShowDoAColorSlices': self._showDoAColorSlices,
                 'doShowDoAChimera': self._showDoAChimera,
-                'doShowSphSlices': self._showDoASlices,
-                'doShowSphColorSlices': self._showDoAColorSlices,
-                'doShowSphChimera': self._showDoAChimera,
-                'doShowSphHistogram': self._plotHistogram,
                 'doShowDoAHistogram': self._plotHistogram,
                 'doShowVarianceSlices': self._showVarianceSlices,
                 'doShowVarianceColorSlices': self._showVarianceColorSlices,
@@ -190,16 +173,6 @@ class XmippMonoDirViewer(ProtocolViewer):
     def _showDoAChimera(self, param=None):
         self._showChimera(OUTPUT_DOA_FILE_CHIMERA, CHIMERA_CMD_DOA)
         
-    def _showSphSlices(self, param=None):
-        cm = DataView(self.protocol._getExtraPath(OUTPUT_SPH_FILE))
-        return [cm]  
- 
-    def _showSphColorSlices(self, param=None):
-        self._showColorSlices(OUTPUT_SPH_FILE)
-
-    def _showSphChimera(self, param=None):
-        self._showChimera(OUTPUT_DOA_FILE_CHIMERA, CHIMERA_CMD_SPH)
-
         
     def _showVarianceSlices(self, param=None):
         cm = DataView(self.protocol._getExtraPath(OUTPUT_VARIANCE_FILE))
@@ -240,7 +213,7 @@ class XmippMonoDirViewer(ProtocolViewer):
 
     def _plotHistogram(self, param=None):
         md = MetaData()
-        md.read(self.protocol._getPath('extra/hist_Sph.xmd'))
+        md.read(self.protocol._getPath('extra/hist_DoA.xmd'))
         x_axis = []
         y_axis = []
 
