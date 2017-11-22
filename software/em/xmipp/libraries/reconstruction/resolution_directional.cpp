@@ -1463,9 +1463,9 @@ void ProgResDir::run()
 
 			degreeOfAnisotropy(lambda_1, lambda_2, lambda_3, sph);
 
-			std::cout << "LAMBDA_1 = " << lambda_1 <<
-					   "  LAMBDA_2 = " << lambda_2 <<
-					   "  LAMBDA_3 = " << lambda_3 << std::endl;
+//			std::cout << "LAMBDA_1 = " << lambda_1 <<
+//					   "  LAMBDA_2 = " << lambda_2 <<
+//					   "  LAMBDA_3 = " << lambda_3 << std::endl;
 
 			DIRECT_MULTIDIM_ELEM(pInertia_00,n) = lambda_1;
 			DIRECT_MULTIDIM_ELEM(pInertia_01,n) = lambda_2;
