@@ -1472,7 +1472,7 @@ void ProgResDir::run()
 			DIRECT_MULTIDIM_ELEM(pInertia_02,n) = lambda_3;
 
 			DIRECT_MULTIDIM_ELEM(pInertia_11,n) = sph;
-			DIRECT_MULTIDIM_ELEM(pInertia_12,n) = (lambda_1-lambda_3)/(lambda_1+lambda_3);
+//			DIRECT_MULTIDIM_ELEM(pInertia_12,n) = (lambda_1-lambda_3)/(lambda_1+lambda_3);
 
 		}
 		else
@@ -1484,7 +1484,7 @@ void ProgResDir::run()
 	Inertia_00.write("lambda_1.vol");
 	Inertia_01.write("lambda_2.vol");
 	Inertia_02.write("lambda_3.vol");
-	Inertia_12.write(fnDoA);
+	Inertia_11.write(fnDoA);
 
 
 	Image<double> VarianzeResolution;
