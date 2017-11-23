@@ -320,7 +320,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
 	z_dir = cos(tilt*PI/180);
 
-	double uz, uy, ux, uxxuyy;
+	double uz, uy, ux;
 	n=0;
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
@@ -467,62 +467,31 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 //	}
 //	#endif
 
+	amplitude.setXmippOrigin();
+	int z_size = ZSIZE(amplitude);
+	int x_size = XSIZE(amplitude);
+	int y_size = YSIZE(amplitude);
 
-//	size_t Ydim, Xdim, Zdim, Ndim;
-//	amplitude.getDimensions(Xdim, Ydim, Zdim, Ndim);
-
-
-
-//	//Creating mask for smoothing
-//		for (size_t i = 0; i< Xdim; i++)
-//		{
-//			for (size_t j = 0; j< Ydim; j++)
-//			{
-//				for (size_t k = 0; k< Zdim; k++)
-//				{
-//					if (i<= N_smoothing)
-//						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing-i)/(N_smoothing)));
-//					if (j<= N_smoothing)
-//						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing-j)/(N_smoothing)));
-//					if (k<= N_smoothing)
-//						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing-k)/(N_smoothing)));
-//					if (i>= (Xdim - N_smoothing))
-//						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing+Xdim-i)/(N_smoothing)));
-//					if (j>= (Ydim - N_smoothing))
-//						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing+Ydim-j)/(N_smoothing)));
-//					if (k>= (Zdim - N_smoothing))
-//						DIRECT_MULTIDIM_ELEM(amplitude, n) = DIRECT_MULTIDIM_ELEM(amplitude, n)*0.5*(1+cos(PI*(N_smoothing+Zdim-k)/(N_smoothing)));
-//					++n;
-//				}
-//			}
-//		}
-
-		amplitude.setXmippOrigin();
-		int z_size = ZSIZE(amplitude);
-		int x_size = XSIZE(amplitude);
-		int y_size = YSIZE(amplitude);
-
-		std::cout << "z_size = " << z_size << std::endl;
-		double limit_radius = (z_size/2-N_smoothing);
-		n=0;
-		for(int k=0; k<z_size; ++k)
+	double limit_radius = (z_size/2-N_smoothing);
+	n=0;
+	for(int k=0; k<z_size; ++k)
+	{
+		uz = (k - z_size*0.5);
+		for(int i=0; i<y_size; ++i)
 		{
-			uz = (k - z_size*0.5);
-			for(int i=0; i<y_size; ++i)
+			uy = (i - y_size*0.5);
+			for(int j=0; j<x_size; ++j)
 			{
-				uy = (i - y_size*0.5);
-				for(int j=0; j<x_size; ++j)
-				{
-					ux = (j - x_size*0.5);
-					double radius = sqrt(ux*ux + uy*uy + uz*uz);
-					if ((radius>=limit_radius) && (radius<=(z_size*0.5)))
-						DIRECT_MULTIDIM_ELEM(amplitude, n) *= 0.5*(1+cos(PI*(limit_radius-radius)/(N_smoothing)));
-					else if (radius>(0.5*z_size))
-						DIRECT_MULTIDIM_ELEM(amplitude, n) = 0;
-					++n;
-				}
+				ux = (j - x_size*0.5);
+				double radius = sqrt(ux*ux + uy*uy + uz*uz);
+				if ((radius>=limit_radius) && (radius<=(z_size*0.5)))
+					DIRECT_MULTIDIM_ELEM(amplitude, n) *= 0.5*(1+cos(PI*(limit_radius-radius)/(N_smoothing)));
+				else if (radius>(0.5*z_size))
+					DIRECT_MULTIDIM_ELEM(amplitude, n) = 0;
+				++n;
 			}
 		}
+	}
 
 
 //		#ifdef MONO_AMPLITUDE
@@ -749,7 +718,7 @@ void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A, int Ndirections,
 }
 
 void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &lambda_3,
-							double &doa, int counter)
+							double &doa, int &counter)
 {
 	//This equation comes from Thomsen's formula, with an error lesser than 1.061%
 	/*double p = 1.6075;
@@ -774,7 +743,7 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 		std::cout << "lambda_3 = " << lambda_3 << std::endl;
 	}
 
-
+	counter++;
 	// Sort value and get threshold
 	std::sort(&A1D_ELEM(eigs,0),&A1D_ELEM(eigs,2));
 
