@@ -112,7 +112,7 @@ public:
     void generateGridProjectionMatching(FileName fnVol_, double smprt,
     		Matrix2D<double> &angles);
 
-    void createVectorField(Image<double> volume);
+    void createVectorField(Image<double> volume, MultidimArray<int> &mask);
 
     void run();
 

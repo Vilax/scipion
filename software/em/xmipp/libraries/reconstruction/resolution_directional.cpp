@@ -696,21 +696,21 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 			DIRECT_MULTIDIM_ELEM(SumRes,n) += 2;
 			idx++;
 
-//			if (idx == 34)
-//			{
-//				MetaData md;
-//				md.read("res.xmd");
-//				size_t objId;
-//				objId = md.addObject();
-//				md.setValue(MDL_ANGLE_ROT, rot, objId);
-//				md.setValue(MDL_ANGLE_TILT, tilt, objId);
-//				md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
-//
-//
-//				md.write("res.xmd");
-//
-//				std::cout << "resVal = " << resVal << std::endl;
-//			}
+			if (idx == 34)
+			{
+				MetaData md;
+				md.read("res.xmd");
+				size_t objId;
+				objId = md.addObject();
+				md.setValue(MDL_ANGLE_ROT, rot, objId);
+				md.setValue(MDL_ANGLE_TILT, tilt, objId);
+				md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
+
+
+				md.write("res.xmd");
+
+				std::cout << "resVal = " << resVal << std::endl;
+			}
 
 			//resVal = 1;
 
@@ -888,12 +888,58 @@ void ProgResDir::resolution2eval(int &count_res, double step,
 }
 
 
-void ProgResDir::createVectorField(Image<double> volume)
+void ProgResDir::createVectorField(Image<double> volume, MultidimArray<int> &mask)
 {
 	size_t Xdim, Ydim, Zdim, Ndim;
 	volume.getDimensions(Xdim, Ydim, Zdim, Ndim);
 
+	int height_cylinder = 8;
+	int height_cone = 4;
+	int radius_cylinder = 2;
+	int radius_cone = 4;
 
+	std::vector<int> x_coor, y_coor, z_coor;
+
+	int step_x = Xdim/(height_cone + height_cylinder);
+	int step_y = Ydim/(height_cone + height_cylinder);
+	int step_z = Zdim/(height_cone + height_cylinder);
+
+	std::ofstream descrfile ("arrows.descr");
+	descrfile << Xdim << " " << Ydim << " " << Zdim << " " << Ndim << "\n" << std::endl;
+
+	//cyl = 1 0 0 0 5 5 20 0 0 0
+
+	for (size_t k = 0; k< Zdim; k+step_z)
+	{
+		if (k != 0 )
+			k = k - 0.5*Zdim;
+		else
+			k = 0.5*Zdim;
+		for (size_t i = 0; i< Ydim; i+step_y)
+		{
+			if (i != 0 )
+				i = i - 0.5*Ydim;
+			else
+				i = 0.5*Ydim;
+			for (size_t j = 0; j< Zdim; j+step_x)
+			{
+				if (DIRECT_A3D_ELEM(mask, k,i,j) == 1)
+				{
+					if (j != 0 )
+						j = j - 0.5*Xdim;
+					else
+						j = 0.5*Xdim;
+
+					x_coor.push_back(i);
+					y_coor.push_back(j);
+					z_coor.push_back(k);
+					descrfile << "my text here!" << std::endl;
+				}
+			}
+		}
+	}
+
+	descrfile.close();
 
 }
 
