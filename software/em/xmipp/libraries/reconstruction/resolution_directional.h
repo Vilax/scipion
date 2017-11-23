@@ -95,7 +95,7 @@ public:
 			   MultidimArray<double> &SumRes,
 			   double rot, double tilt);
 
-    void diagSymMatrix3x3(Matrix2D<double> A, int Ndirections,
+    void diagSymMatrix3x3(Matrix2D<double> A,
 			double &lambda_1, double &lambda_2, double &lambda_3);
 
     void degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &lambda_3,

@@ -688,7 +688,7 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 	}
 }
 
-void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A, int Ndirections,
+void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A,
 					double &lambda_1, double &lambda_2, double &lambda_3)
 {
 	double b, c, d, p, q, Delta;
@@ -743,12 +743,25 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 		std::cout << "lambda_3 = " << lambda_3 << std::endl;
 	}
 
+	double max_, min_;
+
+	double eigenvalues[] = {lambda_1,lambda_2,lambda_3};
+
+	min_ = *std::min_element(eigenvalues,eigenvalues+3);
+	max_ = *std::max_element(eigenvalues,eigenvalues+3);
+
+	if (counter == 34)
+	{
+	  // using default comparison:
+	  std::cout << "min = " << min_ << '\n';
+	  std::cout << "max = " << max_ << '\n';
+	}
 	counter++;
 	// Sort value and get threshold
-	std::sort(&A1D_ELEM(eigs,0),&A1D_ELEM(eigs,2));
+//	std::sort(&A1D_ELEM(eigs,0),&A1D_ELEM(eigs,2));
 
-	double max = 1/sqrt(A1D_ELEM(eigs,0));
-	double min = 1/sqrt(A1D_ELEM(eigs,2));
+	double max = 1/sqrt(min_);//sqrt(A1D_ELEM(eigs,0));
+	double min = 1/sqrt(max_);//sqrt(A1D_ELEM(eigs,2));
 
 	if (counter == 34)
 	{
@@ -1483,7 +1496,7 @@ void ProgResDir::run()
 
 			//std::cout << "InertiaMatrix = " << InertiaMatrix << std::endl;
 
-			diagSymMatrix3x3(InertiaMatrix, N_directions, lambda_1, lambda_2, lambda_3);
+			diagSymMatrix3x3(InertiaMatrix, lambda_1, lambda_2, lambda_3);
 
 
 //			std::cout << "lambda_1 = " << lambda_1 <<
