@@ -99,7 +99,7 @@ public:
 			double &lambda_1, double &lambda_2, double &lambda_3);
 
     void degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &lambda_3,
-			double &doa);
+			double &doa, int counter);
 
     void resolution2eval(int &count_res, double step,
 			double &resolution, double &last_resolution,

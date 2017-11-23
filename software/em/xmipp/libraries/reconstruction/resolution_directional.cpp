@@ -452,10 +452,10 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 		DIRECT_MULTIDIM_ELEM(amplitude,n)=sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
 	}
 
-	Image<double> saveImg2;
+//	Image<double> saveImg2;
 //	saveImg2 = amplitude;
-	FileName fnSaveImg2;
-	FileName iternumber;
+//	FileName fnSaveImg2;
+//	FileName iternumber;
 
 //	#ifdef MONO_AMPLITUDE
 
@@ -468,11 +468,11 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 //	#endif
 
 
-	size_t Ydim, Xdim, Zdim, Ndim;
-	amplitude.getDimensions(Xdim, Ydim, Zdim, Ndim);
+//	size_t Ydim, Xdim, Zdim, Ndim;
+//	amplitude.getDimensions(Xdim, Ydim, Zdim, Ndim);
 
 
-	n=0;
+
 //	//Creating mask for smoothing
 //		for (size_t i = 0; i< Xdim; i++)
 //		{
@@ -504,6 +504,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 		std::cout << "z_size = " << z_size << std::endl;
 		double limit_radius = (z_size/2-N_smoothing);
+		n=0;
 		for(int k=0; k<z_size; ++k)
 		{
 			uz = (k - z_size*0.5);
@@ -748,7 +749,7 @@ void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A, int Ndirections,
 }
 
 void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &lambda_3,
-							double &doa)
+							double &doa, int counter)
 {
 	//This equation comes from Thomsen's formula, with an error lesser than 1.061%
 	/*double p = 1.6075;
@@ -766,13 +767,25 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 	A1D_ELEM(eigs,1) = lambda_2;
 	A1D_ELEM(eigs,2) = lambda_3;
 
+	if (counter == 34)
+	{
+		std::cout << "lambda_1 = " << lambda_1 << std::endl;
+		std::cout << "lambda_2 = " << lambda_2 << std::endl;
+		std::cout << "lambda_3 = " << lambda_3 << std::endl;
+	}
+
+
 	// Sort value and get threshold
 	std::sort(&A1D_ELEM(eigs,0),&A1D_ELEM(eigs,2));
 
 	double max = 1/sqrt(A1D_ELEM(eigs,0));
 	double min = 1/sqrt(A1D_ELEM(eigs,2));
 
-
+	if (counter == 34)
+	{
+		std::cout << "max = " << max << std::endl;
+		std::cout << "min = " << min << std::endl;
+	}
 	//Defining DoA
 	doa = (max-min)/(max+min);
 
@@ -894,20 +907,20 @@ void ProgResDir::createVectorField(Image<double> volume, MultidimArray<int> &mas
 	volume.getDimensions(Xdim, Ydim, Zdim, Ndim);
 
 	int height_cylinder = 8;
-	int height_cone = 4;
+	int height_cone = 12;
 	int radius_cylinder = 2;
 	int radius_cone = 4;
 
 	std::vector<int> x_coor, y_coor, z_coor;
 
-	int step_x = Xdim/(height_cone + height_cylinder);
-	int step_y = Ydim/(height_cone + height_cylinder);
-	int step_z = Zdim/(height_cone + height_cylinder);
+	int step_x = Xdim/(height_cone);// + height_cylinder);
+	int step_y = Ydim/(height_cone);// + height_cylinder);
+	int step_z = Zdim/(height_cone);// + height_cylinder);
 
 	std::ofstream descrfile ("arrows.descr");
 	descrfile << Xdim << " " << Ydim << " " << Zdim << " " << Ndim << "\n" << std::endl;
 
-	//cyl = 1 0 0 0 5 5 20 0 0 0
+	//con = 1 0 0 0 5 5 20 0 0 0
 
 	for (size_t k = 0; k< Zdim; k+step_z)
 	{
@@ -933,7 +946,9 @@ void ProgResDir::createVectorField(Image<double> volume, MultidimArray<int> &mas
 					x_coor.push_back(i);
 					y_coor.push_back(j);
 					z_coor.push_back(k);
-					descrfile << "my text here!" << std::endl;
+					descrfile << "con = 1 " << i << " " << j << " " << k
+							<< " " << radius_cone << " " << height_cone <<
+							" " << 0 << " " << 0 << " " << 0 <<  std::endl;
 				}
 			}
 		}
@@ -1122,7 +1137,7 @@ void ProgResDir::run()
 
 				amplitudeMS.setXmippOrigin();
 
-
+				//TODO: check if can be taken out side the loop
 				MultidimArray<double> coneVol;
 				coneVol.initZeros(amplitudeMS);
 				int n=0;
@@ -1475,11 +1490,11 @@ void ProgResDir::run()
 	Matrix2D<double> InertiaMatrix;
 	InertiaMatrix.initZeros(3,3);
 
-	Image<double> AvgResolution;
-	AvgResolution.read(fnOut);
+
 	//MultidimArray<double> &pAvgResolution = AvgResolution();
 
-	double lambda_1, lambda_2, lambda_3, sph;
+	double lambda_1, lambda_2, lambda_3, doa;
+	int counter = 0;
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pInertia_11)
 	{
 		if (DIRECT_MULTIDIM_ELEM(mask(),n) == 1 )
@@ -1507,7 +1522,7 @@ void ProgResDir::run()
 //					   "  lambda_3 = " << lambda_3 << std::endl;
 
 
-			degreeOfAnisotropy(lambda_1, lambda_2, lambda_3, sph);
+			degreeOfAnisotropy(lambda_1, lambda_2, lambda_3, doa, counter);
 
 //			std::cout << "LAMBDA_1 = " << lambda_1 <<
 //					   "  LAMBDA_2 = " << lambda_2 <<
@@ -1517,7 +1532,7 @@ void ProgResDir::run()
 			DIRECT_MULTIDIM_ELEM(pInertia_01,n) = lambda_2;
 			DIRECT_MULTIDIM_ELEM(pInertia_02,n) = lambda_3;
 
-			DIRECT_MULTIDIM_ELEM(pInertia_11,n) = sph;
+			DIRECT_MULTIDIM_ELEM(pInertia_11,n) = doa;
 //			DIRECT_MULTIDIM_ELEM(pInertia_12,n) = (lambda_1-lambda_3)/(lambda_1+lambda_3);
 
 		}
@@ -1533,7 +1548,7 @@ void ProgResDir::run()
 	Inertia_11.write(fnDoA);
 
 
-	Image<double> VarianzeResolution;
+	Image<double> AvgResolution, VarianzeResolution;
 	AvgResolution.read(fnOut);
 	MultidimArray<double> &pAvgResolution = AvgResolution();
 
