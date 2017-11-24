@@ -731,6 +731,8 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 //	std::cout << "A_ellip  = " << A_ellip << "  V_ellip  = " << V_ellip << std::endl;
 	sph = pow(PI,(1.0/3.0))*pow(6.0*V_ellip,2.0/3.0)/A_ellip;
 	*/
+
+	/*
 	MultidimArray<double> eigs(3);
 	A1D_ELEM(eigs,0) = lambda_1;
 	A1D_ELEM(eigs,1) = lambda_2;
@@ -768,9 +770,30 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 		std::cout << "max = " << max << std::endl;
 		std::cout << "min = " << min << std::endl;
 	}
+*/
+
+
 	counter++;
+
 	//Defining DoA
-	doa = (max-min)/(max+min);
+	//doa = (max-min)/(max+min);
+	double tr = lambda_1 + lambda_2 + lambda_3;
+	double tr2 = lambda_1*lambda_1 + lambda_2*lambda_2 + lambda_3*lambda_3;
+
+	double aux_tr=tr2/(tr*tr);
+	doa = sqrt((3.0/2.0)*( aux_tr - (1.0/3.0) ) );
+	if (counter == 34)
+	{
+		std::cout << "lambda_1 = " << lambda_1 << std::endl;
+		std::cout << "lambda_2 = " << lambda_2 << std::endl;
+		std::cout << "lambda_3 = " << lambda_3 << std::endl;
+		std::cout << "tr = " << tr << std::endl;
+		std::cout << "tr2 = " << tr2 << std::endl;
+		std::cout << "doa = " << doa << std::endl;
+
+
+	}
+
 
 
 	/*
