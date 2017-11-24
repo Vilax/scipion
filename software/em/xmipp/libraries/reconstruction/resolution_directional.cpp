@@ -756,7 +756,7 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 	  std::cout << "min = " << min_ << '\n';
 	  std::cout << "max = " << max_ << '\n';
 	}
-	counter++;
+
 	// Sort value and get threshold
 //	std::sort(&A1D_ELEM(eigs,0),&A1D_ELEM(eigs,2));
 
@@ -768,6 +768,7 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 		std::cout << "max = " << max << std::endl;
 		std::cout << "min = " << min << std::endl;
 	}
+	counter++;
 	//Defining DoA
 	doa = (max-min)/(max+min);
 
