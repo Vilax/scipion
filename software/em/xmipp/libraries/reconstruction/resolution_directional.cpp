@@ -781,9 +781,9 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 //	double tr2 = lambda_1*lambda_1 + lambda_2*lambda_2 + lambda_3*lambda_3;
 //	double aux_tr=tr2/(tr*tr);
 //	doa = sqrt((3.0/2.0)*( aux_tr - (1.0/3.0) ) );
-	double D11 = lambda_1;
-	double D22 = lambda_2;
-	double D33 = lambda_3;
+	double D11 = lambda_1*lambda_1;
+	double D22 = lambda_2*lambda_2;
+	double D33 = lambda_3*lambda_3;
 	double I1 = D11 + D22 + D33;
 	double I2 = D11*D22 + D11*D33 + D22*D33;
 	double I3 = D11*D22*D33;
