@@ -777,21 +777,34 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 
 	//Defining DoA
 	//doa = (max-min)/(max+min);
-	double tr = lambda_1 + lambda_2 + lambda_3;
-	double tr2 = lambda_1*lambda_1 + lambda_2*lambda_2 + lambda_3*lambda_3;
+//	double tr = lambda_1 + lambda_2 + lambda_3;
+//	double tr2 = lambda_1*lambda_1 + lambda_2*lambda_2 + lambda_3*lambda_3;
+//	double aux_tr=tr2/(tr*tr);
+//	doa = sqrt((3.0/2.0)*( aux_tr - (1.0/3.0) ) );
+	double D11 = lambda_1;
+	double D22 = lambda_2;
+	double D33 = lambda_3;
+	double I1 = D11 + D22 + D33;
+	double I2 = D11*D22 + D11*D33 + D22*D33;
+	double I3 = D11*D22*D33;
+	double I4 = D11*D11 + D22*D22 + D33*D33;
 
-	double aux_tr=tr2/(tr*tr);
-	doa = sqrt((3.0/2.0)*( aux_tr - (1.0/3.0) ) );
+	double Dav = I1/3;
+	double Dsurf = sqrt(I2/3);
+	double Dmag = sqrt(I4/3);
+
+	//double D_D = 2*(Dmag^2-Dvol^2);
+	double FA = sqrt(1-( (Dsurf*Dsurf)/(Dmag*Dmag) ) );
+	double RA = sqrt(2)*sqrt(1-( (Dsurf*Dsurf)/(Dav*Dav) ) );
+
+	doa = FA;
+
+
 	if (counter == 34)
 	{
 		std::cout << "lambda_1 = " << lambda_1 << std::endl;
 		std::cout << "lambda_2 = " << lambda_2 << std::endl;
 		std::cout << "lambda_3 = " << lambda_3 << std::endl;
-		std::cout << "tr = " << tr << std::endl;
-		std::cout << "tr2 = " << tr2 << std::endl;
-		std::cout << "doa = " << doa << std::endl;
-
-
 	}
 
 
