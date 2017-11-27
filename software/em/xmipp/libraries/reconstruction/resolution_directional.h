@@ -107,8 +107,6 @@ public:
 			int &last_fourier_idx,
 			bool &continueIter, bool &breakIter, bool &doNextIteration);
 
-    void generateGrid(const double N_points, Matrix2D<double> &angles);
-
     void generateGridProjectionMatching(FileName fnVol_, double smprt,
     		Matrix2D<double> &angles);
 

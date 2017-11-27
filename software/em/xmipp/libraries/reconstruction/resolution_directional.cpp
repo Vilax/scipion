@@ -720,61 +720,8 @@ void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A,
 void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &lambda_3,
 							double &doa, int &counter)
 {
-	//This equation comes from Thomsen's formula, with an error lesser than 1.061%
-	/*double p = 1.6075;
-	double A_ellip, V_ellip;
-	double aux = (pow((lambda_1*lambda_2),p) + pow((lambda_1*lambda_3),p) +
-				pow((lambda_2*lambda_3),p));
-	A_ellip = 4.0*PI*pow(aux/3.0,1.0/p);
-	V_ellip = (4.0/3.0)*PI*lambda_1*lambda_2*lambda_3;
-//	std::cout << "lambda_1  = " << lambda_1 << "  lambda_2  = " << lambda_2 << "  lambda_3  = " << lambda_3 << std::endl;
-//	std::cout << "A_ellip  = " << A_ellip << "  V_ellip  = " << V_ellip << std::endl;
-	sph = pow(PI,(1.0/3.0))*pow(6.0*V_ellip,2.0/3.0)/A_ellip;
-	*/
-
-	/*
-	MultidimArray<double> eigs(3);
-	A1D_ELEM(eigs,0) = lambda_1;
-	A1D_ELEM(eigs,1) = lambda_2;
-	A1D_ELEM(eigs,2) = lambda_3;
-
-	if (counter == 34)
-	{
-		std::cout << "lambda_1 = " << lambda_1 << std::endl;
-		std::cout << "lambda_2 = " << lambda_2 << std::endl;
-		std::cout << "lambda_3 = " << lambda_3 << std::endl;
-	}
-
-	double max_, min_;
-
-	double eigenvalues[] = {lambda_1,lambda_2,lambda_3};
-
-	min_ = *std::min_element(eigenvalues,eigenvalues+3);
-	max_ = *std::max_element(eigenvalues,eigenvalues+3);
-
-	if (counter == 34)
-	{
-	  // using default comparison:
-	  std::cout << "min = " << min_ << '\n';
-	  std::cout << "max = " << max_ << '\n';
-	}
-
-	// Sort value and get threshold
-//	std::sort(&A1D_ELEM(eigs,0),&A1D_ELEM(eigs,2));
-
-	double max = 1/sqrt(min_);//sqrt(A1D_ELEM(eigs,0));
-	double min = 1/sqrt(max_);//sqrt(A1D_ELEM(eigs,2));
-
-	if (counter == 34)
-	{
-		std::cout << "max = " << max << std::endl;
-		std::cout << "min = " << min << std::endl;
-	}
-*/
-
-
 	counter++;
-
+	/*
 	//Defining DoA
 	//doa = (max-min)/(max+min);
 //	double tr = lambda_1 + lambda_2 + lambda_3;
@@ -807,9 +754,9 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 		std::cout << "lambda_3 = " << lambda_3 << std::endl;
 	}
 
+*/
 
 
-	/*
 
 	Matrix2D<double> invA;
 	Matrix1D<double> inertia_vector(3), ellipsoid_axes(3);
@@ -830,14 +777,23 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 	lambda_2 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 1)*100.0)/100.0));
 	lambda_3 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 2)*100.0)/100.0));
 
-	if ((lambda_3>lambda_2) && (lambda_3>lambda_1))
-		sph = (lambda_1*lambda_2)/(lambda_3*lambda_3);
-	else if ((lambda_2>lambda_3) && (lambda_2>lambda_1))
-		sph = (lambda_1*lambda_3)/(lambda_2*lambda_2);
-		else if ((lambda_1>lambda_2) && (lambda_1>lambda_3))
-			sph = (lambda_2*lambda_3)/(lambda_1*lambda_1);
+	std::vector<double> lambda_list = {lambda_1, lambda_2, lambda_3};
+	std::sort (lambda_list.begin(), lambda_list.begin()+3);
 
-*/
+	doa = 3*(lambda_list[2] - lambda_list[0])/(lambda_list[0] + lambda_list[1] +lambda_list[2]);
+
+	if (counter == 34)
+	{
+		std::cout << "lambda_1 = " << lambda_1 << std::endl;
+		std::cout << "lambda_2 = " << lambda_2 << std::endl;
+		std::cout << "lambda_3 = " << lambda_3 << std::endl;
+
+		std::cout << "doa = " << doa << std::endl;
+		std::cout << "lambda_list[2] = " << lambda_list[2] << std::endl;
+		std::cout << "lambda_list[1] = " << lambda_list[1] << std::endl;
+		std::cout << "lambda_list[0] = " << lambda_list[0] << std::endl;
+	}
+
 }
 
 
