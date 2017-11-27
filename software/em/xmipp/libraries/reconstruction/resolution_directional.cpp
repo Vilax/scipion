@@ -777,7 +777,7 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 	lambda_2 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 1)*100.0)/100.0));
 	lambda_3 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 2)*100.0)/100.0));
 
-	std::vector<double> lambda_list = {lambda_1, lambda_2, lambda_3};
+	std::vector<double> lambda_list[] = {lambda_1, lambda_2, lambda_3};
 	std::sort (lambda_list.begin(), lambda_list.begin()+3);
 
 	doa = 3*(lambda_list[2] - lambda_list[0])/(lambda_list[0] + lambda_list[1] +lambda_list[2]);
