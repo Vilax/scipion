@@ -777,10 +777,10 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 	lambda_2 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 1)*100.0)/100.0));
 	lambda_3 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 2)*100.0)/100.0));
 
-	std::vector<double> lambda_list[] = {lambda_1, lambda_2, lambda_3};
-	std::sort (lambda_list.begin(), lambda_list.begin()+3);
+	double lambda_values[3] = {lambda_1, lambda_2, lambda_3};
+	std::sort(lambda_values, lambda_values+3);
 
-	doa = 3*(lambda_list[2] - lambda_list[0])/(lambda_list[0] + lambda_list[1] +lambda_list[2]);
+	doa = 3*(lambda_values[2] - lambda_values[0])/(lambda_values[0] + lambda_values[1] +lambda_values[2]);
 
 	if (counter == 34)
 	{
@@ -789,9 +789,9 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 		std::cout << "lambda_3 = " << lambda_3 << std::endl;
 
 		std::cout << "doa = " << doa << std::endl;
-		std::cout << "lambda_list[2] = " << lambda_list[2] << std::endl;
-		std::cout << "lambda_list[1] = " << lambda_list[1] << std::endl;
-		std::cout << "lambda_list[0] = " << lambda_list[0] << std::endl;
+		std::cout << "lambda_list[2] = " << lambda_values[2] << std::endl;
+		std::cout << "lambda_list[1] = " << lambda_values[1] << std::endl;
+		std::cout << "lambda_list[0] = " << lambda_values[0] << std::endl;
 	}
 
 }
