@@ -446,26 +446,11 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	}
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
-	{
-		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
-		DIRECT_MULTIDIM_ELEM(amplitude,n)=sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
-	}
-
-//	Image<double> saveImg2;
-//	saveImg2 = amplitude;
-//	FileName fnSaveImg2;
-//	FileName iternumber;
-
-//	#ifdef MONO_AMPLITUDE
-
-//	if (fnDebug.c_str() != "")
+//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 //	{
-//		saveImg2 = amplitude;
-//		iternumber = formatString("No_Filtered_Amplitude_%i_%i.vol", dir, count);
-//		saveImg2.write(fnDebug+iternumber);
+//
+//
 //	}
-//	#endif
 
 	amplitude.setXmippOrigin();
 	int z_size = ZSIZE(amplitude);
@@ -483,6 +468,9 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 			for(int j=0; j<x_size; ++j)
 			{
 				ux = (j - x_size*0.5);
+				DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+				DIRECT_MULTIDIM_ELEM(amplitude,n)=sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
+
 				double radius = sqrt(ux*ux + uy*uy + uz*uz);
 				if ((radius>=limit_radius) && (radius<=(z_size*0.5)))
 					DIRECT_MULTIDIM_ELEM(amplitude, n) *= 0.5*(1+cos(PI*(limit_radius-radius)/(N_smoothing)));
@@ -510,28 +498,15 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	transformer_inv.FourierTransform(amplitude, fftVRiesz, false);
 
     double raised_w = PI/(wH-w1);
-//    w1 = 0.4;
 
-//	for (size_t k=0; k<ZSIZE(fftVRiesz); k++)
-//	{
-//		for (size_t i=0; i<YSIZE(fftVRiesz); i++)
-//		{
-//			for (size_t j=0; j<XSIZE(fftVRiesz); j++)
-//			{
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fftVRiesz)
 	{
 			double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
-//			double un=1.0/DIRECT_A3D_ELEM(iu,k,i,j);
-
 			if ((wH)>=un && un>=w1)
 				DIRECT_MULTIDIM_ELEM(fftVRiesz,n) *= 0.5*(1 + cos(raised_w*(un-w1)));
 			else
 				if (un>(wH))
 					DIRECT_MULTIDIM_ELEM(fftVRiesz,n) = 0;
-//			n++;
-//			}
-//		}
-//	}
 	}
 	transformer_inv.inverseFourierTransform();
 
@@ -806,7 +781,6 @@ void ProgResDir::resolution2eval(int &count_res, double step,
 	resolution = maxRes - count_res*step;
 	freq = sampling/resolution;
 
-
 	++count_res;
 
 	double Nyquist = 2*sampling;
@@ -814,7 +788,6 @@ void ProgResDir::resolution2eval(int &count_res, double step,
 	int fourier_idx;
 
 	DIGFREQ2FFT_IDX(freq, ZSIZE(VRiesz), fourier_idx);
-
 
 //	std::cout << "Resolution = " << resolution << "   iter = " << count_res-1 << std::endl;
 //	std::cout << "freq = " << freq << "   Fourier index = " << fourier_idx << std::endl;
@@ -861,7 +834,6 @@ void ProgResDir::resolution2eval(int &count_res, double step,
 	int fourier_idx_2;
 
 	DIGFREQ2FFT_IDX(freqL, ZSIZE(VRiesz), fourier_idx_2);
-	double caca, caca2;
 
 	if (fourier_idx_2 == fourier_idx)
 	{
@@ -975,7 +947,7 @@ void ProgResDir::run()
 		MultidimArray<int> &pMask = mask_aux;
 		std::vector<double> list;
 		double resolution, last_resolution = maxRes;  //A huge value for achieving last_resolution < resolution
-		double freq, freqL, freqH, resVal, counter, resolution_2;
+		double freq, freqL, freqH, counter, resolution_2;
 		double max_meanS = -1e38;
 		double cut_value = 0.025;
 
@@ -1084,24 +1056,6 @@ void ProgResDir::run()
 			}
 			else
 			{
-//				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
-//				{
-//
-//					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
-//					{
-//						amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-//						sumS  += amplitudeValue;
-//						sumS2 += amplitudeValue*amplitudeValue;
-//						++NS;
-//					}
-//					else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
-//					{
-//						amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-//						sumN  += amplitudeValue;
-//						sumN2 += amplitudeValue*amplitudeValue;
-//						++NN;
-//					}
-//				}
 				double x_dir, y_dir, z_dir;
 
 				x_dir = sin(tilt*PI/180)*cos(rot*PI/180);
