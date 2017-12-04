@@ -96,10 +96,11 @@ public:
 			   double rot, double tilt);
 
     void diagSymMatrix3x3(Matrix2D<double> A,
-			double &lambda_1, double &lambda_2, double &lambda_3);
+			Matrix1D<double> &eigenvalues, Matrix2D<double> &P);
 
-    void degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &lambda_3,
-			double &doa, int &counter);
+    void degreeOfAnisotropy(Matrix1D<double> eigenvalues, Matrix2D<double> eigenvectors,
+			double &doa, double &direction_x, double &direction_y, double &direction_z,
+			int &counter);
 
     void resolution2eval(int &count_res, double step,
 			double &resolution, double &last_resolution,
@@ -110,7 +111,13 @@ public:
     void generateGridProjectionMatching(FileName fnVol_, double smprt,
     		Matrix2D<double> &angles);
 
-    void createVectorField(Image<double> volume, MultidimArray<int> &mask);
+    void defineDirection(Matrix1D<double> &r0, Matrix1D<double> &rF,
+			Matrix2D<double> direction, double eigenvalue, int eigdir,
+			int k , int i, int j);
+
+    void defineSegment(Matrix1D<double> r0, Matrix1D<double> rF,
+			MultidimArray<int> &arrows, double elongation);
+
 
     void run();
 

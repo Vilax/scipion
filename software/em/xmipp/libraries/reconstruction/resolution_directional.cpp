@@ -225,6 +225,8 @@ void ProgResDir::produceSideInfo()
 
 	freq_fourier.initZeros(ZSIZE(inputVol));
 	int size = ZSIZE(inputVol);
+	maxRes = size;
+	minRes = 1;
 	V.clear();
 
 
@@ -237,6 +239,8 @@ void ProgResDir::produceSideInfo()
 		VEC_ELEM(freq_fourier,k) = u;
 //		std::cout << "freq_fourier = " << u  << std::endl;
 	}
+
+
 }
 
 
@@ -285,7 +289,8 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 	N_directions = count;
 	angles.initZeros(4,N_directions);
 
-	for (size_t k = 0; k<N_directions; k++)
+	//The loop beging in 1 instead of 0 avoiding the repeated direction rot=0 tilt=0.
+	for (size_t k = 1; k<(N_directions); k++)
 	{
 		MAT_ELEM(angles, 0, k) = MAT_ELEM(aux_angles,0, k);
 		MAT_ELEM(angles, 1, k) = MAT_ELEM(aux_angles,1, k);
@@ -356,7 +361,9 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= exp(-arg_exp);
 				}
 
-				DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J*iun*DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
+				DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
+				DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
+				DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
 				++n;
 			}
 		}
@@ -639,7 +646,7 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 			DIRECT_MULTIDIM_ELEM(Inertia_33,n) += r_xyz2*(1-z_dir_sym*z_dir_sym);
 
 			DIRECT_MULTIDIM_ELEM(SumRes,n) += 2;
-			idx++;
+			++idx;
 
 			if (idx == 34)
 			{
@@ -656,16 +663,14 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 
 				std::cout << "resVal = " << resVal << std::endl;
 			}
-
-			//resVal = 1;
-
 		}
 	}
 }
 
 void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A,
-					double &lambda_1, double &lambda_2, double &lambda_3)
+					Matrix1D<double> &eigenvalues, Matrix2D<double> &eigenvectors)
 {
+	/*
 	double b, c, d, p, q, Delta;
 
 	b = MAT_ELEM(A, 0, 0) + MAT_ELEM(A, 1, 1) + MAT_ELEM(A, 2, 2);
@@ -690,10 +695,25 @@ void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A,
 	lambda_1 =(1.0/3)*(b+2.0*sqrt(p)*cos(Delta/3));
 	lambda_2 =(1.0/3)*(b+2.0*sqrt(p)*cos((Delta+2.0*PI)/3));
 	lambda_3 =(1.0/3)*(b+2.0*sqrt(p)*cos((Delta-2.0*PI)/3));
+	*/
+
+	Matrix2D<double> B;
+	B.initZeros(3,3);
+
+	MAT_ELEM(B,0,0) = 1;
+	MAT_ELEM(B,1,1) = 1;
+	MAT_ELEM(B,2,2) = 1;
+
+	Matrix1D<double> D;
+
+	generalizedEigs(A, B, eigenvalues, eigenvectors);
 }
 
-void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &lambda_3,
-							double &doa, int &counter)
+void ProgResDir::degreeOfAnisotropy(Matrix1D<double> eigenvalues,
+									Matrix2D<double> eigenvectors,
+									double &doa,
+							double &direction_x, double &direction_y, double &direction_z,
+							int &counter)
 {
 	counter++;
 	/*
@@ -732,6 +752,9 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 */
 
 
+	direction_x = MAT_ELEM(eigenvectors, 0, 1);
+	direction_y = MAT_ELEM(eigenvectors, 1, 1);
+	direction_z = MAT_ELEM(eigenvectors, 2, 1);
 
 	Matrix2D<double> invA;
 	Matrix1D<double> inertia_vector(3), ellipsoid_axes(3);
@@ -741,18 +764,22 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 	MAT_ELEM(invA, 1, 1) = -0.5;
 	MAT_ELEM(invA, 2, 2) = -0.5;
 
-	VEC_ELEM(inertia_vector, 0) = 3.0*lambda_1;
-	VEC_ELEM(inertia_vector, 1) = 3.0*lambda_2;
-	VEC_ELEM(inertia_vector, 2) = 3.0*lambda_3;
+	VEC_ELEM(inertia_vector, 0) = 3.0*VEC_ELEM(eigenvalues,0);
+	VEC_ELEM(inertia_vector, 1) = 3.0*VEC_ELEM(eigenvalues,1);
+	VEC_ELEM(inertia_vector, 2) = 3.0*VEC_ELEM(eigenvalues,2);
 
 	ellipsoid_axes = invA*inertia_vector;
-
-
-	lambda_1 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 0)*100.0)/100.0));
-	lambda_2 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 1)*100.0)/100.0));
-	lambda_3 = fabs(sqrt(round(VEC_ELEM(ellipsoid_axes, 2)*100.0)/100.0));
+/*
+	lambda_1 = sqrt(round(VEC_ELEM(ellipsoid_axes, 0)*100.0)/100.0);
+	lambda_2 = sqrt(round(VEC_ELEM(ellipsoid_axes, 1)*100.0)/100.0);
+	lambda_3 = sqrt(round(VEC_ELEM(ellipsoid_axes, 2)*100.0)/100.0);
+*/
+	double lambda_1 = sqrt(VEC_ELEM(ellipsoid_axes, 0));
+	double lambda_2 = sqrt(VEC_ELEM(ellipsoid_axes, 1));
+	double lambda_3 = sqrt(VEC_ELEM(ellipsoid_axes, 2));
 
 	double lambda_values[3] = {lambda_1, lambda_2, lambda_3};
+
 	std::sort(lambda_values, lambda_values+3);
 
 	doa = 3*(lambda_values[2] - lambda_values[0])/(lambda_values[0] + lambda_values[1] +lambda_values[2]);
@@ -768,7 +795,6 @@ void ProgResDir::degreeOfAnisotropy(double &lambda_1, double &lambda_2, double &
 		std::cout << "lambda_list[1] = " << lambda_values[1] << std::endl;
 		std::cout << "lambda_list[0] = " << lambda_values[0] << std::endl;
 	}
-
 }
 
 
@@ -792,25 +818,31 @@ void ProgResDir::resolution2eval(int &count_res, double step,
 //	std::cout << "Resolution = " << resolution << "   iter = " << count_res-1 << std::endl;
 //	std::cout << "freq = " << freq << "   Fourier index = " << fourier_idx << std::endl;
 
-	FFT_IDX2DIGFREQ(fourier_idx, ZSIZE(VRiesz), aux_frequency);
+	FFT_IDX2DIGFREQ(fourier_idx, ZSIZE(VRiesz), freq);
 
 	/////////////////////
-	FFT_IDX2DIGFREQ((fourier_idx+1), ZSIZE(VRiesz), aux_frequency_next);
+	FFT_IDX2DIGFREQ((fourier_idx+1), ZSIZE(VRiesz), freqH);
 	/////////////////////
 
-	freq = aux_frequency;
-	freqH = aux_frequency_next;
+//	std::cout << "freq = " << freq << "  freqH = " << freqH << std::endl;
+//	std::cout << "fourier_idx = " << fourier_idx << "  fourier_idx +1 = " << fourier_idx + 1 << std::endl;
 
+	if ( freq == 0)// || (resolution > last_resolution) )
+	{
+		std::cout << "Nyquist limit reached" << std::endl;
+		breakIter = true;
+		doNextIteration = false;
+		return;
+	}
 
 	if (fourier_idx == last_fourier_idx)
 	{
-//		std::cout << "entro en el if"  << std::endl;
 		continueIter = true;
 		return;
 	}
 
 	last_fourier_idx = fourier_idx;
-	resolution = sampling/aux_frequency;
+	resolution = sampling/freq;
 
 
 	if (count_res == 0)
@@ -820,11 +852,13 @@ void ProgResDir::resolution2eval(int &count_res, double step,
 	{
 		//std::cout << "Nyquist limit reached" << std::endl;
 		breakIter = true;
+		doNextIteration = false;
 		return;
 	}
 	if ( ( freq>0.49))// || (resolution > last_resolution) )
 	{
 		std::cout << "Nyquist limit reached" << std::endl;
+		breakIter = true;
 		doNextIteration = false;
 		return;
 	}
@@ -837,7 +871,7 @@ void ProgResDir::resolution2eval(int &count_res, double step,
 
 	if (fourier_idx_2 == fourier_idx)
 	{
-		if (fourier_idx > 0){
+		if (fourier_idx > 2){
 			//std::cout << " index low =  " << (fourier_idx - 1) << std::endl;
 			FFT_IDX2DIGFREQ(fourier_idx - 1, ZSIZE(VRiesz), freqL);
 		}
@@ -847,61 +881,31 @@ void ProgResDir::resolution2eval(int &count_res, double step,
 	}
 }
 
-
-void ProgResDir::createVectorField(Image<double> volume, MultidimArray<int> &mask)
+void ProgResDir::defineDirection(Matrix1D<double> &r0, Matrix1D<double> &rF,
+							Matrix2D<double> direction, double eigenvalue, int eigdir,
+							int k , int i, int j)
 {
-	size_t Xdim, Ydim, Zdim, Ndim;
-	volume.getDimensions(Xdim, Ydim, Zdim, Ndim);
+	VECTOR_R3(r0,j-eigenvalue*MAT_ELEM(direction,0,eigdir),
+							     i-eigenvalue*MAT_ELEM(direction,1,eigdir),
+							     k-eigenvalue*MAT_ELEM(direction,2,eigdir));
+	VECTOR_R3(rF,j+eigenvalue*MAT_ELEM(direction,0,eigdir),
+				 i+eigenvalue*MAT_ELEM(direction,1,eigdir),
+				 k+eigenvalue*MAT_ELEM(direction,2,eigdir));
+}
 
-	int height_cylinder = 8;
-	int height_cone = 12;
-	int radius_cylinder = 2;
-	int radius_cone = 4;
 
-	std::vector<int> x_coor, y_coor, z_coor;
+void ProgResDir::defineSegment(Matrix1D<double> r0, Matrix1D<double> rF,
+							MultidimArray<int> &arrows, double elongation)
+{
+	Matrix1D<double> r(3);
+	XX(r)=(1-elongation)*XX(r0)+elongation*XX(rF);
+	YY(r)=(1-elongation)*YY(r0)+elongation*YY(rF);
+	ZZ(r)=(1-elongation)*ZZ(r0)+elongation*ZZ(rF);
 
-	int step_x = Xdim/(height_cone);// + height_cylinder);
-	int step_y = Ydim/(height_cone);// + height_cylinder);
-	int step_z = Zdim/(height_cone);// + height_cylinder);
+	//A3D_ELEM(arrows,(int)round(XX(r)),(int)round(YY(r)),(int)round(ZZ(r)))=1;
 
-	std::ofstream descrfile ("arrows.descr");
-	descrfile << Xdim << " " << Ydim << " " << Zdim << " " << Ndim << "\n" << std::endl;
 
-	//con = 1 0 0 0 5 5 20 0 0 0
-
-	for (size_t k = 0; k< Zdim; k+step_z)
-	{
-		if (k != 0 )
-			k = k - 0.5*Zdim;
-		else
-			k = 0.5*Zdim;
-		for (size_t i = 0; i< Ydim; i+step_y)
-		{
-			if (i != 0 )
-				i = i - 0.5*Ydim;
-			else
-				i = 0.5*Ydim;
-			for (size_t j = 0; j< Zdim; j+step_x)
-			{
-				if (DIRECT_A3D_ELEM(mask, k,i,j) == 1)
-				{
-					if (j != 0 )
-						j = j - 0.5*Xdim;
-					else
-						j = 0.5*Xdim;
-
-					x_coor.push_back(i);
-					y_coor.push_back(j);
-					z_coor.push_back(k);
-					descrfile << "con = 1 " << i << " " << j << " " << k
-							<< " " << radius_cone << " " << height_cone <<
-							" " << 0 << " " << 0 << " " << 0 <<  std::endl;
-				}
-			}
-		}
-	}
-
-	descrfile.close();
+	A3D_ELEM(arrows,(int)round(ZZ(r)),(int)round(YY(r)),(int)round(XX(r)))=1;
 
 }
 
@@ -932,9 +936,11 @@ void ProgResDir::run()
 	if (step<0.1)
 		step=0.1;
 
-		std::cout << "Analyzing directions" << std::endl;
+	std::cout << "Analyzing directions" << std::endl;
 
-//	N_directions=1;
+	N_directions=1;
+
+	std::cout << "N_directions = " << N_directions << std::endl;
 
 	for (size_t dir=0; dir<N_directions; dir++)
 	{
@@ -981,11 +987,13 @@ void ProgResDir::run()
 							freq, freqL, freqH,
 							last_fourier_idx, continueIter, breakIter, doNextIteration);
 
+			if (breakIter)
+				break;
+
 			if (continueIter)
 				continue;
 
-			if (breakIter)
-				break;
+
 
 			std::cout << "resolution = " << resolution << "  resolutionL = " <<
 					sampling/(freqL) << "  resolutionH = " << sampling/freqH << "  " << freqH << std::endl;
@@ -1175,6 +1183,7 @@ void ProgResDir::run()
 				std::cout << "  meanS= " << meanS << " sigma2S= " << sigma2S << " NS= " << NS << std::endl;
 				std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
 				std::cout << "Search of resolutions stopped due to too low signal" << std::endl;
+				std::cout << "\n"<< std::endl;
 				doNextIteration = false;
 			}
 			else
@@ -1423,8 +1432,15 @@ void ProgResDir::run()
 	//MultidimArray<double> &pAvgResolution = AvgResolution();
 
 	double lambda_1, lambda_2, lambda_3, doa;
+	double direction_x, direction_y, direction_z;
 	int counter = 0;
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pInertia_11)
+	Matrix2D<double> eigenvectors;
+	Matrix1D<double> eigenvalues, r0_1(3), rF_1(3), r0_2(3), rF_2(3), r0_3(3), rF_3(3), r(3);
+	MultidimArray<int> arrows;
+	arrows.initZeros(mask());
+	const int gridStep=10;
+	size_t n=0;
+	FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(pInertia_11)
 	{
 		if (DIRECT_MULTIDIM_ELEM(mask(),n) == 1 )
 		{
@@ -1440,18 +1456,10 @@ void ProgResDir::run()
 			MAT_ELEM(InertiaMatrix, 2, 1) = DIRECT_MULTIDIM_ELEM(pInertia_12,n)*val;//MAT_ELEM(InertiaMatrix, 1, 2)
 			MAT_ELEM(InertiaMatrix, 2, 2) = DIRECT_MULTIDIM_ELEM(pInertia_22,n)*val;
 
+			diagSymMatrix3x3(InertiaMatrix, eigenvalues, eigenvectors);
 
-			//std::cout << "InertiaMatrix = " << InertiaMatrix << std::endl;
-
-			diagSymMatrix3x3(InertiaMatrix, lambda_1, lambda_2, lambda_3);
-
-
-//			std::cout << "lambda_1 = " << lambda_1 <<
-//					   "  lambda_2 = " << lambda_2 <<
-//					   "  lambda_3 = " << lambda_3 << std::endl;
-
-
-			degreeOfAnisotropy(lambda_1, lambda_2, lambda_3, doa, counter);
+			degreeOfAnisotropy(eigenvalues, eigenvectors, doa,
+					direction_x, direction_y, direction_z, counter);
 
 //			std::cout << "LAMBDA_1 = " << lambda_1 <<
 //					   "  LAMBDA_2 = " << lambda_2 <<
@@ -1461,16 +1469,38 @@ void ProgResDir::run()
 			DIRECT_MULTIDIM_ELEM(pInertia_01,n) = lambda_2;
 			DIRECT_MULTIDIM_ELEM(pInertia_02,n) = lambda_3;
 
+
 			DIRECT_MULTIDIM_ELEM(pInertia_11,n) = doa;
 //			DIRECT_MULTIDIM_ELEM(pInertia_12,n) = (lambda_1-lambda_3)/(lambda_1+lambda_3);
 
+
+			//lambda_1 is assumed as the least eigenvalue
+			if ( (i%gridStep==0) && (j%gridStep==0) && (k%gridStep==0) )
+			{
+
+				defineDirection(r0_1, rF_1, eigenvectors, lambda_1, 1, k , i, j);
+				defineDirection(r0_2, rF_2, eigenvectors, lambda_2, 2, k , i, j);
+				defineDirection(r0_3, rF_3, eigenvectors, lambda_3, 3, k , i, j);
+
+//				for (double t=0; t<1; t+=0.01)
+//				{
+//					defineSegment(r0_1, rF_1, arrows, t);
+//					defineSegment(r0_2, rF_2, arrows, t);
+//					defineSegment(r0_3, rF_3, arrows, t);
+//				}
+				A3D_ELEM(arrows, k, i,j)=1;
+			}
 		}
 		else
 		{
 			DIRECT_MULTIDIM_ELEM(pInertia_11,n) = 0;
 			DIRECT_MULTIDIM_ELEM(pInertia_12,n) =0;
 		}
+		++n;
 	}
+	Image<int> preferreddir;
+	preferreddir()=arrows;
+	preferreddir.write("preferred.vol");
 	Inertia_00.write("lambda_1.vol");
 	Inertia_01.write("lambda_2.vol");
 	Inertia_02.write("lambda_3.vol");
