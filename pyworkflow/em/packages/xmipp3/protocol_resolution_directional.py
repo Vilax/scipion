@@ -44,6 +44,7 @@ FN_MEAN_VOL = 'mean_volume.vol'
 METADATA_ANGLES_FILE = 'angles_md.xmd'
 OUTPUT_DOA_FILE = 'local_anisotropy.vol'
 OUTPUT_VARIANCE_FILE = 'resolution_variance.vol'
+OUTPUT_DIRECTIONS_FILE = 'preffered.vol'
 
 
 class XmippProtMonoDir(ProtAnalysis3D):
@@ -248,11 +249,12 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params += ' --maxRes %f' % self.maxRes.get()
         params += ' --varVol %s' % self._getExtraPath(OUTPUT_VARIANCE_FILE)
         params += ' --volumeRadius %f' % xdim
-        params += ' --chimera_volume %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE_CHIMERA)
+        #params += ' --chimera_volume %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE_CHIMERA)
         params += ' --sym %s' % self.symmetry.get()
         params += ' --significance %f' % self.significance.get()
         params += ' --md_resdir %s' % self._getExtraPath(METADATA_ANGLES_FILE)
         params += ' --doa_vol %s' % self._getExtraPath(OUTPUT_DOA_FILE)
+        params += ' --directions %s' % self._getExtraPath(OUTPUT_DIRECTIONS_FILE)
 
         self.runJob('xmipp_resolution_directional', params)
 

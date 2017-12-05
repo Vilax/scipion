@@ -40,7 +40,7 @@ void ProgResDir::readParams()
 	fnOut = getParam("-o");
 	fnMask = getParam("--mask");
 	fnMaskOut = getParam("--mask_out");
-	fnchim = getParam("--chimera_volume");
+	//fnchim = getParam("--chimera_volume");
 	sampling = getDoubleParam("--sampling_rate");
 	ang_sampling = getDoubleParam("--angular_sampling");
 	R = getDoubleParam("--volumeRadius");
@@ -53,6 +53,7 @@ void ProgResDir::readParams()
 	significance = getDoubleParam("--significance");
 	fnMd = getParam("--md_resdir");
 	fnDoA = getParam("--doa_vol");
+	fnDirections = getParam("--directions");
 }
 
 
@@ -63,13 +64,13 @@ void ProgResDir::defineParams()
 	addParamsLine("  [--mask <vol_file=\"\">]     : Mask defining the macromolecule");
 	addParamsLine("                               :+ If two half volume are given, the noise is estimated from them");
 	addParamsLine("                               :+ Otherwise the noise is estimated outside the mask");
-	addParamsLine("  [--mask_out <vol_file=\"\">] : sometimes the provided mask is not perfect, and contains voxels out of the particle");
-	addParamsLine("                               :+ Thus the algorithm calculated a tight mask to the volume");
+//	addParamsLine("  [--mask_out <vol_file=\"\">] : sometimes the provided mask is not perfect, and contains voxels out of the particle");
+//	addParamsLine("                               :+ Thus the algorithm calculated a tight mask to the volume");
 	addParamsLine("  [--vol2 <vol_file=\"\">]     : Half volume 2");
 	addParamsLine("  [-o <output=\"MGresolution.vol\">]: Local resolution volume (in Angstroms)");
 	addParamsLine("  [--meanVol <vol_file=\"\">]  : Mean volume of half1 and half2 (only it is neccesary the two haves are used)");
 	addParamsLine("  --sym <symmetry>: Symmetry (c1, c2, c3,..d1, d2, d3,...)");
-	addParamsLine("  [--chimera_volume <output=\"Chimera_resolution_volume.vol\">]: Local resolution volume for chimera viewer (in Angstroms)");
+	//addParamsLine("  [--chimera_volume <output=\"Chimera_resolution_volume.vol\">]: Local resolution volume for chimera viewer (in Angstroms)");
 	addParamsLine("  [--sampling_rate <s=1>]      : Sampling rate (A/px)");
 	addParamsLine("  [--angular_sampling <s=15>]  : Angular Sampling rate (degrees)");
 	addParamsLine("  [--volumeRadius <s=100>]     : This parameter determines the radius of a sphere where the volume is");
@@ -77,14 +78,12 @@ void ProgResDir::defineParams()
 	addParamsLine("                               : maximum resolution px/A. This parameter determines that number");
 	addParamsLine("  [--minRes <s=30>]            : Minimum resolution (A)");
 	addParamsLine("  [--maxRes <s=1>]             : Maximum resolution (A)");
-	addParamsLine("  [--maxVol <vol_file=\"\">]   : Output filename with maximum resolution volume");
-	addParamsLine("  [--minVol <vol_file=\"\">]   : Output filename with minimum resolution volume");
 	addParamsLine("  [--varVol <vol_file=\"\">]   : Output filename with varianze resolution volume");
 	addParamsLine("  [--noiseonlyinhalves]        : The noise estimation is only performed inside the mask");
 	addParamsLine("  [--significance <s=0.95>]    : The level of confidence for the hypothesis test.");
 	addParamsLine("  [--md_resdir <file=\".\">]   : Metadata with mean resolution by direction.");
 	addParamsLine("  [--doa_vol <vol_file=\"\">]  : Output filename with DoA volume");
-	addParamsLine("  [--sphericity <vol_file=\"\">]  : Output filename with DoA volume");
+	addParamsLine("  [--directions <vol_file=\"\">]  : Output preffered directions");
 }
 
 void ProgResDir::produceSideInfo()
@@ -380,13 +379,14 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
-	//#ifdef DEBUG_DIR
-
-//		Image<double> filteredvolume;
-//		filteredvolume = VRiesz;
-//		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
-
-	//#endif
+	#ifdef DEBUG_DIR
+	if (count == 1)
+	{
+		Image<double> filteredvolume;
+		filteredvolume = VRiesz;
+		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
+	}
+	#endif
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 		DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
@@ -648,21 +648,21 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 			DIRECT_MULTIDIM_ELEM(SumRes,n) += 2;
 			++idx;
 
-			if (idx == 34)
-			{
-				MetaData md;
-				md.read("res.xmd");
-				size_t objId;
-				objId = md.addObject();
-				md.setValue(MDL_ANGLE_ROT, rot, objId);
-				md.setValue(MDL_ANGLE_TILT, tilt, objId);
-				md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
-
-
-				md.write("res.xmd");
-
-				std::cout << "resVal = " << resVal << std::endl;
-			}
+//			if (idx == 34)
+//			{
+//				MetaData md;
+//				md.read("res.xmd");
+//				size_t objId;
+//				objId = md.addObject();
+//				md.setValue(MDL_ANGLE_ROT, rot, objId);
+//				md.setValue(MDL_ANGLE_TILT, tilt, objId);
+//				md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
+//
+//
+//				md.write("res.xmd");
+//
+//				std::cout << "resVal = " << resVal << std::endl;
+//			}
 		}
 	}
 }
@@ -782,7 +782,10 @@ void ProgResDir::degreeOfAnisotropy(Matrix1D<double> eigenvalues,
 
 	std::sort(lambda_values, lambda_values+3);
 
-	doa = 3*(lambda_values[2] - lambda_values[0])/(lambda_values[0] + lambda_values[1] +lambda_values[2]);
+	double aux = (lambda_values[0]/lambda_values[2]);
+	doa = sqrt(1 -  aux*aux);
+
+	//doa = 3*(lambda_values[2] - lambda_values[0])/(lambda_values[0] + lambda_values[1] +lambda_values[2]);
 
 	if (counter == 34)
 	{
@@ -882,20 +885,28 @@ void ProgResDir::resolution2eval(int &count_res, double step,
 }
 
 void ProgResDir::defineDirection(Matrix1D<double> &r0, Matrix1D<double> &rF,
-							Matrix2D<double> direction, double eigenvalue, int eigdir,
-							int k , int i, int j)
+							Matrix2D<double> &direction, double &eigenvalue, double &eigenvalue_max,  int eigdir,
+							int k, int i, int j)
 {
-	VECTOR_R3(r0,j-eigenvalue*MAT_ELEM(direction,0,eigdir),
-							     i-eigenvalue*MAT_ELEM(direction,1,eigdir),
-							     k-eigenvalue*MAT_ELEM(direction,2,eigdir));
-	VECTOR_R3(rF,j+eigenvalue*MAT_ELEM(direction,0,eigdir),
-				 i+eigenvalue*MAT_ELEM(direction,1,eigdir),
-				 k+eigenvalue*MAT_ELEM(direction,2,eigdir));
+	std::cout << "direction = " << MAT_ELEM(direction,0,eigdir) <<
+			" " << MAT_ELEM(direction,1,eigdir) << " " << MAT_ELEM(direction,2,eigdir) << std::endl;
+	std::cout << "eigenvalue = " << eigenvalue << std::endl;
+
+	double aux = eigenvalue/eigenvalue_max;
+
+	VECTOR_R3(r0,j-5.0*aux*MAT_ELEM(direction,0,eigdir),
+				 i-5.0*aux*MAT_ELEM(direction,1,eigdir),
+				 k-5.0*aux*MAT_ELEM(direction,2,eigdir));
+
+	VECTOR_R3(rF,j+5.0*aux*MAT_ELEM(direction,0,eigdir),
+				 i+5.0*aux*MAT_ELEM(direction,1,eigdir),
+				 k+5.0*aux*MAT_ELEM(direction,2,eigdir));
+	std::cout << " " << std::endl;
 }
 
 
-void ProgResDir::defineSegment(Matrix1D<double> r0, Matrix1D<double> rF,
-							MultidimArray<int> &arrows, double elongation)
+void ProgResDir::defineSegment(Matrix1D<double> &r0, Matrix1D<double> &rF,
+							MultidimArray<int> &arrows, double &elongation)
 {
 	Matrix1D<double> r(3);
 	XX(r)=(1-elongation)*XX(r0)+elongation*XX(rF);
@@ -904,8 +915,7 @@ void ProgResDir::defineSegment(Matrix1D<double> r0, Matrix1D<double> rF,
 
 	//A3D_ELEM(arrows,(int)round(XX(r)),(int)round(YY(r)),(int)round(ZZ(r)))=1;
 
-
-	A3D_ELEM(arrows,(int)round(ZZ(r)),(int)round(YY(r)),(int)round(XX(r)))=1;
+	DIRECT_A3D_ELEM(arrows,(int)round(ZZ(r)),(int)round(YY(r)),(int)round(XX(r)))=1;
 
 }
 
@@ -934,11 +944,11 @@ void ProgResDir::run()
 	double step = range/N_freq;
 
 	if (step<0.1)
-		step=0.1;
+		step=0.2;
 
 	std::cout << "Analyzing directions" << std::endl;
 
-	N_directions=1;
+//	N_directions=10;
 
 	std::cout << "N_directions = " << N_directions << std::endl;
 
@@ -1120,7 +1130,7 @@ void ProgResDir::run()
 									++NN;
 								}
 							}
-							n++;
+							++n;
 						}
 					}
 				}
@@ -1241,7 +1251,7 @@ void ProgResDir::run()
 				}
 			}
 
-			iter++;
+			++iter;
 			last_resolution = resolution;
 		}while(doNextIteration);
 
@@ -1461,13 +1471,6 @@ void ProgResDir::run()
 			degreeOfAnisotropy(eigenvalues, eigenvectors, doa,
 					direction_x, direction_y, direction_z, counter);
 
-//			std::cout << "LAMBDA_1 = " << lambda_1 <<
-//					   "  LAMBDA_2 = " << lambda_2 <<
-//					   "  LAMBDA_3 = " << lambda_3 << std::endl;
-
-			DIRECT_MULTIDIM_ELEM(pInertia_00,n) = lambda_1;
-			DIRECT_MULTIDIM_ELEM(pInertia_01,n) = lambda_2;
-			DIRECT_MULTIDIM_ELEM(pInertia_02,n) = lambda_3;
 
 
 			DIRECT_MULTIDIM_ELEM(pInertia_11,n) = doa;
@@ -1477,30 +1480,40 @@ void ProgResDir::run()
 			//lambda_1 is assumed as the least eigenvalue
 			if ( (i%gridStep==0) && (j%gridStep==0) && (k%gridStep==0) )
 			{
+				std::cout << "----------------------------------" << std::endl;
+				std::cout << "eigenvalues = " << eigenvalues << std::endl;
+				std::cout << "eigenvectors = " << eigenvectors << std::endl;
 
-				defineDirection(r0_1, rF_1, eigenvectors, lambda_1, 1, k , i, j);
-				defineDirection(r0_2, rF_2, eigenvectors, lambda_2, 2, k , i, j);
-				defineDirection(r0_3, rF_3, eigenvectors, lambda_3, 3, k , i, j);
+				double lambda_1 = VEC_ELEM(eigenvalues, 0);
+				double lambda_2 = VEC_ELEM(eigenvalues, 1);
+				double lambda_3 = VEC_ELEM(eigenvalues, 2);
 
-//				for (double t=0; t<1; t+=0.01)
-//				{
-//					defineSegment(r0_1, rF_1, arrows, t);
-//					defineSegment(r0_2, rF_2, arrows, t);
-//					defineSegment(r0_3, rF_3, arrows, t);
-//				}
-				A3D_ELEM(arrows, k, i,j)=1;
+				std::cout << "LAMBDA_1 = " << lambda_1 <<
+						   "  LAMBDA_2 = " << lambda_2 <<
+						   "  LAMBDA_3 = " << lambda_3 << std::endl;
+
+				defineDirection(r0_1, rF_1, eigenvectors, lambda_1, lambda_3, 0, k, i, j);
+				defineDirection(r0_2, rF_2, eigenvectors, lambda_2, lambda_3, 1, k, i, j);
+				defineDirection(r0_3, rF_3, eigenvectors, lambda_3, lambda_3, 2, k, i, j);
+
+				for (double t=0; t<1; t+=0.02)
+				{
+					defineSegment(r0_1, rF_1, arrows, t);
+					defineSegment(r0_2, rF_2, arrows, t);
+					defineSegment(r0_3, rF_3, arrows, t);
+				}
 			}
 		}
 		else
 		{
 			DIRECT_MULTIDIM_ELEM(pInertia_11,n) = 0;
-			DIRECT_MULTIDIM_ELEM(pInertia_12,n) =0;
+			DIRECT_MULTIDIM_ELEM(pInertia_12,n) = 0;
 		}
 		++n;
 	}
 	Image<int> preferreddir;
 	preferreddir()=arrows;
-	preferreddir.write("preferred.vol");
+	preferreddir.write(fnDirections);
 	Inertia_00.write("lambda_1.vol");
 	Inertia_01.write("lambda_2.vol");
 	Inertia_02.write("lambda_3.vol");

@@ -54,7 +54,7 @@ class ProgResDir : public XmippProgram
 public:
 	 /** Filenames */
 	FileName fnOut, fnVol, fnVol2, fnMask, fnchim, fnSym, fnMeanVol, fnMaskOut, fnMaxVol,
-	fnMinVol, fnMd, fnVar, fnDoA, fnSph;
+	fnMinVol, fnMd, fnVar, fnDoA, fnSph, fnDirections;
 
 	/** sampling rate, minimum resolution, and maximum resolution */
 	double sampling, minRes, maxRes, R, ang_sampling, N_points, pepep, N_directions;
@@ -112,11 +112,11 @@ public:
     		Matrix2D<double> &angles);
 
     void defineDirection(Matrix1D<double> &r0, Matrix1D<double> &rF,
-			Matrix2D<double> direction, double eigenvalue, int eigdir,
+			Matrix2D<double> &direction, double &eigenvalue, double &eigenvalue_max, int eigdir,
 			int k , int i, int j);
 
-    void defineSegment(Matrix1D<double> r0, Matrix1D<double> rF,
-			MultidimArray<int> &arrows, double elongation);
+    void defineSegment(Matrix1D<double> &r0, Matrix1D<double> &rF,
+			MultidimArray<int> &arrows, double &elongation);
 
 
     void run();
