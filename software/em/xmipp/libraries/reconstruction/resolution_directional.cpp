@@ -331,7 +331,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
 //	#ifdef DEBUG_DIR
-	if (count == 1)
+	if (count == 0)
 	{
 		Image<double> filteredvolume;
 		filteredvolume = VRiesz;
@@ -852,6 +852,7 @@ void ProgResDir::run()
 					{
 						if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 						{
+//							amplitudeValue=DIRECT_A3D_ELEM(amplitudeMS, n);
 							amplitudeValue=DIRECT_A3D_ELEM(amplitudeMS, k,i,j);
 							sumS  += amplitudeValue;
 							sumS2 += amplitudeValue*amplitudeValue;
@@ -875,6 +876,8 @@ void ProgResDir::run()
 							if (acosine<(PI*20/180))
 							{
 								DIRECT_A3D_ELEM(coneVol, k,i,j) = 1;
+//								DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
+//								amplitudeValue=DIRECT_A3D_ELEM(amplitudeMS, n);
 								amplitudeValue=DIRECT_A3D_ELEM(amplitudeMS, k,i,j);
 								sumN  += amplitudeValue;
 								sumN2 += amplitudeValue*amplitudeValue;
