@@ -331,12 +331,12 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
 //	#ifdef DEBUG_DIR
-	if (count == 0)
-	{
-		Image<double> filteredvolume;
-		filteredvolume = VRiesz;
-		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
-	}
+//	if (count == 0)
+//	{
+//		Image<double> filteredvolume;
+//		filteredvolume = VRiesz;
+//		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
+//	}
 //	#endif
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
@@ -852,8 +852,8 @@ void ProgResDir::run()
 					{
 						if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 						{
-//							amplitudeValue=DIRECT_A3D_ELEM(amplitudeMS, n);
-							amplitudeValue=DIRECT_A3D_ELEM(amplitudeMS, k,i,j);
+							amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+//							amplitudeValue=DIRECT_A3D_ELEM(amplitudeMS, k,i,j);
 							sumS  += amplitudeValue;
 							sumS2 += amplitudeValue*amplitudeValue;
 							++NS;
@@ -875,10 +875,10 @@ void ProgResDir::run()
 
 							if (acosine<(PI*20/180))
 							{
-								DIRECT_A3D_ELEM(coneVol, k,i,j) = 1;
-//								DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
-//								amplitudeValue=DIRECT_A3D_ELEM(amplitudeMS, n);
-								amplitudeValue=DIRECT_A3D_ELEM(amplitudeMS, k,i,j);
+//								DIRECT_A3D_ELEM(coneVol, k,i,j) = 1;
+								DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
+								amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+//								amplitudeValue=DIRECT_A3D_ELEM(amplitudeMS, k,i,j);
 								sumN  += amplitudeValue;
 								sumN2 += amplitudeValue*amplitudeValue;
 								++NN;
@@ -889,15 +889,15 @@ void ProgResDir::run()
 				}
 			}
 
-				if (iter == 0)
-				{
-				Image<double> img;
-
-				FileName iternumber;
-				iternumber = formatString("cone_%i.vol", dir);
-				img = coneVol;
-				img.write(iternumber);
-				}
+//				if (iter == 0)
+//				{
+//				Image<double> img;
+//
+//				FileName iternumber;
+//				iternumber = formatString("cone_%i.vol", dir);
+//				img = coneVol;
+//				img.write(iternumber);
+//				}
 
 
 
