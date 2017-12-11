@@ -371,7 +371,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	{
 		for(size_t i=0; i<YSIZE(myfftV); ++i)
 		{
-
+			uy = VEC_ELEM(freq_fourier,i);
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
 			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= uy*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
@@ -749,7 +749,7 @@ void ProgResDir::run()
 
 	std::cout << "Analyzing directions" << std::endl;
 
-//	N_directions=10;
+//	N_directions=1;
 
 	std::cout << "N_directions = " << N_directions << std::endl;
 
@@ -866,8 +866,7 @@ void ProgResDir::run()
 							double iun = 1/sqrt(ux*ux + uy*uy + uz*uz);
 
 							//BE CAREFULL with the order
-							double dotproduct;
-							dotproduct = (ux*y_dir + uy*x_dir + uz*z_dir)*iun;
+							double dotproduct = (ux*y_dir + uy*x_dir + uz*z_dir)*iun;
 
 							double acosine = acos(fabs(dotproduct));
 
