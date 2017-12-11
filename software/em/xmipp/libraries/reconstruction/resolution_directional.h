@@ -78,12 +78,8 @@ public:
      * the monogenic amplitud is calculated and low pass filtered at frequency w1*/
     void amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
     		double w1, double w1l, double wH, MultidimArray<double> &amplitude,
-    		int count, int dir, FileName fnDebug, double angle_cone,
+    		int count, int dir, FileName fnDebug,
     		double rot, double tilt);
-
-    void postProcessingLocalResolutions(MultidimArray<double> &resolutionVol,
-    		std::vector<double> &list, MultidimArray<double> &resolutionChimera,
-    		double &cut_value, MultidimArray<int> &pMask);
 
     void inertiaMatrix(MultidimArray<double> &resolutionVol,
 			   MultidimArray<double> &Inertia_11,
