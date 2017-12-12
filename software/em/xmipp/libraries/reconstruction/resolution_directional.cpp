@@ -305,15 +305,19 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= exp(-arg_exp);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
+					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
+					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
 				} else if (un>w1)
 				{
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= exp(-arg_exp);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
+					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
 				}
 
-				DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
-				DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
-				DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
+
 				//TODO: Check if last three lines can be included in the if condition
 				++n;
 			}
@@ -359,29 +363,8 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	}
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
-	DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 
-/*
-	// Calculate second component of Riesz vector
-	n=0;
-
-	for(size_t k=0; k<ZSIZE(myfftV); ++k)
-	{
-		for(size_t i=0; i<YSIZE(myfftV); ++i)
-		{
-			uy = VEC_ELEM(freq_fourier,i);
-			for(size_t j=0; j<XSIZE(myfftV); ++j)
-			{
-			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= uy*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
-			++n;
-			}
-		}
-	}
-	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
-
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
-		DIRECT_MULTIDIM_ELEM(amplitude,n)+= DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
-*/
 	// Calculate second and third component of Riesz vector
 	n=0;
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
