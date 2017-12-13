@@ -611,7 +611,7 @@ void ProgResDir::amplitudeMonogenicSignal3D2(MultidimArray< std::complex<double>
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 	//std::cout << "inicio" << std::endl;
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
-	DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 	//std::cout << "fin" << std::endl;
 /*
 	// Calculate second component of Riesz vector
@@ -1023,15 +1023,14 @@ void ProgResDir::run()
 
 	std::cout << "Analyzing directions" << std::endl;
 
-	//N_directions=1;
+	N_directions=1;
 
 	std::cout << "N_directions = " << N_directions << std::endl;
 
 	for (size_t dir=0; dir<N_directions; dir++)
 	{
 		Image<double> outputResolution;
-		outputResolution().resizeNoCopy(VRiesz);
-		outputResolution().initZeros();
+		outputResolution().initZeros(VRiesz);
 		MultidimArray<double> &pOutputResolution = outputResolution();
 		MultidimArray<double> amplitudeMS, amplitudeMN;
 		MultidimArray<int> mask_aux = mask();
@@ -1127,7 +1126,6 @@ void ProgResDir::run()
 						if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 						{
 							amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-//							amplitudeValue=DIRECT_A3D_ELEM(amplitudeMS, k,i,j);
 							sumS  += amplitudeValue;
 							sumS2 += amplitudeValue*amplitudeValue;
 							++NS;
@@ -1152,7 +1150,6 @@ void ProgResDir::run()
 //								DIRECT_A3D_ELEM(coneVol, k,i,j) = 1;
 								DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
 								amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-//								amplitudeValue=DIRECT_A3D_ELEM(amplitudeMS, k,i,j);
 								sumN  += amplitudeValue;
 								sumN2 += amplitudeValue*amplitudeValue;
 								++NN;
@@ -1261,12 +1258,12 @@ void ProgResDir::run()
 
 				// Is the mean inside the signal significantly different from the noise?
 				double z=(meanS-meanN)/sqrt(sigma2S/NS+sigma2N/NN);
-				//#ifdef DEBUG
+				#ifdef DEBUG
 					std::cout << "thresholdNoise = " << thresholdNoise << std::endl;
 					std::cout << "  meanS= " << meanS << " sigma2S= " << sigma2S << " NS= " << NS << std::endl;
 					std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
 					std::cout << "  z= " << z << " (" << criticalZ << ")" << std::endl;
-				//#endif
+				#endif
 				if (z<criticalZ)
 				{
 					criticalW = freq;
