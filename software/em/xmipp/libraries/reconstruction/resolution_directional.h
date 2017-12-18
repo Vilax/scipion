@@ -81,11 +81,6 @@ public:
     		int count, int dir, FileName fnDebug,
     		double rot, double tilt);
 
-    void amplitudeMonogenicSignal3D2(MultidimArray< std::complex<double> > &myfftV,
-    		double w1, double w1l, double wH, MultidimArray<double> &amplitude,
-    		int count, int dir, FileName fnDebug,
-    		double rot, double tilt);
-
     void inertiaMatrix(MultidimArray<double> &resolutionVol,
 			   MultidimArray<double> &Inertia_11,
 			   MultidimArray<double> &Inertia_12,
