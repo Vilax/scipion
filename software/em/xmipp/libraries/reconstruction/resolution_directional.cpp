@@ -304,20 +304,37 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 				if (w1l<=un && un<=w1)
 				{
 					double arg_exp = acosine*acosine*acosine*acosine/(0.12*0.12*0.12*0.12);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= exp(-arg_exp);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
+					aux_prod_d = exp(-arg_exp);
+					aux_prod_d *= 0.5*(1+cos((un-w1)*ideltal));
+					aux_prod_c = DIRECT_MULTIDIM_ELEM(myfftV, n);
+					aux_prod_c *= aux_prod_d;
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = aux_prod_c;
+					aux_prod_c *= (-J);
+					aux_prod_c *= iun;
+					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = aux_prod_c;
+
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= exp(-arg_exp);
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
 				} else if (un>w1)
 				{
 					double arg_exp = acosine*acosine*acosine*acosine/(0.12*0.12*0.12*0.12);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= exp(-arg_exp);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
+
+					aux_prod_c = DIRECT_MULTIDIM_ELEM(myfftV, n);
+					aux_prod_c *= exp(-arg_exp);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = aux_prod_c;
+					aux_prod_c *= (-J);
+					aux_prod_c *= iun;
+					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = aux_prod_c;
+
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= exp(-arg_exp);
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
 				}
 				++n;
 			}
@@ -336,12 +353,12 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
 //	#ifdef DEBUG_DIR
-//	if (count == 0)
-//	{
-//		Image<double> filteredvolume;
-//		filteredvolume = VRiesz;
-//		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
-//	}
+	if (count == 0)
+	{
+		Image<double> filteredvolume;
+		filteredvolume = VRiesz;
+		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
+	}
 //	#endif
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
@@ -452,12 +469,12 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	Image<double> saveImg2;
 	saveImg2 = amplitude;
 
-//	if (fnDebug.c_str() != "")
-//	{
-//		FileName iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir, count);
-//		saveImg2.write(fnDebug+iternumber);
-//	}
-//	saveImg2.clear();
+	if (fnDebug.c_str() != "")
+	{
+		FileName iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir, count);
+		saveImg2.write(fnDebug+iternumber);
+	}
+	saveImg2.clear();
 ////	#endif // DEBUG
 
 }
