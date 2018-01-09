@@ -267,10 +267,10 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	long n=0;
 	double ideltal=PI/(w1-w1l);
 
-	#ifdef DEBUG_DIR
+	//#ifdef DEBUG_DIR
 	MultidimArray<double> coneVol;
 	coneVol.initZeros(iu);
-	#endif
+	//#endif
 
 
 	double x_dir, y_dir, z_dir;
@@ -327,14 +327,14 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 		}
 	}
 
-	#ifdef DEBUG_DIR
+//	#ifdef DEBUG_DIR
 	if ( (count == 0) )
 	{
 		Image<double> direction;
 		direction = coneVol;
 		direction.write(formatString("cone_%i.vol", dir));
 	}
-	#endif
+	//#endif
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
@@ -351,6 +351,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 		DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 
 	// Calculate first component of Riesz vector
+	fftVRiesz.initZeros(myfftV);
 	n=0;
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
@@ -391,6 +392,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	*/
 
 	// Calculate second and third component of Riesz vector
+	fftVRiesz.initZeros(myfftV);
 	n=0;
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
@@ -408,6 +410,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 			DIRECT_MULTIDIM_ELEM(amplitude,n)+= DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 	////////////////
+	fftVRiesz.initZeros(myfftV);
 	// Calculate second and third component of Riesz vector
 		n=0;
 		for(size_t k=0; k<ZSIZE(myfftV); ++k)
@@ -464,12 +467,13 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 
 //		#ifdef MONO_AMPLITUDE
-//		saveImg2 = amplitude;
-//		if (fnDebug.c_str() != "")
-//		{
-//			iternumber = formatString("smoothed_volume_%i_%i.vol", dir, count);
-//			saveImg2.write(fnDebug+iternumber);
-//		}
+		Image<double> saveImg2;
+		saveImg2 = amplitude;
+		if (fnDebug.c_str() != "")
+		{
+			FileName iternumber = formatString("smoothed_volume_%i_%i.vol", dir, count);
+			saveImg2.write(fnDebug+iternumber);
+		}
 ////		saveImg2.clear();
 //		#endif
 
@@ -493,8 +497,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 //	#ifdef MONO_AMPLITUDE
 
-	Image<double> saveImg2;
-	saveImg2 = amplitude;
+
 
 	if (fnDebug.c_str() != "")
 	{
