@@ -840,7 +840,7 @@ void ProgResDir::run()
 				resolution_2 = list[0];
 			else
 				resolution_2 = list[iter - 2];
-/*
+
 			fnDebug = "Signal";
 
 			amplitudeMonogenicSignal3D(fftV, freq, freqL, freqH, amplitudeMS, iter, dir, fnDebug, rot, tilt);
@@ -1019,7 +1019,7 @@ void ProgResDir::run()
 						doNextIteration = false;
 				}
 			}
- */
+
 			++iter;
 			last_resolution = resolution;
 		}while(doNextIteration);
