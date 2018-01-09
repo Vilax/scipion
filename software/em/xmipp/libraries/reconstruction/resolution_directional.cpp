@@ -339,12 +339,12 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
 //	#ifdef DEBUG_DIR
-	if (count == 0)
-	{
-		Image<double> filteredvolume;
-		filteredvolume = VRiesz;
-		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
-	}
+//	if (count == 0)
+//	{
+//		Image<double> filteredvolume;
+//		filteredvolume = VRiesz;
+//		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
+//	}
 //	#endif
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
