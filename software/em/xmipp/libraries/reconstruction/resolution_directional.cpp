@@ -508,7 +508,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 //		FileName iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir, count);
 //		saveImg2.write(fnDebug+iternumber);
 //	}
-	saveImg2.clear();
+//	saveImg2.clear();
 ////	#endif // DEBUG
 
 }
