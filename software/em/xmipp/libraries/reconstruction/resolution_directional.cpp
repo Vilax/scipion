@@ -905,15 +905,15 @@ void ProgResDir::run()
 				}
 			}
 
-//				if (iter == 0)
-//				{
-//				Image<double> img;
-//
-//				FileName iternumber;
-//				iternumber = formatString("cone_%i.vol", dir);
-//				img = coneVol;
-//				img.write(iternumber);
-//				}
+				if (iter == 0)
+				{
+				Image<double> img;
+
+				FileName iternumber;
+				iternumber = formatString("cone_noise_%i.vol", dir);
+				img = coneVol;
+				img.write(iternumber);
+				}
 
 
 
