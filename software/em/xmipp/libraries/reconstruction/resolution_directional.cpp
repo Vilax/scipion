@@ -999,12 +999,12 @@ void ProgResDir::run()
 
 				// Is the mean inside the signal significantly different from the noise?
 				double z=(meanS-meanN)/sqrt(sigma2S/NS+sigma2N/NN);
-				#ifdef DEBUG
+				//#ifdef DEBUG
 					std::cout << "thresholdNoise = " << thresholdNoise << std::endl;
 					std::cout << "  meanS= " << meanS << " sigma2S= " << sigma2S << " NS= " << NS << std::endl;
 					std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
 					std::cout << "  z= " << z << " (" << criticalZ << ")" << std::endl;
-				#endif
+				//#endif
 				if (z<criticalZ)
 				{
 					criticalW = freq;
