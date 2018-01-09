@@ -368,7 +368,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
-/*
+
 	// Calculate second and third component of Riesz vector
 	n=0;
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
@@ -389,8 +389,8 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 		DIRECT_MULTIDIM_ELEM(amplitude,n)+= DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
-	*/
 
+/*
 	// Calculate second and third component of Riesz vector
 	fftVRiesz.initZeros(myfftV);
 	n=0;
@@ -432,10 +432,10 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 			DIRECT_MULTIDIM_ELEM(amplitude,n) = sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
 		}
 	////////////////
-
-/*
-	transformer_inv.inverseFourierTransform(fftVRiesz_aux, VRiesz);
 */
+
+	transformer_inv.inverseFourierTransform(fftVRiesz_aux, VRiesz);
+
 	amplitude.setXmippOrigin();
 	int z_size = ZSIZE(amplitude);
 	int x_size = XSIZE(amplitude);
@@ -452,8 +452,8 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 			for(int j=0; j<x_size; ++j)
 			{
 				ux = (j - x_size*0.5);
-//				DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
-//				DIRECT_MULTIDIM_ELEM(amplitude,n)=sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
+				DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+				DIRECT_MULTIDIM_ELEM(amplitude,n)=sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
 
 				double radius = sqrt(ux*ux + uy*uy + uz*uz);
 				if ((radius>=limit_radius) && (radius<=(z_size*0.5)))
