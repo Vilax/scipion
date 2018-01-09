@@ -1005,12 +1005,12 @@ void ProgResDir::run()
 					std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
 					std::cout << "  z= " << z << " (" << criticalZ << ")" << std::endl;
 				//#endif
-				if (z<criticalZ)
-				{
-					criticalW = freq;
-					std::cout << "Search stopped due to z>Z (hypothesis test)" << std::endl;
-					doNextIteration=false;
-				}
+//				if (z<criticalZ)
+//				{
+//					criticalW = freq;
+//					std::cout << "Search stopped due to z>Z (hypothesis test)" << std::endl;
+//					doNextIteration=false;
+//				}
 				if (doNextIteration)
 					if (resolution <= (minRes-0.001))
 						doNextIteration = false;
