@@ -328,12 +328,12 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	}
 
 //	#ifdef DEBUG_DIR
-	if ( (count == 0) )
-	{
-		Image<double> direction;
-		direction = coneVol;
-		direction.write(formatString("cone_%i.vol", dir));
-	}
+//	if ( (count == 0) )
+//	{
+//		Image<double> direction;
+//		direction = coneVol;
+//		direction.write(formatString("cone_%i.vol", dir));
+//	}
 	//#endif
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
@@ -470,13 +470,13 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 
 //		#ifdef MONO_AMPLITUDE
-		Image<double> saveImg2;
-		saveImg2 = amplitude;
-		if (fnDebug.c_str() != "")
-		{
-			FileName iternumber = formatString("smoothed_volume_%i_%i.vol", dir, count);
-			saveImg2.write(fnDebug+iternumber);
-		}
+//		Image<double> saveImg2;
+//		saveImg2 = amplitude;
+//		if (fnDebug.c_str() != "")
+//		{
+//			FileName iternumber = formatString("smoothed_volume_%i_%i.vol", dir, count);
+//			saveImg2.write(fnDebug+iternumber);
+//		}
 ////		saveImg2.clear();
 //		#endif
 
@@ -502,12 +502,12 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 
 
-	if (fnDebug.c_str() != "")
-	{
-		saveImg2 = amplitude;
-		FileName iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir, count);
-		saveImg2.write(fnDebug+iternumber);
-	}
+//	if (fnDebug.c_str() != "")
+//	{
+//		saveImg2 = amplitude;
+//		FileName iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir, count);
+//		saveImg2.write(fnDebug+iternumber);
+//	}
 	saveImg2.clear();
 ////	#endif // DEBUG
 
@@ -775,7 +775,7 @@ void ProgResDir::run()
 
 	std::cout << "Analyzing directions" << std::endl;
 
-	N_directions=1;
+//	N_directions=1;
 
 	std::cout << "N_directions = " << N_directions << std::endl;
 
