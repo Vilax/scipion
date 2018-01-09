@@ -773,7 +773,8 @@ void ProgResDir::run()
 	if (step<0.1)
 		step=0.2;
 
-	std::cout << "Analyzing directions" << std::endl;
+	std::cout << "Analyzing directions " << std::endl;
+	std::cout << "step = " << step << std::endl;
 
 //	N_directions=1;
 
@@ -839,7 +840,7 @@ void ProgResDir::run()
 				resolution_2 = list[0];
 			else
 				resolution_2 = list[iter - 2];
-
+/*
 			fnDebug = "Signal";
 
 			amplitudeMonogenicSignal3D(fftV, freq, freqL, freqH, amplitudeMS, iter, dir, fnDebug, rot, tilt);
@@ -1011,12 +1012,14 @@ void ProgResDir::run()
 //					std::cout << "Search stopped due to z>Z (hypothesis test)" << std::endl;
 //					doNextIteration=false;
 //				}
+ *
+
 				if (doNextIteration)
 					if (resolution <= (minRes-0.001))
 						doNextIteration = false;
 				}
 			}
-
+ */
 			++iter;
 			last_resolution = resolution;
 		}while(doNextIteration);
