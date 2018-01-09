@@ -1012,7 +1012,6 @@ void ProgResDir::run()
 //					std::cout << "Search stopped due to z>Z (hypothesis test)" << std::endl;
 //					doNextIteration=false;
 //				}
- *
 
 				if (doNextIteration)
 					if (resolution <= (minRes-0.001))
