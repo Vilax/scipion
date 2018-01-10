@@ -190,7 +190,7 @@ void ProgResDir::produceSideInfo()
 	{
 		FFT_IDX2DIGFREQ(k,size, u);
 		VEC_ELEM(freq_fourier,k) = u;
-//		std::cout << "freq_fourier = " << u  << std::endl;
+		std::cout << "freq_fourier = " << sampling/u  << std::endl;
 	}
 
 
@@ -728,6 +728,15 @@ void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 	{
 		freq = sampling/(last_resolution-min_step);
 		DIGFREQ2FFT_IDX(freq, volsize, fourier_idx);
+		FFT_IDX2DIGFREQ(fourier_idx, volsize, freq);
+
+		if (fourier_idx == last_fourier_idx)
+		{
+			continueIter = true;
+			++fourier_idx;
+			return;
+		}
+
 	}
 
 	resolution = sampling/freq;
@@ -864,7 +873,7 @@ void ProgResDir::run()
 	std::cout << "step = " << step << std::endl;
 
 
-	N_directions=4;
+	N_directions=1;
 
 	std::cout << "N_directions = " << N_directions << std::endl;
 
@@ -884,7 +893,6 @@ void ProgResDir::run()
 
 		bool doNextIteration=true;
 		bool lefttrimming = false;
-
 
 		int fourier_idx = 2, last_fourier_idx = -1, iter = 0, fourier_idx_2;
 		int count_res = 0;
@@ -928,7 +936,7 @@ void ProgResDir::run()
 				resolution_2 = list[iter - 2];
 
 			fnDebug = "Signal";
-
+/*
 			amplitudeMonogenicSignal3D(fftV, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, rot, tilt);
 
 			double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
@@ -1098,6 +1106,8 @@ void ProgResDir::run()
 						doNextIteration = false;
 				}
 			}
+
+			*/
 			++iter;
 			last_resolution = resolution;
 		}while(doNextIteration);
