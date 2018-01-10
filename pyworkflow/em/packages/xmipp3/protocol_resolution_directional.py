@@ -148,14 +148,14 @@ class XmippProtMonoDir(ProtAnalysis3D):
             xdim = xdim*0.5
 
         # Number of frequencies
-        Nfreqs = xdim
+        #Nfreqs = xdim
                 
         params = ' --vol %s' % self.vol0Fn
         params += ' --mask %s' % self.maskFn
         params += ' -o %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
         params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
         params += ' --angular_sampling %f' % self.angularsampling.get()
-        params += ' --number_frequencies %f' % Nfreqs
+        #params += ' --number_frequencies %f' % Nfreqs
         params += ' --varVol %s' % self._getExtraPath(OUTPUT_VARIANCE_FILE)
         params += ' --volumeRadius %f' % xdim
         params += ' --sym %s' % self.symmetry.get()
