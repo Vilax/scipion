@@ -106,8 +106,9 @@ public:
 
     void resolution2eval_(int &fourier_idx, double min_step,
 			double &resolution, double &last_resolution,
+			int &last_fourier_idx,
 			double &freq, double &freqL, double &freqH,
-			bool &breakIter, bool &doNextIteration);
+			bool &continueIter, bool &breakIter, bool &doNextIteration);
 
     void generateGridProjectionMatching(FileName fnVol_, double smprt,
     		Matrix2D<double> &angles);

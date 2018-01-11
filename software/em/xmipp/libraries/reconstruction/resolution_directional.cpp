@@ -81,10 +81,6 @@ void ProgResDir::produceSideInfo()
 
 	V().setXmippOrigin();
 
-
-
-
-
 	//Sweeping the projection sphere
 	std::cout << "Obtaining angular projections..." << std::endl;
 	generateGridProjectionMatching(fnVol, ang_sampling, angles);
@@ -302,7 +298,9 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 				double un=1.0/iun;
 				if (freqH<=un && un<=freq)
 				{
+					//TODO: Check if acosine and exp can be calculated outside the loop
 					//TODO: Change to the precalculated value
+					//TODO: Check if fftVRiesz can be made equal to myfftV
 					//0.12 is a good value (0.00020736 = 0.12^4), thus, 4822.53=1/(0.12^4)
 					//double arg_exp = acosine*acosine*acosine*acosine*4822.53;
 					double arg_exp = acosine*acosine*acosine*acosine/(0.12*0.12*0.12*0.12);
@@ -712,8 +710,9 @@ void ProgResDir::resolution2eval(int &count_res, double step,
 
 void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 								double &resolution, double &last_resolution,
+								int &last_fourier_idx,
 								double &freq, double &freqL, double &freqH,
-								bool &breakIter, bool &doNextIteration)
+								bool &continueIter, bool &breakIter, bool &doNextIteration)
 {
 	int volsize = ZSIZE(VRiesz);
 
@@ -724,8 +723,9 @@ void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 	std::cout << "min_step = " << min_step << std::endl;
 
 	//TODO: I am sure that the abs can be removed
-	if ( abs(resolution - last_resolution)<min_step )
+	if ( fabs(resolution - last_resolution)<min_step )
 	{
+		std::cout << "entro last_resolution = "  << last_resolution << "res = " << resolution  << std::endl;
 		freq = sampling/(last_resolution-min_step);
 		DIGFREQ2FFT_IDX(freq, volsize, fourier_idx);
 		FFT_IDX2DIGFREQ(fourier_idx, volsize, freq);
@@ -736,7 +736,6 @@ void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 			++fourier_idx;
 			return;
 		}
-
 	}
 
 	resolution = sampling/freq;
@@ -763,9 +762,11 @@ void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 	std::cout << "freq_H = " << freqH << std::endl;
 	std::cout << "freq_L = " << freqL << std::endl;
 
-	if (freqH>0.5)
+	if (freqH>0.5 || freqH<0)
 		freqH = 0.5;
 
+	if (freqL>0.5 || freqL<0)
+		freqL = 0.5;
 	int fourier_idx_H, fourier_idx_L;
 
 	DIGFREQ2FFT_IDX(freqH, volsize, fourier_idx_H);
@@ -783,7 +784,7 @@ void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 	std::cout << "freq_H = " << freqH << std::endl;
 	std::cout << "freq_L = " << freqL << std::endl;
 
-	if (freq>0.49)
+	if (freq>0.49 || freq<0)
 	{
 		std::cout << "Nyquist limit reached" << std::endl;
 		breakIter = true;
@@ -796,8 +797,9 @@ void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 		doNextIteration = true;
 	}
 	std::cout << "resolution = " << resolution << "  resolutionL = " <<
-				sampling/(freqL) << "  resolutionH = " << sampling/freqH << std::endl;
-
+				sampling/(freqL) << "  resolutionH = " << sampling/freqH
+				<< "  las_res = " << last_resolution << std::endl;
+	last_fourier_idx = fourier_idx;
 	++fourier_idx;
 }
 
@@ -909,33 +911,39 @@ void ProgResDir::run()
 		std::vector<double> noiseValues;
 		FileName fnDebug;
 		double last_resolution = 0;
+		int kkkk = 0;
 		do
 		{
-//			continueIter = false;
+			kkkk++;
+			continueIter = false;
 			breakIter = false;
 			//std::cout << "--------------Frequency--------------" << std::endl;
 
 			resolution2eval_(fourier_idx, step,
-							resolution, last_resolution,
+							resolution, last_resolution, last_fourier_idx,
 							freq, freqL, freqH,
-							breakIter, doNextIteration);
+							continueIter, breakIter, doNextIteration);
 
 			if (breakIter)
 				break;
 
-//			if (continueIter)
-//				continue;
+			if (kkkk>800)
+				break;
+			if (continueIter)
+				continue;
 
 			std::cout << "resolution = " << resolution << "  resolutionL = " << freqL << "  resolutionH = " << freqH << std::endl;
 
 			list.push_back(resolution);
 
-			if (iter <2)
+			if (iter<2)
 				resolution_2 = list[0];
 			else
 				resolution_2 = list[iter - 2];
 
 			fnDebug = "Signal";
+
+
 /*
 			amplitudeMonogenicSignal3D(fftV, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, rot, tilt);
 
