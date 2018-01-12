@@ -815,7 +815,10 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 	{
 			double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
 			if (freqL>=un && un>=freq)
+			{
 				DIRECT_MULTIDIM_ELEM(fftVRiesz,n) *= 0.5*(1 + cos(raised_w*(un-freq)));
+				DIRECT_MULTIDIM_ELEM(fftVRiesz,n) *= DIRECT_MULTIDIM_ELEM(conefilter, n);
+			}
 			else
 				if (un>freqL)
 					DIRECT_MULTIDIM_ELEM(fftVRiesz,n) = 0;
