@@ -76,11 +76,6 @@ public:
 
     /* Mogonogenid amplitud of a volume, given an input volume,
      * the monogenic amplitud is calculated and low pass filtered at frequency w1*/
-    void amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
-    		double w1, double w1l, double wH, MultidimArray<double> &amplitude,
-    		int count, int dir, FileName fnDebug,
-    		double rot, double tilt);
-
     void amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<double> > &myfftV,
     		double w1, double w1l, double wH, MultidimArray<double> &amplitude,
     		int count, int dir, FileName fnDebug,
