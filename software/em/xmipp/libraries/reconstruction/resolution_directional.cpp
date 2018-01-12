@@ -555,11 +555,11 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 //		#ifdef MONO_AMPLITUDE
 		Image<double> saveImg2;
 		saveImg2 = amplitude;
-		if (fnDebug.c_str() != "")
-		{
-			FileName iternumber = formatString("smoothed_volume_%i_%i.vol", dir, count);
-			saveImg2.write(fnDebug+iternumber);
-		}
+//		if (fnDebug.c_str() != "")
+//		{
+//			FileName iternumber = formatString("smoothed_volume_%i_%i.vol", dir, count);
+//			saveImg2.write(fnDebug+iternumber);
+//		}
 //		saveImg2.clear();
 //		#endif
 
@@ -875,7 +875,7 @@ void ProgResDir::run()
 	std::cout << "step = " << step << std::endl;
 
 
-	N_directions=1;
+//	N_directions=1;
 
 	std::cout << "N_directions = " << N_directions << std::endl;
 
