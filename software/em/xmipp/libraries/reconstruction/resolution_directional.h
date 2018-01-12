@@ -81,10 +81,19 @@ public:
     		int count, int dir, FileName fnDebug,
     		double rot, double tilt);
 
+    void amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<double> > &myfftV,
+    		double w1, double w1l, double wH, MultidimArray<double> &amplitude,
+    		int count, int dir, FileName fnDebug,
+    		double rot, double tilt);
+
+
     void amplitudeMonogenicSignal3D_test(MultidimArray< std::complex<double> > &myfftV,
     		double w1, double w1l, double wH, MultidimArray<double> &amplitude,
     		int count, int dir, FileName fnDebug,
     		double rot, double tilt);
+
+    void defineCone(MultidimArray< std::complex<double> > &myfftV,
+    		MultidimArray<double> &conefilter, double rot, double tilt);
 
     void inertiaMatrix(MultidimArray<double> &resolutionVol,
 			   MultidimArray<double> &Inertia_11,
@@ -124,7 +133,7 @@ public:
 
 public:
     Image<int> mask;
-    MultidimArray<double> iu, VRiesz, fftVRiesz_test; // Inverse of the frequency
+    MultidimArray<double> iu, VRiesz, fftVRiesz_test, conefilter; // Inverse of the frequency
 	MultidimArray< std::complex<double> > fftV, *fftN; // Fourier transform of the input volume
 	FourierTransformer transformer_inv, transformer_direct;
 	MultidimArray< std::complex<double> > fftVRiesz, fftVRiesz_aux;
