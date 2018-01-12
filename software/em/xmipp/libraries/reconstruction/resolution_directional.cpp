@@ -58,7 +58,7 @@ void ProgResDir::defineParams()
 	addParamsLine("                               :+ If two half volume are given, the noise is estimated from them");
 	addParamsLine("                               :+ Otherwise the noise is estimated outside the mask");
 	addParamsLine("  [-o <output=\"MGresolution.vol\">]: Local resolution volume (in Angstroms)");
-	addParamsLine("  --sym <symmetry>: Symmetry (c1, c2, c3,..d1, d2, d3,...)");
+	addParamsLine("  [--sym <symmetry>]			  : Symmetry (c1, c2, c3,..d1, d2, d3,...)");
 	addParamsLine("  [--sampling_rate <s=1>]      : Sampling rate (A/px)");
 	addParamsLine("  [--angular_sampling <s=15>]  : Angular Sampling rate (degrees)");
 	addParamsLine("  [--volumeRadius <s=100>]     : This parameter determines the radius of a sphere where the volume is");
@@ -1106,30 +1106,6 @@ void ProgResDir::run()
 		
 
 		double last_resolution_2 = resolution;
-		if (fnSym!="c1")
-		{
-			SymList SL;
-			SL.readSymmetryFile(fnSym);
-			MultidimArray<double> VSimetrized;
-			symmetrizeVolume(SL, pOutputResolution, VSimetrized, LINEAR, DONT_WRAP);
-			outputResolution() = VSimetrized;
-			VSimetrized.clear();
-		}
-
-		#ifdef DEBUG_SYMMETRY
-			outputResolution.write("resolution_simple_simmetrized.vol");
-
-		Image<double> saveImg;
-		saveImg = pOutputResolution;
-		FileName fnres;
-		fnres = formatString("resolution_simmetrized_%i.vol", dir);
-		saveImg.write(fnres);
-		saveImg.clear();
-		#endif
-
-		//MultidimArray<double> resolutionFiltered, resolutionChimera;
-		//postProcessingLocalResolutions(pOutputResolution, list, resolutionChimera, cut_value, pMask);
-
 
 		//////////////////
 		//INERTIA MOMENT//
