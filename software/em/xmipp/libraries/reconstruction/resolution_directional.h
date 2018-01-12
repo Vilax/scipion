@@ -81,6 +81,11 @@ public:
     		int count, int dir, FileName fnDebug,
     		double rot, double tilt);
 
+    void amplitudeMonogenicSignal3D_test(MultidimArray< std::complex<double> > &myfftV,
+    		double w1, double w1l, double wH, MultidimArray<double> &amplitude,
+    		int count, int dir, FileName fnDebug,
+    		double rot, double tilt);
+
     void inertiaMatrix(MultidimArray<double> &resolutionVol,
 			   MultidimArray<double> &Inertia_11,
 			   MultidimArray<double> &Inertia_12,
@@ -97,12 +102,6 @@ public:
     void degreeOfAnisotropy(Matrix1D<double> eigenvalues, Matrix2D<double> eigenvectors,
 			double &doa, double &direction_x, double &direction_y, double &direction_z,
 			int &counter);
-
-    void resolution2eval(int &count_res, double step,
-			double &resolution, double &last_resolution,
-			double &freq, double &freqL, double &freqH,
-			int &last_fourier_idx,
-			bool &continueIter, bool &breakIter, bool &doNextIteration);
 
     void resolution2eval_(int &fourier_idx, double min_step,
 			double &resolution, double &last_resolution,
@@ -125,7 +124,7 @@ public:
 
 public:
     Image<int> mask;
-    MultidimArray<double> iu, VRiesz; // Inverse of the frequency
+    MultidimArray<double> iu, VRiesz, fftVRiesz_test; // Inverse of the frequency
 	MultidimArray< std::complex<double> > fftV, *fftN; // Fourier transform of the input volume
 	FourierTransformer transformer_inv, transformer_direct;
 	MultidimArray< std::complex<double> > fftVRiesz, fftVRiesz_aux;

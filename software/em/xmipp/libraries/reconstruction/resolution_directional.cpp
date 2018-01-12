@@ -188,8 +188,6 @@ void ProgResDir::produceSideInfo()
 		VEC_ELEM(freq_fourier,k) = u;
 		std::cout << "freq_fourier = " << sampling/u  << std::endl;
 	}
-
-
 }
 
 
@@ -247,6 +245,91 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 	}
 }
 
+void ProgResDir::amplitudeMonogenicSignal3D_test(MultidimArray< std::complex<double> > &myfftV,
+		double freq, double freqH, double freqL, MultidimArray<double> &amplitude, int count, int dir, FileName fnDebug,
+		double rot, double tilt)
+{
+	fftVRiesz_test.initZeros(myfftV);
+	fftVRiesz_aux.initZeros(myfftV);
+	amplitude.resizeNoCopy(VRiesz);
+	std::complex<double> J(0,1);
+	std::complex<double> aux_prod_c;
+	double aux_prod_d;
+
+	// Filter the input volume and add it to amplitude
+	long n=0;
+	double ideltal=PI/(freq-freqH);
+
+	//#ifdef DEBUG_DIR
+	MultidimArray<double> coneVol;
+	coneVol.initZeros(iu);
+	//#endif
+
+
+	double x_dir, y_dir, z_dir;
+
+	x_dir = sin(tilt*PI/180)*cos(rot*PI/180);
+	y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
+	z_dir = cos(tilt*PI/180);
+
+	double uz, uy, ux;
+	n=0;
+	for(size_t k=0; k<ZSIZE(myfftV); ++k)
+	{
+		for(size_t i=0; i<YSIZE(myfftV); ++i)
+		{
+			for(size_t j=0; j<XSIZE(myfftV); ++j)
+			{
+				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
+				double un=1.0/iun;
+				if (freqH<=un && un<=freq)
+				{
+					DIRECT_MULTIDIM_ELEM(fftVRiesz_test, n) = sampling*iun;
+					DIRECT_MULTIDIM_ELEM(fftVRiesz_test, n) *= 0.5*(1+cos((un-freq)*ideltal));
+				} else if (un>freq)
+				{
+					DIRECT_MULTIDIM_ELEM(fftVRiesz_test, n) = sampling/freq;
+				}
+				++n;
+			}
+		}
+	}
+	Image<double> saveImg2;
+	saveImg2 = fftVRiesz_test;
+	FileName iternumber = formatString("PPPP_%i_%i.vol", dir, count);
+	saveImg2.write(fnDebug+iternumber);
+
+
+
+
+//	amplitude.setXmippOrigin();
+//
+//
+//    double raised_w = PI/(freqL-freq);
+//
+//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fftVRiesz)
+//	{
+//			double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
+//			if (freqL>=un && un>=freq)
+//				DIRECT_MULTIDIM_ELEM(fftVRiesz,n) *= 0.5*(1 + cos(raised_w*(un-freq)));
+//			else
+//				if (un>freqL)
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz,n) = 0;
+//	}
+//	transformer_inv.inverseFourierTransform();
+//
+//
+//	if (fnDebug.c_str() != "")
+//	{
+//
+//		saveImg2 = amplitude;
+//		FileName iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir, count);
+//		saveImg2.write(fnDebug+iternumber);
+//	}
+//	saveImg2.clear();
+
+
+}
 
 void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
 		double freq, double freqH, double freqL, MultidimArray<double> &amplitude, int count, int dir, FileName fnDebug,
@@ -345,6 +428,8 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 	}
 //	#endif
 
+
+
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 		DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 
@@ -387,8 +472,7 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 		DIRECT_MULTIDIM_ELEM(amplitude,n)+= DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
-
-/*
+#ifdef SEPARADO
 	// Calculate second and third component of Riesz vector
 	fftVRiesz.initZeros(myfftV);
 	n=0;
@@ -429,8 +513,9 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 			DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 			DIRECT_MULTIDIM_ELEM(amplitude,n) = sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
 		}
+		#endif SEPARADP
 	////////////////
-*/
+
 
 	transformer_inv.inverseFourierTransform(fftVRiesz_aux, VRiesz);
 
@@ -510,7 +595,6 @@ void ProgResDir::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> 
 ////	#endif // DEBUG
 
 }
-
 
 void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 							   MultidimArray<double> &Inertia_11,
@@ -625,89 +709,6 @@ void ProgResDir::degreeOfAnisotropy(Matrix1D<double> eigenvalues,
 	}
 }
 
-void ProgResDir::resolution2eval(int &count_res, double step,
-								double &resolution, double &last_resolution,
-								double &freq, double &freqL, double &freqH,
-								int &last_fourier_idx,
-								bool &continueIter,	bool &breakIter, bool &doNextIteration)
-{
-	resolution = maxRes - count_res*step;
-	freq = sampling/resolution;
-
-	++count_res;
-
-	double Nyquist = 2*sampling;
-	double aux_frequency, aux_frequency_next;
-	int fourier_idx;
-
-	DIGFREQ2FFT_IDX(freq, ZSIZE(VRiesz), fourier_idx);
-
-//	std::cout << "Resolution = " << resolution << "   iter = " << count_res-1 << std::endl;
-//	std::cout << "freq = " << freq << "   Fourier index = " << fourier_idx << std::endl;
-
-	FFT_IDX2DIGFREQ(fourier_idx, ZSIZE(VRiesz), freq);
-
-	/////////////////////
-	FFT_IDX2DIGFREQ((fourier_idx+1), ZSIZE(VRiesz), freqH);
-	/////////////////////
-
-//	std::cout << "freq = " << freq << "  freqH = " << freqH << std::endl;
-//	std::cout << "fourier_idx = " << fourier_idx << "  fourier_idx +1 = " << fourier_idx + 1 << std::endl;
-
-	if ( freq == 0)// || (resolution > last_resolution) )
-	{
-		std::cout << "Nyquist limit reached" << std::endl;
-		breakIter = true;
-		doNextIteration = false;
-		return;
-	}
-
-	if (fourier_idx == last_fourier_idx)
-	{
-		continueIter = true;
-		return;
-	}
-
-	last_fourier_idx = fourier_idx;
-	resolution = sampling/freq;
-
-
-	if (count_res == 0)
-		last_resolution = resolution;
-
-	if ( ( resolution<Nyquist ))// || (resolution > last_resolution) )
-	{
-		//std::cout << "Nyquist limit reached" << std::endl;
-		breakIter = true;
-		doNextIteration = false;
-		return;
-	}
-	if ( ( freq>0.49))// || (resolution > last_resolution) )
-	{
-		std::cout << "Nyquist limit reached" << std::endl;
-		breakIter = true;
-		doNextIteration = false;
-		return;
-	}
-
-	freqL = sampling/(resolution + step);
-
-	int fourier_idx_2;
-
-	DIGFREQ2FFT_IDX(freqL, ZSIZE(VRiesz), fourier_idx_2);
-
-	if (fourier_idx_2 == fourier_idx)
-	{
-		if (fourier_idx > 2){
-			//std::cout << " index low =  " << (fourier_idx - 1) << std::endl;
-			FFT_IDX2DIGFREQ(fourier_idx - 1, ZSIZE(VRiesz), freqL);
-		}
-		else{
-			freqL = sampling/(resolution + step);
-		}
-	}
-}
-
 void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 								double &resolution, double &last_resolution,
 								int &last_fourier_idx,
@@ -802,7 +803,6 @@ void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 	last_fourier_idx = fourier_idx;
 	++fourier_idx;
 }
-
 
 void ProgResDir::defineDirection(Matrix1D<double> &r0, Matrix1D<double> &rF,
 							Matrix2D<double> &direction, double &eigenvalue, double &eigenvalue_max,  int eigdir,
@@ -911,10 +911,8 @@ void ProgResDir::run()
 		std::vector<double> noiseValues;
 		FileName fnDebug;
 		double last_resolution = 0;
-		int kkkk = 0;
 		do
 		{
-			kkkk++;
 			continueIter = false;
 			breakIter = false;
 			//std::cout << "--------------Frequency--------------" << std::endl;
@@ -927,12 +925,12 @@ void ProgResDir::run()
 			if (breakIter)
 				break;
 
-			if (kkkk>800)
-				break;
 			if (continueIter)
 				continue;
 
-			std::cout << "resolution = " << resolution << "  resolutionL = " << freqL << "  resolutionH = " << freqH << std::endl;
+			std::cout << "resolution = " << resolution << "  resolutionL = " << sampling/freqL << "  resolutionH = " << sampling/freqH << std::endl;
+			std::cout << "resolution = " << freq 	   << "  resolutionL = " << freqL 		   << "  resolutionH = " << freqH << std::endl;
+
 
 			list.push_back(resolution);
 
@@ -943,8 +941,6 @@ void ProgResDir::run()
 
 			fnDebug = "Signal";
 
-
-/*
 			amplitudeMonogenicSignal3D(fftV, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, rot, tilt);
 
 			double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
@@ -1115,7 +1111,6 @@ void ProgResDir::run()
 				}
 			}
 
-			*/
 			++iter;
 			last_resolution = resolution;
 		}while(doNextIteration);
