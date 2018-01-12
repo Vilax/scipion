@@ -390,14 +390,13 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
 //	#ifdef DEBUG_DIR
-	if (count == 0)
-	{
-		Image<double> filteredvolume;
-		filteredvolume = VRiesz;
-		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
-	}
+//	if (count == 0)
+//	{
+//		Image<double> filteredvolume;
+//		filteredvolume = VRiesz;
+//		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir,count));
+//	}
 //	#endif
-
 
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
@@ -442,51 +441,6 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 		DIRECT_MULTIDIM_ELEM(amplitude,n)+= DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
-
-#ifdef SEPARADO
-	// Calculate second and third component of Riesz vector
-	fftVRiesz.initZeros(myfftV);
-	n=0;
-	for(size_t k=0; k<ZSIZE(myfftV); ++k)
-	{
-		for(size_t i=0; i<YSIZE(myfftV); ++i)
-		{
-			uy = VEC_ELEM(freq_fourier,i);
-			for(size_t j=0; j<XSIZE(myfftV); ++j)
-			{
-				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = uy*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
-				++n;
-			}
-		}
-	}
-	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
-			DIRECT_MULTIDIM_ELEM(amplitude,n)+= DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
-	////////////////
-	fftVRiesz.initZeros(myfftV);
-	// Calculate second and third component of Riesz vector
-		n=0;
-		for(size_t k=0; k<ZSIZE(myfftV); ++k)
-		{
-			uz = VEC_ELEM(freq_fourier,k);
-			for(size_t i=0; i<YSIZE(myfftV); ++i)
-			{
-				for(size_t j=0; j<XSIZE(myfftV); ++j)
-				{
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = uz*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
-					++n;
-				}
-			}
-		}
-		transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
-		{
-			DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
-			DIRECT_MULTIDIM_ELEM(amplitude,n) = sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
-		}
-		#endif SEPARADP
-	////////////////
-
 
 	transformer_inv.inverseFourierTransform(fftVRiesz_aux, VRiesz);
 
@@ -838,7 +792,6 @@ void ProgResDir::defineDirection(Matrix1D<double> &r0, Matrix1D<double> &rF,
 	std::cout << " " << std::endl;
 }
 
-
 void ProgResDir::defineSegment(Matrix1D<double> &r0, Matrix1D<double> &rF,
 							MultidimArray<int> &arrows, double &elongation)
 {
@@ -852,7 +805,6 @@ void ProgResDir::defineSegment(Matrix1D<double> &r0, Matrix1D<double> &rF,
 	DIRECT_A3D_ELEM(arrows,(int)round(ZZ(r)),(int)round(YY(r)),(int)round(XX(r)))=1;
 
 }
-
 
 void ProgResDir::run()
 {
@@ -975,8 +927,8 @@ void ProgResDir::run()
 			amplitudeMS.setXmippOrigin();
 
 			//TODO: check if can be taken out side the loop
-			MultidimArray<double> coneVol;
-			coneVol.initZeros(amplitudeMS);
+//			MultidimArray<double> coneVol;
+//			coneVol.initZeros(amplitudeMS);
 			int n=0;
 			int z_size = ZSIZE(amplitudeMS);
 			int x_size = XSIZE(amplitudeMS);
@@ -1008,12 +960,9 @@ void ProgResDir::run()
 
 							double acosine = acos(fabs(dotproduct));
 
-//							DIRECT_A3D_ELEM(coneVol, k,i,j) = 1;
-
 							if (acosine<(PI*20/180))
 							{
-//								DIRECT_A3D_ELEM(coneVol, k,i,j) = 1;
-								DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
+//								DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
 								amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
 								sumN  += amplitudeValue;
 								sumN2 += amplitudeValue*amplitudeValue;
