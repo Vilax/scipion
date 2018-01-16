@@ -38,14 +38,10 @@ void ProgLocSharp::readParams()
 	fnOut = getParam("-o");
 	fnMask = getParam("--mask");
 	sampling = getDoubleParam("--sampling_rate");
-	ang_sampling = getDoubleParam("--angular_sampling");
 	R = getDoubleParam("--volumeRadius");
-	fnVar = getParam("--varVol");
 	fnSym = getParam("--sym");
 	significance = getDoubleParam("--significance");
-	fnMd = getParam("--md_resdir");
-	fnDoA = getParam("--doa_vol");
-	fnDirections = getParam("--directions");
+	fnSrp = getParam("--sharpened_vol");
 }
 
 
@@ -59,13 +55,9 @@ void ProgLocSharp::defineParams()
 	addParamsLine("  [-o <output=\"MGresolution.vol\">]: Local resolution volume (in Angstroms)");
 	addParamsLine("  [--sym <symmetry>]			  : Symmetry (c1, c2, c3,..d1, d2, d3,...)");
 	addParamsLine("  [--sampling_rate <s=1>]      : Sampling rate (A/px)");
-	addParamsLine("  [--angular_sampling <s=15>]  : Angular Sampling rate (degrees)");
 	addParamsLine("  [--volumeRadius <s=100>]     : This parameter determines the radius of a sphere where the volume is");
-	addParamsLine("  [--varVol <vol_file=\"\">]   : Output filename with varianze resolution volume");
 	addParamsLine("  [--significance <s=0.95>]    : The level of confidence for the hypothesis test.");
 	addParamsLine("  [--md_resdir <file=\".\">]   : Metadata with mean resolution by direction.");
-	addParamsLine("  [--doa_vol <vol_file=\"\">]  : Output filename with DoA volume");
-	addParamsLine("  [--directions <vol_file=\"\">]  : Output preffered directions");
 }
 
 void ProgLocSharp::produceSideInfo()
