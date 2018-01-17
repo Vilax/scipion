@@ -73,6 +73,9 @@ void ProgLocSharp::produceSideInfo()
 	MultidimArray<double> &inputVol = V();
 	VRiesz.resizeNoCopy(inputVol);
 
+	if (fnSrp!="")
+		VresolutionFiltered().initZeros(V());
+
 	transformer.FourierTransform(inputVol, fftV);
 	iu.initZeros(fftV);
 
@@ -212,6 +215,9 @@ void ProgLocSharp::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<d
 //		filteredvolume.write(formatString("Volumen_filtrado_%i.vol", count));
 //	}
 //	#endif
+
+	if (fnSrp!="")
+		Vfiltered()=VRiesz;
 
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
@@ -448,8 +454,8 @@ void ProgLocSharp::run()
 	outputResolution().initZeros(VRiesz);
 	MultidimArray<double> &pOutputResolution = outputResolution();
 	MultidimArray<double> amplitudeMS, amplitudeMN;
-//	MultidimArray<int> mask_aux = mask();
-//	MultidimArray<int> &pMask = mask_aux;
+	MultidimArray<double> &pVfiltered = Vfiltered();
+	MultidimArray<double> &pVresolutionFiltered = VresolutionFiltered();
 	MultidimArray<int> &pMask = mask();
 	std::vector<double> list;
 	double resolution;  //A huge value for achieving last_resolution < resolution
@@ -584,6 +590,8 @@ void ProgLocSharp::run()
 					{
 						DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
 						DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution;//sampling/freq;
+						if (fnSrp!="")
+							DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n)=DIRECT_MULTIDIM_ELEM(pVfiltered,n);
 					}
 					else
 					{
@@ -665,6 +673,21 @@ void ProgLocSharp::run()
 			outputResolution.write("resolution_simple_simmetrized.vol");
 		#endif
 
+
+		if (fnSrp!="")
+			{
+				mask.read(fnMask);
+				mask().setXmippOrigin();
+				Vfiltered.read(fnVol);
+				pVfiltered=Vfiltered();
+				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pVfiltered)
+				if (DIRECT_MULTIDIM_ELEM(pMask,n)==1)
+					DIRECT_MULTIDIM_ELEM(pVfiltered,n)-=DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n);
+				Vfiltered.write(fnSrp);
+
+				VresolutionFiltered().clear();
+				Vfiltered().clear();
+			}
 
 
 		Image<double> outputResolutionImage;
