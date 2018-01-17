@@ -55,7 +55,7 @@ class ProgLocSharp : public XmippProgram
 public:
 	 /** Filenames */
 	FileName fnOut, fnVol, fnVol2, fnMask, fnchim, fnSym, fnMeanVol, fnMaskOut, fnMaxVol,
-	fnMinVol, fnMd, fnVar, fnDoA, fnSph, fnDirections;
+	fnMinVol, fnMd, fnVar, fnSrp, fnSph, fnDirections;
 
 	/** sampling rate, minimum resolution, and maximum resolution */
 	double sampling, minRes, maxRes, R, ang_sampling, N_points, pepep, N_directions;
@@ -100,6 +100,7 @@ public:
 	Sampling mysampling;
 	Matrix2D<double> angles;
 	Matrix1D<double> freq_fourier;
+	Image<double> Vfiltered, VresolutionFiltered;
 
 };
 //@}

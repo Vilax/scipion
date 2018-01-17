@@ -57,7 +57,7 @@ void ProgLocSharp::defineParams()
 	addParamsLine("  [--sampling_rate <s=1>]      : Sampling rate (A/px)");
 	addParamsLine("  [--volumeRadius <s=100>]     : This parameter determines the radius of a sphere where the volume is");
 	addParamsLine("  [--significance <s=0.95>]    : The level of confidence for the hypothesis test.");
-	addParamsLine("  [--md_resdir <file=\".\">]   : Metadata with mean resolution by direction.");
+	addParamsLine("  [--sharpened_vol <vol_file=\"\">]    : Sharpened volume.");
 }
 
 void ProgLocSharp::produceSideInfo()
@@ -72,9 +72,6 @@ void ProgLocSharp::produceSideInfo()
 	FourierTransformer transformer;
 	MultidimArray<double> &inputVol = V();
 	VRiesz.resizeNoCopy(inputVol);
-	N_freq = ZSIZE(inputVol);
-	maxRes = ZSIZE(inputVol);
-	minRes = 2*sampling;
 
 	transformer.FourierTransform(inputVol, fftV);
 	iu.initZeros(fftV);
@@ -126,19 +123,6 @@ void ProgLocSharp::produceSideInfo()
 		std::cout << "Error: a mask ought to be provided" << std::endl;
 		exit(0);
 	}
-
-	//use the mask for preparing resolution volumes
-	Image<double> AvgResoltion, VarianzeResolution;
-	AvgResoltion().resizeNoCopy(inputVol);
-	VarianzeResolution().resizeNoCopy(inputVol);
-	AvgResoltion().initZeros();
-	VarianzeResolution().initZeros();
-
-	AvgResoltion.write(fnOut);
-	VarianzeResolution.write(fnVar);
-
-	AvgResoltion.clear();
-	VarianzeResolution.clear();
 
 	N_smoothing = 15;
 	NVoxelsOriginalMask = 0;
@@ -200,7 +184,6 @@ void ProgLocSharp::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<d
 				double un=1.0/iun;
 				if (freqH<=un && un<=freq)
 				{
-					//TODO: Check if fftVRiesz can be made equal to myfftV
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-freq)*ideltal));//H;
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
@@ -455,13 +438,7 @@ void ProgLocSharp::run()
 	bool continueIter = false, breakIter = false;
 	double criticalZ=icdf_gauss(significance);
 
-	double range = maxRes-minRes;
-	double step = range/N_freq;
-
-	if (step<0.3)
-		step=0.3;
-
-	step = 0.3;
+	double step = 0.3;
 
 	std::cout << "maxRes = " << maxRes << std::endl;
 	std::cout << "minRes = " << minRes << std::endl;
@@ -471,11 +448,12 @@ void ProgLocSharp::run()
 	outputResolution().initZeros(VRiesz);
 	MultidimArray<double> &pOutputResolution = outputResolution();
 	MultidimArray<double> amplitudeMS, amplitudeMN;
-	MultidimArray<int> mask_aux = mask();
-	MultidimArray<int> &pMask = mask_aux;
+//	MultidimArray<int> mask_aux = mask();
+//	MultidimArray<int> &pMask = mask_aux;
+	MultidimArray<int> &pMask = mask();
 	std::vector<double> list;
 	double resolution;  //A huge value for achieving last_resolution < resolution
-	double freq, freqL, freqH, counter, resolution_2;
+	double freq, freqL, freqH, resolution_2;
 	double max_meanS = -1e38;
 	double cut_value = 0.025;
 
@@ -487,11 +465,12 @@ void ProgLocSharp::run()
 	double criticalW=-1;
 	std::cout << "--------------NEW DIRECTION--------------" << std::endl;
 
+	//This initialize the resolution values
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
 		if (DIRECT_MULTIDIM_ELEM(pMask, n) == 1)
 			DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = maxRes;
 
-	std::vector<double> noiseValues;
+
 	FileName fnDebug;
 	double last_resolution = 0;
 
@@ -515,7 +494,6 @@ void ProgLocSharp::run()
 		std::cout << "resolution = " << resolution << "  resolutionL = " << sampling/freqL << "  resolutionH = " << sampling/freqH << std::endl;
 		std::cout << "resolution = " << freq 	   << "  resolutionL = " << freqL 		   << "  resolutionH = " << freqH << std::endl;
 
-
 		list.push_back(resolution);
 
 		if (iter<2)
@@ -528,7 +506,6 @@ void ProgLocSharp::run()
 		amplitudeMonogenicSignal3D_fast(fftV, freq, freqH, freqL, amplitudeMS, iter, fnDebug);
 
 		double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
-		noiseValues.clear();
 
 		double amplitudeValue;
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
@@ -667,7 +644,33 @@ void ProgLocSharp::run()
 	fftVRiesz.clear();
 
 
-	double last_resolution_2 = resolution;
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
+		{
+		if (DIRECT_MULTIDIM_ELEM(pOutputResolution,n) > maxRes)
+			DIRECT_MULTIDIM_ELEM(pOutputResolution,n) = 0;
+		}
+
+		double last_resolution_2 = resolution;
+		if (fnSym!="c1")
+		{
+			SymList SL;
+			SL.readSymmetryFile(fnSym);
+			MultidimArray<double> VSimetrized;
+			symmetrizeVolume(SL, pOutputResolution, VSimetrized, LINEAR, DONT_WRAP);
+			outputResolution() = VSimetrized;
+			VSimetrized.clear();
+		}
+
+		#ifdef DEBUG
+			outputResolution.write("resolution_simple_simmetrized.vol");
+		#endif
+
+
+
+		Image<double> outputResolutionImage;
+		outputResolutionImage() = pOutputResolution;//resolutionFiltered;
+		outputResolutionImage.write(fnOut);
+
 
 
 
