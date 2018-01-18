@@ -478,7 +478,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 
 
 //		#ifdef MONO_AMPLITUDE
-//		Image<double> saveImg2;
+		Image<double> saveImg2;
 //		saveImg2 = amplitude;
 //		if (fnDebug.c_str() != "")
 //		{
@@ -510,11 +510,11 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 //
 //	if (fnDebug.c_str() != "")
 //	{
-//		saveImg2 = amplitude;
-//		FileName iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir, count);
-//		saveImg2.write(fnDebug+iternumber);
+		saveImg2 = amplitude;
+		FileName iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir, count);
+		saveImg2.write(fnDebug+iternumber);
 //	}
-//	saveImg2.clear();
+	saveImg2.clear();
 ////	#endif // DEBUG
 
 }
@@ -584,7 +584,11 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 
 	//std::cout << "x_dir = " << x_dir << "  y_dir = " << y_dir<< "  z_dir = " << z_dir << std::endl;
 
-	int idx = 0;
+	size_t idx = 0;
+
+	MetaData md;
+	size_t objId;
+	md.read("res.xmd");
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
 	{
@@ -593,7 +597,15 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 			resVal = DIRECT_MULTIDIM_ELEM(resolutionVol,n);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
 			r_xyz2 = resVal*resVal;
 //			r_xyz2 = 10;
-
+			if (idx == 34)
+			{
+				objId = md.addObject();
+				md.setValue(MDL_IDX, idx, objId);
+				md.setValue(MDL_ANGLE_ROT, rot, objId);
+				md.setValue(MDL_ANGLE_TILT, tilt, objId);
+				md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
+				md.write("res.xmd");
+			}
 			DIRECT_MULTIDIM_ELEM(Inertia_11,n) += r_xyz2*(1-x_dir*x_dir);
 			DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= r_xyz2*x_dir*y_dir;
 			DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= r_xyz2*x_dir*z_dir;
