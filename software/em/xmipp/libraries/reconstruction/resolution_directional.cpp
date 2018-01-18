@@ -586,9 +586,66 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 
 	size_t idx = 0;
 
-	MetaData md;
-	size_t objId;
-	md.read("res.xmd");
+
+
+	int nn=0;
+	for(size_t k=0; k<ZSIZE(resolutionVol); ++k)
+	{
+		for(size_t i=0; i<YSIZE(resolutionVol); ++i)
+		{
+			for(size_t j=0; j<XSIZE(resolutionVol); ++j)
+			{
+				if (DIRECT_MULTIDIM_ELEM(mask(), nn) == 1)
+				{
+					resVal = DIRECT_MULTIDIM_ELEM(resolutionVol,nn);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
+					double aux_val = DIRECT_A3D_ELEM(resolutionVol,k,i,j);
+					r_xyz2 = resVal*resVal;
+		//			r_xyz2 = 10;
+					if ((idx == 10) ||(idx == 20) ||(idx == 30) ||(idx == 34) ||
+							(idx == 40) || (idx == 50) || (idx == 100) || (idx == 200) ||
+							(idx == 300) ||(idx == 340) || (idx == 400) || (idx == 80) ||
+							(idx == 70) || (idx == 60) || (idx == 90) ||(idx == 110) ||
+							(idx == 130) || (idx == 120))
+					{
+						MetaData md;
+						size_t objId;
+						FileName fn_md;
+						fn_md = formatString("res_%i.xmd",idx);
+						md.read(fn_md);
+
+						objId = md.addObject();
+						md.setValue(MDL_IDX, idx, objId);
+						md.setValue(MDL_XCOOR, i, objId);
+						md.setValue(MDL_YCOOR, j, objId);
+						md.setValue(MDL_ZCOOR, k, objId);
+						md.setValue(MDL_ANGLE_ROT, rot, objId);
+						md.setValue(MDL_ANGLE_TILT, tilt, objId);
+						md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
+						md.setValue(MDL_RESOLUTION_FREQ, aux_val, objId);
+						md.write(fn_md);
+					}
+					DIRECT_MULTIDIM_ELEM(Inertia_11,nn) += r_xyz2*(1-x_dir*x_dir);
+					DIRECT_MULTIDIM_ELEM(Inertia_12,nn) -= r_xyz2*x_dir*y_dir;
+					DIRECT_MULTIDIM_ELEM(Inertia_13,nn) -= r_xyz2*x_dir*z_dir;
+					DIRECT_MULTIDIM_ELEM(Inertia_22,nn) += r_xyz2*(1-y_dir*y_dir);
+					DIRECT_MULTIDIM_ELEM(Inertia_23,nn) -= r_xyz2*y_dir*z_dir;
+					DIRECT_MULTIDIM_ELEM(Inertia_33,nn) += r_xyz2*(1-z_dir*z_dir);
+
+					DIRECT_MULTIDIM_ELEM(Inertia_11,nn) += r_xyz2*(1-x_dir_sym*x_dir_sym);
+					DIRECT_MULTIDIM_ELEM(Inertia_12,nn) -= r_xyz2*x_dir_sym*y_dir_sym;
+					DIRECT_MULTIDIM_ELEM(Inertia_13,nn) -= r_xyz2*x_dir_sym*z_dir_sym;
+					DIRECT_MULTIDIM_ELEM(Inertia_22,nn) += r_xyz2*(1-y_dir_sym*y_dir_sym);
+					DIRECT_MULTIDIM_ELEM(Inertia_23,nn) -= r_xyz2*y_dir_sym*z_dir_sym;
+					DIRECT_MULTIDIM_ELEM(Inertia_33,nn) += r_xyz2*(1-z_dir_sym*z_dir_sym);
+
+					DIRECT_MULTIDIM_ELEM(SumRes,nn) += 2;
+					++idx;
+				}
+				++nn;
+			}
+		}
+	}
+
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
 	{
@@ -597,14 +654,21 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 			resVal = DIRECT_MULTIDIM_ELEM(resolutionVol,n);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
 			r_xyz2 = resVal*resVal;
 //			r_xyz2 = 10;
-			if (idx == 34)
+			if ((idx == 10) ||(idx == 20) ||(idx == 30) ||(idx == 34) ||
+					(idx == 40) || (idx == 50))
 			{
+				MetaData md;
+				size_t objId;
+				FileName fn_md;
+				fn_md = formatString("res_%i.xmd",idx);
+				md.read(fn_md);
+
 				objId = md.addObject();
 				md.setValue(MDL_IDX, idx, objId);
 				md.setValue(MDL_ANGLE_ROT, rot, objId);
 				md.setValue(MDL_ANGLE_TILT, tilt, objId);
 				md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
-				md.write("res.xmd");
+				md.write(fn_md);
 			}
 			DIRECT_MULTIDIM_ELEM(Inertia_11,n) += r_xyz2*(1-x_dir*x_dir);
 			DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= r_xyz2*x_dir*y_dir;
@@ -624,6 +688,49 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 			++idx;
 		}
 	}
+
+
+//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
+//	{
+//		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
+//		{
+//			resVal = DIRECT_MULTIDIM_ELEM(resolutionVol,n);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
+//			r_xyz2 = resVal*resVal;
+////			r_xyz2 = 10;
+//			if ((idx == 10) ||(idx == 20) ||(idx == 30) ||(idx == 34) ||
+//					(idx == 40) || (idx == 50))
+//			{
+//				MetaData md;
+//				size_t objId;
+//				FileName fn_md;
+//				fn_md = formatString("res_%i.xmd",idx);
+//				md.read(fn_md);
+//
+//				objId = md.addObject();
+//				md.setValue(MDL_IDX, idx, objId);
+//				md.setValue(MDL_ANGLE_ROT, rot, objId);
+//				md.setValue(MDL_ANGLE_TILT, tilt, objId);
+//				md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
+//				md.write(fn_md);
+//			}
+//			DIRECT_MULTIDIM_ELEM(Inertia_11,n) += r_xyz2*(1-x_dir*x_dir);
+//			DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= r_xyz2*x_dir*y_dir;
+//			DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= r_xyz2*x_dir*z_dir;
+//			DIRECT_MULTIDIM_ELEM(Inertia_22,n) += r_xyz2*(1-y_dir*y_dir);
+//			DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= r_xyz2*y_dir*z_dir;
+//			DIRECT_MULTIDIM_ELEM(Inertia_33,n) += r_xyz2*(1-z_dir*z_dir);
+//
+//			DIRECT_MULTIDIM_ELEM(Inertia_11,n) += r_xyz2*(1-x_dir_sym*x_dir_sym);
+//			DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= r_xyz2*x_dir_sym*y_dir_sym;
+//			DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= r_xyz2*x_dir_sym*z_dir_sym;
+//			DIRECT_MULTIDIM_ELEM(Inertia_22,n) += r_xyz2*(1-y_dir_sym*y_dir_sym);
+//			DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= r_xyz2*y_dir_sym*z_dir_sym;
+//			DIRECT_MULTIDIM_ELEM(Inertia_33,n) += r_xyz2*(1-z_dir_sym*z_dir_sym);
+//
+//			DIRECT_MULTIDIM_ELEM(SumRes,n) += 2;
+//			++idx;
+//		}
+//	}
 }
 
 void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A,
