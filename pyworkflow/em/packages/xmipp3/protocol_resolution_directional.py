@@ -98,6 +98,13 @@ class XmippProtMonoDir(ProtAnalysis3D):
                       'to be performed inside that premask, and out of the provieded mask asked in the previus'
                       'box. The radius value, determines the radius of the spherical premask. By default'
                       'radius = -1 use the half of the volume size as radius')
+        
+        group.addParam('particleRadius', FloatParam, default=-1,
+                      label="Particle radius (px)",
+                      help='When the original volume is originally premasked, the noise estimation ought'
+                      'to be performed inside that premask, and out of the provieded mask asked in the previus'
+                      'box. The radius value, determines the radius of the spherical premask. By default'
+                      'radius = -1 use the half of the volume size as radius')
 
         group.addParam('stepSize', FloatParam, allowsNull=True,
                       expertLevel=LEVEL_ADVANCED, label='Step')
@@ -155,7 +162,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params += ' -o %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
         params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
         params += ' --angular_sampling %f' % self.angularsampling.get()
-        #params += ' --number_frequencies %f' % Nfreqs
+        params += ' --particleRadius %s' % self.particleRadius.get()
         params += ' --varVol %s' % self._getExtraPath(OUTPUT_VARIANCE_FILE)
         params += ' --volumeRadius %f' % xdim
         params += ' --sym %s' % self.symmetry.get()

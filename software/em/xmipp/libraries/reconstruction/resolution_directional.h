@@ -57,7 +57,7 @@ public:
 	fnMinVol, fnMd, fnVar, fnDoA, fnSph, fnDirections;
 
 	/** sampling rate, minimum resolution, and maximum resolution */
-	double sampling, minRes, maxRes, R, ang_sampling, N_points, pepep, N_directions;
+	double sampling, minRes, maxRes, R, ang_sampling, N_points, pepep, N_directions, Rparticle;
 
 	/** Is the volume previously masked?*/
 	int NVoxelsOriginalMask, Nvoxels;
@@ -81,12 +81,6 @@ public:
     		int count, int dir, FileName fnDebug,
     		double rot, double tilt);
 
-
-    void amplitudeMonogenicSignal3D_test(MultidimArray< std::complex<double> > &myfftV,
-    		double w1, double w1l, double wH, MultidimArray<double> &amplitude,
-    		int count, int dir, FileName fnDebug,
-    		double rot, double tilt);
-
     void defineCone(MultidimArray< std::complex<double> > &myfftV,
     		MultidimArray<double> &conefilter, double rot, double tilt);
 
@@ -98,7 +92,7 @@ public:
 			   MultidimArray<double> &Inertia_23,
 			   MultidimArray<double> &Inertia_33,
 			   MultidimArray<double> &SumRes,
-			   double rot, double tilt);
+			   double rot, double tilt, size_t dir);
 
     void diagSymMatrix3x3(Matrix2D<double> A,
 			Matrix1D<double> &eigenvalues, Matrix2D<double> &P);
