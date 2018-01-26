@@ -740,16 +740,17 @@ void ProgResDir::degreeOfAnisotropy(Matrix1D<double> eigenvalues,
 
 	ellipsoid_axes = invA*inertia_vector;
 
-	double lambda_1 = sqrt(VEC_ELEM(ellipsoid_axes, 0));
-	double lambda_2 = sqrt(VEC_ELEM(ellipsoid_axes, 1));
-	double lambda_3 = sqrt(VEC_ELEM(ellipsoid_axes, 2));
+	//lambda_1, lambda_2, lambda_3 are the square of lambda_1, lambda_2, lambda_3
+	double lambda_1 = VEC_ELEM(ellipsoid_axes, 0);
+	double lambda_2 = VEC_ELEM(ellipsoid_axes, 1);
+	double lambda_3 = VEC_ELEM(ellipsoid_axes, 2);
 
 	double lambda_values[3] = {lambda_1, lambda_2, lambda_3};
 
 	std::sort(lambda_values, lambda_values+3);
 
 	double aux = (lambda_values[0]/lambda_values[2]);
-	doa = sqrt(1 -  aux*aux);
+	doa = sqrt(1 - aux);
 
 	if (counter == 34)
 	{
@@ -894,6 +895,168 @@ void ProgResDir::defineSegment(Matrix1D<double> &r0, Matrix1D<double> &rF,
 }
 
 
+double ProgResDir::firstMonoResEstimation(MultidimArray< std::complex<double> > &myfftV,
+		double freq, double freqH, MultidimArray<double> &amplitude)
+{
+	fftVRiesz.initZeros(myfftV);
+	amplitude.resizeNoCopy(VRiesz);
+	std::complex<double> J(0,1);
+
+	// Filter the input volume and add it to amplitude
+	long n=0;
+	double iw=1.0/freq;
+	double iwl=1.0/freqH;
+	double ideltal=PI/(freq-freqH);
+
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(myfftV)
+	{
+		double iun=DIRECT_MULTIDIM_ELEM(iu,n);
+		double un=1.0/iun;
+		if (freqH<=un && un<=freq)
+		{
+			//double H=0.5*(1+cos((un-w1)*ideltal));
+			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-freq)*ideltal));//H;
+		} else if (un>freq)
+			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+	}
+
+	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
+
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
+		DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+
+	// Calculate first component of Riesz vector
+	fftVRiesz.initZeros(myfftV);
+	double uz, uy, ux;
+	n=0;
+
+	for(size_t k=0; k<ZSIZE(myfftV); ++k)
+	{
+		for(size_t i=0; i<YSIZE(myfftV); ++i)
+		{
+			for(size_t j=0; j<XSIZE(myfftV); ++j)
+			{
+				ux = VEC_ELEM(freq_fourier,j);
+				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
+				double un=1.0/iun;
+				if (freqH<=un && un<=freq)
+				{
+					//double H=0.5*(1+cos((un-w1)*ideltal));
+					//DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*ux*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					//DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=0.5*(1+cos((un-w1)*ideltal));//H;
+					//Next lines are an optimization of the commented ones
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= J;
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= -ux*iun*0.5*(1+cos((un-freq)*ideltal));//H;
+				} else if (un>freq)
+				{
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-ux*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= J;
+				}
+				++n;
+			}
+		}
+	}
+	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
+		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+
+	// Calculate second component of Riesz vector
+	fftVRiesz.initZeros(myfftV);
+	n=0;
+
+	for(size_t k=0; k<ZSIZE(myfftV); ++k)
+	{
+		for(size_t i=0; i<YSIZE(myfftV); ++i)
+		{
+			uy = VEC_ELEM(freq_fourier,i);
+			for(size_t j=0; j<XSIZE(myfftV); ++j)
+			{
+				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
+				double un=1.0/iun;
+				if (freqH<=un && un<=freq)
+				{
+					//double H=0.5*(1+cos((un-w1)*ideltal));
+					//DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*uy*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					//DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *=0.5*(1+cos((un-w1)*ideltal));//H;
+					//Next lines are an optimization of the commented ones
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= J;
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= -uy*iun*0.5*(1+cos((un-freq)*ideltal));//H;
+				} else if (un>freq)
+				{
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-uy*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= J;
+				}
+				++n;
+			}
+		}
+	}
+	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
+	DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+
+	// Calculate third component of Riesz vector
+	fftVRiesz.initZeros(myfftV);
+	n=0;
+	for(size_t k=0; k<ZSIZE(myfftV); ++k)
+	{
+		uz = VEC_ELEM(freq_fourier,k);
+		for(size_t i=0; i<YSIZE(myfftV); ++i)
+		{
+			for(size_t j=0; j<XSIZE(myfftV); ++j)
+			{
+				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
+				double un=1.0/iun;
+				if (freqH<=un && un<=freq)
+				{
+					//double H=0.5*(1+cos((un-w1)*ideltal));
+					//DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-J*uz*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					//DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
+					//Next lines are an optimization of the commented ones
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= J;
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= -uz*iun*0.5*(1+cos((un-freq)*ideltal));//H;
+				} else if (un>freq)
+				{
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = (-uz*iun)*DIRECT_MULTIDIM_ELEM(myfftV, n);
+					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= J;
+				}
+				++n;
+			}
+		}
+	}
+	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
+	{
+		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+		DIRECT_MULTIDIM_ELEM(amplitude,n)=sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
+	}
+
+	// Low pass filter the monogenic amplitude
+	lowPassFilter.w1 = freq;
+	amplitude.setXmippOrigin();
+	lowPassFilter.applyMaskSpace(amplitude);
+
+	double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
+	MultidimArray<int> &pMask = mask();
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
+	{
+		double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitude, n);
+		if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
+		{
+			sumN  += amplitudeValue;
+			sumN2 += amplitudeValue*amplitudeValue;
+			++NN;
+		}
+	}
+
+	double mean_noise = sumN/NN;
+	return mean_noise;
+
+}
+
 
 void ProgResDir::run()
 {
@@ -929,6 +1092,17 @@ void ProgResDir::run()
 	std::cout << "N_freq = " << N_freq << std::endl;
 	std::cout << "step = " << step << std::endl;
 
+	Image<double> outputResolution;
+	MultidimArray<double> amplitudeMS, amplitudeMN;
+
+	double w, wH;
+	int volsize = ZSIZE(VRiesz);
+	FFT_IDX2DIGFREQ(10, volsize, w)
+	FFT_IDX2DIGFREQ(11, volsize, wH)
+
+	double AvgNoise;
+	AvgNoise = firstMonoResEstimation(fftV, w, wH, amplitudeMS)/9.0;
+
 
 //	N_directions=1;
 
@@ -936,17 +1110,18 @@ void ProgResDir::run()
 
 	double cone_angle = 20.0; //(degrees)
 
+
 	for (size_t dir=0; dir<N_directions; dir++)
 	{
-		Image<double> outputResolution;
+
 		outputResolution().initZeros(VRiesz);
 		MultidimArray<double> &pOutputResolution = outputResolution();
-		MultidimArray<double> amplitudeMS, amplitudeMN;
+		double freq, freqL, freqH, counter, resolution_2;
 		MultidimArray<int> mask_aux = mask();
 		MultidimArray<int> &pMask = mask_aux;
 		std::vector<double> list;
 		double resolution;  //A huge value for achieving last_resolution < resolution
-		double freq, freqL, freqH, counter, resolution_2;
+
 		double max_meanS = -1e38;
 		double cut_value = 0.025;
 
@@ -1117,7 +1292,7 @@ void ProgResDir::run()
 
 			std::cout << "max_meanS = " << max_meanS << std::endl;
 
-			if (meanS<0.00001*max_meanS)
+			if (meanS<0.001*AvgNoise)//0001*max_meanS)
 			{
 				//std::cout << "  meanS= " << meanS << " sigma2S= " << sigma2S << " NS= " << NS << std::endl;
 				//std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;

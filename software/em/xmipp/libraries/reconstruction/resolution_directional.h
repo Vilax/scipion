@@ -107,6 +107,9 @@ public:
 			double &freq, double &freqL, double &freqH,
 			bool &continueIter, bool &breakIter, bool &doNextIteration);
 
+    double firstMonoResEstimation(MultidimArray< std::complex<double> > &myfftV,
+    		double w1, double w1l, MultidimArray<double> &amplitude);
+
     void generateGridProjectionMatching(FileName fnVol_, double smprt,
     		Matrix2D<double> &angles);
 
