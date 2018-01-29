@@ -94,6 +94,16 @@ public:
 			   MultidimArray<double> &SumRes,
 			   double rot, double tilt, size_t dir);
 
+    void inertiaMatrixWithOutliers(MultidimArray<double> &resolutionVol,
+			   MultidimArray<double> &Inertia_11,
+			   MultidimArray<double> &Inertia_12,
+			   MultidimArray<double> &Inertia_13,
+			   MultidimArray<double> &Inertia_22,
+			   MultidimArray<double> &Inertia_23,
+			   MultidimArray<double> &Inertia_33,
+			   MultidimArray<double> &SumRes,
+			   double rot, double tilt, size_t dir);
+
     void diagSymMatrix3x3(Matrix2D<double> A,
 			Matrix1D<double> &eigenvalues, Matrix2D<double> &P);
 

@@ -357,9 +357,9 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 //	#ifdef DEBUG_DIR
 //	if (count == 0)
 //	{
-		Image<double> filteredvolume;
-		filteredvolume = VRiesz;
-		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir+1,count));
+//		Image<double> filteredvolume;
+//		filteredvolume = VRiesz;
+//		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir+1,count));
 //	}
 //	#endif
 
@@ -443,11 +443,11 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 
 
 //		#ifdef MONO_AMPLITUDE
-		Image<double> saveImg2;
-		saveImg2 = amplitude;
+//		Image<double> saveImg2;
+//		saveImg2 = amplitude;
 //		if (fnDebug.c_str() != "")
 //		{
-			FileName iternumber = formatString("smoothed_volume_%i_%i.vol", dir+1, count);
+//			FileName iternumber = formatString("smoothed_volume_%i_%i.vol", dir+1, count);
 //			saveImg2.write(fnDebug+iternumber);
 //		}
 //		saveImg2.clear();
@@ -477,9 +477,9 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 //
 //	if (fnDebug.c_str() != "")
 //	{
-		saveImg2 = amplitude;
-		iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir+1, count);
-		saveImg2.write(fnDebug+iternumber);
+//		saveImg2 = amplitude;
+//		iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir+1, count);
+//		saveImg2.write(fnDebug+iternumber);
 //	}
 //	saveImg2.clear();
 ////	#endif // DEBUG
@@ -530,6 +530,89 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 			}
 		}
 	}
+}
+
+void ProgResDir::inertiaMatrixWithOutliers(MultidimArray<double> &resolutionVol,
+							   MultidimArray<double> &Inertia_11,
+							   MultidimArray<double> &Inertia_12,
+							   MultidimArray<double> &Inertia_13,
+							   MultidimArray<double> &Inertia_22,
+							   MultidimArray<double> &Inertia_23,
+							   MultidimArray<double> &Inertia_33,
+							   MultidimArray<double> &SumRes,
+							   double rot, double tilt, size_t dir)
+{
+	double x_dir, y_dir, z_dir, resVal, x_dir_sym, y_dir_sym, z_dir_sym, r_xyz2;
+	x_dir = sin(tilt*PI/180)*cos(rot*PI/180);
+	y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
+	z_dir = cos(tilt*PI/180);
+	x_dir_sym = -sin(tilt*PI/180)*cos(rot*PI/180);
+	y_dir_sym = -sin(tilt*PI/180)*sin(rot*PI/180);
+	z_dir_sym = -cos(tilt*PI/180);
+
+	//std::cout << "x_dir = " << x_dir << "  y_dir = " << y_dir<< "  z_dir = " << z_dir << std::endl;
+
+	size_t idx = 0;
+
+
+
+	int nn=0;
+	for(int k=0; k<ZSIZE(resolutionVol); ++k)
+	{
+		for(int i=0; i<YSIZE(resolutionVol); ++i)
+		{
+			for(int j=0; j<XSIZE(resolutionVol); ++j)
+			{
+				if (DIRECT_MULTIDIM_ELEM(mask(), nn) == 1)
+				{
+					resVal = DIRECT_MULTIDIM_ELEM(resolutionVol,nn);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
+					double aux_val = DIRECT_A3D_ELEM(resolutionVol,k,i,j);
+					r_xyz2 = resVal*resVal;
+		//			r_xyz2 = 10;
+
+					if ( ( (k == 30)  || (k == 35) || (k == 40) || (k == 45) || (k == 50) ||
+							(k == 55) || (k == 60) || (k == 65) || (k == 70) || (k == 75)
+							|| (k == 80) || (k == 85)) && (i==52) && (j==62) )
+					{
+						MetaData md;
+						size_t objId;
+						FileName fn_md;
+						fn_md = formatString("res_%i.xmd", k);
+						md.read(fn_md);
+
+						objId = md.addObject();
+						md.setValue(MDL_IDX, dir, objId);
+						md.setValue(MDL_XCOOR, i, objId);
+						md.setValue(MDL_YCOOR, j, objId);
+						md.setValue(MDL_ZCOOR, k, objId);
+						md.setValue(MDL_ANGLE_ROT, rot, objId);
+						md.setValue(MDL_ANGLE_TILT, tilt, objId);
+						md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
+						md.setValue(MDL_RESOLUTION_FREQ, aux_val, objId);
+						md.write(fn_md);
+					}
+					DIRECT_MULTIDIM_ELEM(Inertia_11,nn) += r_xyz2*(1-x_dir*x_dir);
+					DIRECT_MULTIDIM_ELEM(Inertia_12,nn) -= r_xyz2*x_dir*y_dir;
+					DIRECT_MULTIDIM_ELEM(Inertia_13,nn) -= r_xyz2*x_dir*z_dir;
+					DIRECT_MULTIDIM_ELEM(Inertia_22,nn) += r_xyz2*(1-y_dir*y_dir);
+					DIRECT_MULTIDIM_ELEM(Inertia_23,nn) -= r_xyz2*y_dir*z_dir;
+					DIRECT_MULTIDIM_ELEM(Inertia_33,nn) += r_xyz2*(1-z_dir*z_dir);
+
+					DIRECT_MULTIDIM_ELEM(Inertia_11,nn) += r_xyz2*(1-x_dir_sym*x_dir_sym);
+					DIRECT_MULTIDIM_ELEM(Inertia_12,nn) -= r_xyz2*x_dir_sym*y_dir_sym;
+					DIRECT_MULTIDIM_ELEM(Inertia_13,nn) -= r_xyz2*x_dir_sym*z_dir_sym;
+					DIRECT_MULTIDIM_ELEM(Inertia_22,nn) += r_xyz2*(1-y_dir_sym*y_dir_sym);
+					DIRECT_MULTIDIM_ELEM(Inertia_23,nn) -= r_xyz2*y_dir_sym*z_dir_sym;
+					DIRECT_MULTIDIM_ELEM(Inertia_33,nn) += r_xyz2*(1-z_dir_sym*z_dir_sym);
+
+					DIRECT_MULTIDIM_ELEM(SumRes,nn) += 2;
+					++idx;
+				}
+				++nn;
+			}
+		}
+	}
+
 }
 
 
@@ -614,91 +697,6 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 		}
 	}
 
-
-//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
-//	{
-//		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
-//		{
-//			resVal = DIRECT_MULTIDIM_ELEM(resolutionVol,n);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
-//			r_xyz2 = resVal*resVal;
-////			r_xyz2 = 10;
-//			if ((idx == 10) ||(idx == 20) ||(idx == 30) ||(idx == 34) ||
-//					(idx == 40) || (idx == 50))
-//			{
-//				MetaData md;
-//				size_t objId;
-//				FileName fn_md;
-//				fn_md = formatString("res_%i.xmd",idx);
-//				md.read(fn_md);
-//
-//				objId = md.addObject();
-//				md.setValue(MDL_IDX, idx, objId);
-//				md.setValue(MDL_ANGLE_ROT, rot, objId);
-//				md.setValue(MDL_ANGLE_TILT, tilt, objId);
-//				md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
-//				md.write(fn_md);
-//			}
-//			DIRECT_MULTIDIM_ELEM(Inertia_11,n) += r_xyz2*(1-x_dir*x_dir);
-//			DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= r_xyz2*x_dir*y_dir;
-//			DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= r_xyz2*x_dir*z_dir;
-//			DIRECT_MULTIDIM_ELEM(Inertia_22,n) += r_xyz2*(1-y_dir*y_dir);
-//			DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= r_xyz2*y_dir*z_dir;
-//			DIRECT_MULTIDIM_ELEM(Inertia_33,n) += r_xyz2*(1-z_dir*z_dir);
-//
-//			DIRECT_MULTIDIM_ELEM(Inertia_11,n) += r_xyz2*(1-x_dir_sym*x_dir_sym);
-//			DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= r_xyz2*x_dir_sym*y_dir_sym;
-//			DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= r_xyz2*x_dir_sym*z_dir_sym;
-//			DIRECT_MULTIDIM_ELEM(Inertia_22,n) += r_xyz2*(1-y_dir_sym*y_dir_sym);
-//			DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= r_xyz2*y_dir_sym*z_dir_sym;
-//			DIRECT_MULTIDIM_ELEM(Inertia_33,n) += r_xyz2*(1-z_dir_sym*z_dir_sym);
-//
-//			DIRECT_MULTIDIM_ELEM(SumRes,n) += 2;
-//			++idx;
-//		}
-//	}
-
-
-//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(resolutionVol)
-//	{
-//		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
-//		{
-//			resVal = DIRECT_MULTIDIM_ELEM(resolutionVol,n);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
-//			r_xyz2 = resVal*resVal;
-////			r_xyz2 = 10;
-//			if ((idx == 10) ||(idx == 20) ||(idx == 30) ||(idx == 34) ||
-//					(idx == 40) || (idx == 50))
-//			{
-//				MetaData md;
-//				size_t objId;
-//				FileName fn_md;
-//				fn_md = formatString("res_%i.xmd",idx);
-//				md.read(fn_md);
-//
-//				objId = md.addObject();
-//				md.setValue(MDL_IDX, idx, objId);
-//				md.setValue(MDL_ANGLE_ROT, rot, objId);
-//				md.setValue(MDL_ANGLE_TILT, tilt, objId);
-//				md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
-//				md.write(fn_md);
-//			}
-//			DIRECT_MULTIDIM_ELEM(Inertia_11,n) += r_xyz2*(1-x_dir*x_dir);
-//			DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= r_xyz2*x_dir*y_dir;
-//			DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= r_xyz2*x_dir*z_dir;
-//			DIRECT_MULTIDIM_ELEM(Inertia_22,n) += r_xyz2*(1-y_dir*y_dir);
-//			DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= r_xyz2*y_dir*z_dir;
-//			DIRECT_MULTIDIM_ELEM(Inertia_33,n) += r_xyz2*(1-z_dir*z_dir);
-//
-//			DIRECT_MULTIDIM_ELEM(Inertia_11,n) += r_xyz2*(1-x_dir_sym*x_dir_sym);
-//			DIRECT_MULTIDIM_ELEM(Inertia_12,n) -= r_xyz2*x_dir_sym*y_dir_sym;
-//			DIRECT_MULTIDIM_ELEM(Inertia_13,n) -= r_xyz2*x_dir_sym*z_dir_sym;
-//			DIRECT_MULTIDIM_ELEM(Inertia_22,n) += r_xyz2*(1-y_dir_sym*y_dir_sym);
-//			DIRECT_MULTIDIM_ELEM(Inertia_23,n) -= r_xyz2*y_dir_sym*z_dir_sym;
-//			DIRECT_MULTIDIM_ELEM(Inertia_33,n) += r_xyz2*(1-z_dir_sym*z_dir_sym);
-//
-//			DIRECT_MULTIDIM_ELEM(SumRes,n) += 2;
-//			++idx;
-//		}
-//	}
 }
 
 void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A,
@@ -741,16 +739,16 @@ void ProgResDir::degreeOfAnisotropy(Matrix1D<double> eigenvalues,
 	ellipsoid_axes = invA*inertia_vector;
 
 	//lambda_1, lambda_2, lambda_3 are the square of lambda_1, lambda_2, lambda_3
-	double lambda_1 = VEC_ELEM(ellipsoid_axes, 0);
-	double lambda_2 = VEC_ELEM(ellipsoid_axes, 1);
-	double lambda_3 = VEC_ELEM(ellipsoid_axes, 2);
+	double lambda_1 = sqrt(VEC_ELEM(ellipsoid_axes, 0));
+	double lambda_2 = sqrt(VEC_ELEM(ellipsoid_axes, 1));
+	double lambda_3 = sqrt(VEC_ELEM(ellipsoid_axes, 2));
 
 	double lambda_values[3] = {lambda_1, lambda_2, lambda_3};
 
 	std::sort(lambda_values, lambda_values+3);
 
 	double aux = (lambda_values[0]/lambda_values[2]);
-	doa = sqrt(1 - aux);
+	doa = 1 - aux*aux;
 
 	if (counter == 34)
 	{
@@ -864,9 +862,9 @@ void ProgResDir::defineDirection(Matrix1D<double> &r0, Matrix1D<double> &rF,
 							Matrix2D<double> &direction, double &eigenvalue, double &eigenvalue_max,  int eigdir,
 							int k, int i, int j)
 {
-	std::cout << "direction = " << MAT_ELEM(direction,0,eigdir) <<
-			" " << MAT_ELEM(direction,1,eigdir) << " " << MAT_ELEM(direction,2,eigdir) << std::endl;
-	std::cout << "eigenvalue = " << eigenvalue << std::endl;
+//	std::cout << "direction = " << MAT_ELEM(direction,0,eigdir) <<
+//			" " << MAT_ELEM(direction,1,eigdir) << " " << MAT_ELEM(direction,2,eigdir) << std::endl;
+//	std::cout << "eigenvalue = " << eigenvalue << std::endl;
 
 	double aux = eigenvalue/eigenvalue_max;
 
@@ -1128,7 +1126,7 @@ void ProgResDir::run()
 		bool doNextIteration=true;
 		bool lefttrimming = false;
 
-		int fourier_idx = 12, last_fourier_idx = -1, iter = 0, fourier_idx_2;
+		int fourier_idx = 5, last_fourier_idx = -1, iter = 0, fourier_idx_2;
 		int count_res = 0;
 		double criticalW=-1;
 		double rot = MAT_ELEM(angles, 0, dir);
@@ -1555,16 +1553,16 @@ void ProgResDir::run()
 			if ( (i%gridStep==0) && (j%gridStep==0) && (k%gridStep==0) )
 			{
 				std::cout << "----------------------------------" << std::endl;
-				std::cout << "eigenvalues = " << eigenvalues << std::endl;
-				std::cout << "eigenvectors = " << eigenvectors << std::endl;
+//				std::cout << "eigenvalues = " << eigenvalues << std::endl;
+//				std::cout << "eigenvectors = " << eigenvectors << std::endl;
 
 				double lambda_1 = VEC_ELEM(eigenvalues, 0);
 				double lambda_2 = VEC_ELEM(eigenvalues, 1);
 				double lambda_3 = VEC_ELEM(eigenvalues, 2);
 
-				std::cout << "LAMBDA_1 = " << lambda_1 <<
-						   "  LAMBDA_2 = " << lambda_2 <<
-						   "  LAMBDA_3 = " << lambda_3 << std::endl;
+//				std::cout << "LAMBDA_1 = " << lambda_1 <<
+//						   "  LAMBDA_2 = " << lambda_2 <<
+//						   "  LAMBDA_3 = " << lambda_3 << std::endl;
 
 				defineDirection(r0_1, rF_1, eigenvectors, lambda_1, lambda_3, 0, k, i, j);
 				defineDirection(r0_2, rF_2, eigenvectors, lambda_2, lambda_3, 1, k, i, j);
