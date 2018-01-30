@@ -1552,7 +1552,7 @@ void ProgResDir::run()
 			//lambda_1 is assumed as the least eigenvalue
 			if ( (i%gridStep==0) && (j%gridStep==0) && (k%gridStep==0) )
 			{
-				std::cout << "----------------------------------" << std::endl;
+//				std::cout << "----------------------------------" << std::endl;
 //				std::cout << "eigenvalues = " << eigenvalues << std::endl;
 //				std::cout << "eigenvectors = " << eigenvectors << std::endl;
 
