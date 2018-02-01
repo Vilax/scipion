@@ -163,11 +163,9 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
         params += ' --angular_sampling %f' % self.angularsampling.get()
         params += ' --particleRadius %s' % self.particleRadius.get()
-        params += ' --varVol %s' % self._getExtraPath(OUTPUT_VARIANCE_FILE)
         params += ' --volumeRadius %f' % xdim
         params += ' --sym %s' % self.symmetry.get()
         params += ' --significance %f' % self.significance.get()
-        params += ' --md_resdir %s' % self._getExtraPath(METADATA_ANGLES_FILE)
         params += ' --doa_vol %s' % self._getExtraPath(OUTPUT_DOA_FILE)
         params += ' --directions %s' % self._getExtraPath(OUTPUT_DIRECTIONS_FILE)
 

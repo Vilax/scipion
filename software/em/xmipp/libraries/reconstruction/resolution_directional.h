@@ -53,20 +53,16 @@ class ProgResDir : public XmippProgram
 {
 public:
 	 /** Filenames */
-	FileName fnOut, fnVol, fnVol2, fnMask, fnchim, fnSym, fnMeanVol, fnMaskOut, fnMaxVol,
-	fnMinVol, fnMd, fnVar, fnDoA, fnSph, fnDirections;
+	FileName fnOut, fnVol, fnMask, fnSym, fnDoA, fnDirections;
 
 	/** sampling rate, minimum resolution, and maximum resolution */
-	double sampling, minRes, maxRes, R, ang_sampling, N_points, pepep, N_directions, Rparticle;
+	double sampling, minRes, maxRes, R, ang_sampling, N_points, N_directions, Rparticle;
 
 	/** Is the volume previously masked?*/
 	int NVoxelsOriginalMask, Nvoxels;
 
 	/** Step in digital frequency */
-	double N_freq, trimBound, significance;
-
-	/** The search for resolutions is linear or inverse**/
-	bool exactres, noiseOnlyInHalves, nonmanual_mask;
+	double N_freq, significance;
 
 public:
 
@@ -94,14 +90,8 @@ public:
 			   MultidimArray<double> &SumRes,
 			   double rot, double tilt, size_t dir);
 
-    void inertiaMatrixWithOutliers(MultidimArray<double> &resolutionVol,
-			   MultidimArray<double> &Inertia_11,
-			   MultidimArray<double> &Inertia_12,
-			   MultidimArray<double> &Inertia_13,
-			   MultidimArray<double> &Inertia_22,
-			   MultidimArray<double> &Inertia_23,
-			   MultidimArray<double> &Inertia_33,
-			   MultidimArray<double> &SumRes,
+    void inertiaMatrixNew(Matrix2D<double> &resolutionMatrix,
+			   Matrix2D<double> &inertiaMatrix,
 			   double rot, double tilt, size_t dir);
 
     void diagSymMatrix3x3(Matrix2D<double> A,
@@ -140,10 +130,9 @@ public:
 	FourierTransformer transformer_inv, transformer_direct;
 	MultidimArray< std::complex<double> > fftVRiesz, fftVRiesz_aux;
 	FourierFilter lowPassFilter, FilterBand;
-	bool halfMapsGiven;
 	int N_smoothing;
 	Sampling mysampling;
-	Matrix2D<double> angles;
+	Matrix2D<double> angles, resolutionMatrix, inertiaMatrixVariable, maskMatrix;
 	Matrix1D<double> freq_fourier;
 
 };
