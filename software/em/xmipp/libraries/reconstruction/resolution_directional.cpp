@@ -155,12 +155,12 @@ void ProgResDir::produceSideInfo()
 	}
 
 	size_t xrows = angles.mdimx;
-	Matrix2D<double> aaa;
-
-	aaa.initConstant(3, 4, 5);
-	MAT_ELEM(aaa, 1, 2) = 0;
-	std::cout << aaa << std::endl;
-	std::cout << "NVoxelsOriginalMask = " << NVoxelsOriginalMask << std::endl;
+//	Matrix2D<double> aaa;
+//
+//	aaa.initConstant(3, 4, 5);
+//	MAT_ELEM(aaa, 1, 2) = 0;
+//	std::cout << aaa << std::endl;
+//	std::cout << "NVoxelsOriginalMask = " << NVoxelsOriginalMask << std::endl;
 
 	resolutionMatrix.initConstant(xrows, NVoxelsOriginalMask, maxRes);
 	inertiaMatrixVariable.initZeros(7, NVoxelsOriginalMask);
@@ -1037,10 +1037,10 @@ void ProgResDir::run()
 	step = 0.3;
 
 	std::cout << "Analyzing directions " << std::endl;
-	std::cout << "maxRes = " << maxRes << std::endl;
-	std::cout << "minRes = " << minRes << std::endl;
-	std::cout << "N_freq = " << N_freq << std::endl;
-	std::cout << "step = " << step << std::endl;
+//	std::cout << "maxRes = " << maxRes << std::endl;
+//	std::cout << "minRes = " << minRes << std::endl;
+//	std::cout << "N_freq = " << N_freq << std::endl;
+//	std::cout << "step = " << step << std::endl;
 
 	Image<double> outputResolution;
 	MultidimArray<double> amplitudeMS, amplitudeMN;
@@ -1364,24 +1364,32 @@ void ProgResDir::run()
 	arrows.initZeros(mask());
 	const int gridStep=10;
 	size_t n=0;
-	size_t maskPos=0;
+	int maskPos=0;
 
-
-	FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(arrows)
+	std::cout << "Antes del FOR ALL DIRECT ELEMENTS" << std::endl;
+//	FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(arrows)
+//	{
+	for(int k=0; k<ZSIZE(arrows); ++k)
 	{
+		for(int i=0; i<YSIZE(arrows); ++i)
+		{
+			for(int j=0; j<XSIZE(arrows); ++j)
+			{
+				std::cout << "entro en la mascara" << std::endl;
 		if (DIRECT_MULTIDIM_ELEM(mask(),n) == 1 )
 		{
+			std::cout << "entro en la mascara IF" << std::endl;
 			double val = 1/MAT_ELEM(inertiaMatrixVariable, 6, maskPos);
 
 			MAT_ELEM(InertiaMatrix, 0, 0) = MAT_ELEM(inertiaMatrixVariable, 0, maskPos)*val;
 			MAT_ELEM(InertiaMatrix, 0, 1) = MAT_ELEM(inertiaMatrixVariable, 1, maskPos)*val;
 			MAT_ELEM(InertiaMatrix, 0, 2) = MAT_ELEM(inertiaMatrixVariable, 2, maskPos)*val;
-			MAT_ELEM(InertiaMatrix, 1, 0) = MAT_ELEM(inertiaMatrixVariable, 3, maskPos)*val;
-			MAT_ELEM(InertiaMatrix, 1, 1) = MAT_ELEM(inertiaMatrixVariable, 4, maskPos)*val;
-			MAT_ELEM(InertiaMatrix, 1, 2) = MAT_ELEM(inertiaMatrixVariable, 5, maskPos)*val;
+			MAT_ELEM(InertiaMatrix, 1, 1) = MAT_ELEM(inertiaMatrixVariable, 3, maskPos)*val;
+			MAT_ELEM(InertiaMatrix, 1, 0) = MAT_ELEM(inertiaMatrixVariable, 1, maskPos)*val;
+			MAT_ELEM(InertiaMatrix, 1, 2) = MAT_ELEM(inertiaMatrixVariable, 4, maskPos)*val;
 			MAT_ELEM(InertiaMatrix, 2, 0) = MAT_ELEM(inertiaMatrixVariable, 2, maskPos)*val;
-			MAT_ELEM(InertiaMatrix, 2, 1) = MAT_ELEM(inertiaMatrixVariable, 0, maskPos)*val;
-			MAT_ELEM(InertiaMatrix, 2, 2) = MAT_ELEM(inertiaMatrixVariable, 0, maskPos)*val;
+			MAT_ELEM(InertiaMatrix, 2, 1) = MAT_ELEM(inertiaMatrixVariable, 4, maskPos)*val;
+			MAT_ELEM(InertiaMatrix, 2, 2) = MAT_ELEM(inertiaMatrixVariable, 5, maskPos)*val;
 
 			diagSymMatrix3x3(InertiaMatrix, eigenvalues, eigenvectors);
 
@@ -1419,7 +1427,10 @@ void ProgResDir::run()
 			++maskPos;
 		}
 		++n;
+			}
+		}
 	}
+//	}
 	Image<int> preferreddir;
 	preferreddir()=arrows;
 	preferreddir.write(fnDirections);
