@@ -243,11 +243,12 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 	//The loop beging in 1 instead of 0 avoiding the repeated direction rot=0 tilt=0.
 	for (size_t k = 1; k<(N_directions); k++)
 	{
-		MAT_ELEM(angles, 0, k-1) = MAT_ELEM(aux_angles,0, k);
-		MAT_ELEM(angles, 1, k-1) = MAT_ELEM(aux_angles,1, k);
-		std::cout << "k=" << k << "  rot = "  << MAT_ELEM(angles, 0, k-1) <<
-								  "  tilt = " << MAT_ELEM(angles, 1, k-1) << std::endl;
+		MAT_ELEM(angles, 0, k) = MAT_ELEM(aux_angles,0, k);
+		MAT_ELEM(angles, 1, k) = MAT_ELEM(aux_angles,1, k);
+		std::cout << "k=" << k << "  rot = "  << MAT_ELEM(angles, 0, k) <<
+								  "  tilt = " << MAT_ELEM(angles, 1, k) << std::endl;
 	}
+	//TODO: check if the angles output are correct
 }
 
 //	amplitude.setXmippOrigin();
@@ -1053,6 +1054,7 @@ void ProgResDir::run()
 	double AvgNoise;
 	AvgNoise = firstMonoResEstimation(fftV, w, wH, amplitudeMS)/9.0;
 
+	std::cout << "angles = " << angles << std::endl;
 
 //	N_directions=1;
 
