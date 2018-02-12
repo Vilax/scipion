@@ -154,6 +154,9 @@ class XmippProtRotSpectra(KendersomBaseClassify):
         
         imgSet = self.inputParticles.get()
         classes2DSet = self._createSetOfClasses2D(imgSet)
+        print "......"
+        print self._params['kclasses']
+        print "......"
         readSetOfClasses2D(classes2DSet, self._params['kclasses'], 
                            preprocessClass=self._preprocessClass,
                            postprocessImageRow=self._postprocessImageRow)

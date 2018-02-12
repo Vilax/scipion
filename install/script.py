@@ -355,7 +355,7 @@ cython = env.addModule(
     'cython',
     tar='Cython-0.22.tgz',
     targets=['Cython-0.22*'],
-    default=False)
+    default=True)
 
 cythongsl = env.addModule(
     'cythongsl',
@@ -368,7 +368,7 @@ cythongsl = env.addModule(
 sklearn = env.addModule(
     'sklearn',
     tar='scikit-learn-0.17.tar.gz',
-    default=False,
+    default=True,
     deps=[scipy, numpy, cython])
 
 

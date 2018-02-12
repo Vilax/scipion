@@ -32,17 +32,23 @@ from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam, IntParam
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.em.constants import ALIGN_PROJ
-from pyworkflow.utils.path import cleanPath, cleanPattern, moveFile
+from pyworkflow.utils.path import cleanPath, cleanPattern, moveFile, makePath
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.data import SetOfClasses2D, Image, SetOfAverages, SetOfParticles, Class2D
 from pyworkflow.em.packages.xmipp3.convert import setXmippAttributes, xmippToLocation
+from pyworkflow.gui.plotter import Plotter
+from protocol_rotational_spectra import XmippProtRotSpectra
 import pyworkflow.em.metadata as md
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-
+from protocol_kerdensom import KendersomBaseClassify
+from convert import readSetOfClasses2D, readSetOfParticles
 import xmipp
 from xmipp3 import ProjMatcher
 from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
+from os.path import join
 
+
+FN_SSNR_CLUSTER = "ssnrClusters.txt" 
         
 class XmippProtCompareReprojections(ProtAnalysis3D):
     """Compares a set of classes or averages with the corresponding projections of a reference volume.
@@ -57,6 +63,8 @@ class XmippProtCompareReprojections(ProtAnalysis3D):
     
     def __init__(self, **args):
         ProtAnalysis3D.__init__(self, **args)
+#         KendersomBaseClassify.__init__(self, **args)
+        
     
     #--------------------------- DEFINE param functions --------------------------------------------
     def _defineParams(self, form):
@@ -84,6 +92,9 @@ class XmippProtCompareReprojections(ProtAnalysis3D):
         form.addParallelSection(threads=0, mpi=8)
     
     #--------------------------- INSERT steps functions --------------------------------------------
+    def _prepareParams(self):
+        KendersomBaseClassify._prepareParams(self)
+        
     def _insertAllSteps(self):
         # Convert input images if necessary
         self.imgsFn = self._getExtraPath('input_imgs.xmd')
@@ -160,11 +171,13 @@ class XmippProtCompareReprojections(ProtAnalysis3D):
             mdCont.setValue(xmipp.MDL_SSNR1D_GROUP,int(kmeans.labels_[i]+1),objId)
             i+=1
         mdCont.write(fnCont)
-        np.savetxt(self._getExtraPath("ssnrClusters.txt"),kmeans.cluster_centers_)
+        np.savetxt(self._getExtraPath(FN_SSNR_CLUSTER),kmeans.cluster_centers_)
         print(kmeans.cluster_centers_)
+        
     
     def evaluateResiduals(self):
         # Evaluate each image
+        print 'evaluate residuals '
         fnAutoCorrelations = self._getExtraPath("autocorrelations.xmd")
         stkAutoCorrelations = self._getExtraPath("autocorrelations.stk")
         stkResiduals = self._getExtraPath("residuals.stk")
@@ -172,34 +185,93 @@ class XmippProtCompareReprojections(ProtAnalysis3D):
         self.runJob("xmipp_image_residuals", " -i %s -o %s --save_metadata_stack %s" % (stkResiduals, stkAutoCorrelations, fnAutoCorrelations), numberOfMpi=1)
         self.runJob("xmipp_metadata_utilities", '-i %s --operate rename_column "image imageResidual"' % fnAutoCorrelations, numberOfMpi=1)
         self.runJob("xmipp_metadata_utilities", '-i %s --set join %s imageResidual' % (anglesOutFn, fnAutoCorrelations), numberOfMpi=1)
+
         cleanPath(fnAutoCorrelations)
     
     def createOutputStep(self):
+        self.plotsDir = self._getExtraPath('plots')
+        makePath(self.plotsDir)
+
+        fnClassVectors = self._getExtraPath(FN_SSNR_CLUSTER)
+#         fnClassVectors = fnClassVectors.replace('txt', 'vec')
+        print fnClassVectors
+        f = open(fnClassVectors)
+
+        self.classArray = np.fromfile(f, dtype=np.float32)
+        print self.classArray
+        f.close()
+        
         fnImgs = self._getExtraPath('images.stk')
         if os.path.exists(fnImgs):
             cleanPath(fnImgs)
 
-        outputSet = self._createSetOfParticles()
+#         outputSet = self._createSetOfParticles()
         imgSet = self.inputSet.get()
         imgFn = self._getExtraPath("anglesCont.xmd")
         self.newAssignmentPerformed = os.path.exists(self._getExtraPath("angles.xmd"))
         self.samplingRate = self.inputSet.get().getSamplingRate()
         if isinstance(imgSet, SetOfClasses2D):
+            print 'Entro en set of classes'
             outputSet = self._createSetOfClasses2D(imgSet)
-            outputSet.copyInfo(imgSet.getImages())
-        elif isinstance(imgSet, SetOfAverages):
-            outputSet = self._createSetOfAverages()
-            outputSet.copyInfo(imgSet)
-        else:
-            outputSet = self._createSetOfParticles()
-            outputSet.copyInfo(imgSet)
-            if not self.newAssignmentPerformed:
-                outputSet.setAlignmentProj()
+#             outputSet.copyInfo(imgSet.getImages())
+            readSetOfClasses2D(outputSet, imgSet.getFileName(), 
+                           preprocessClass=self._preprocessClass)
+#         elif isinstance(imgSet, SetOfAverages):
+#             print 'Entro en set of averages'
+#             outputSet = self._createSetOfAverages()
+#             outputSet.copyInfo(imgSet)
+#             readSetOfParticles(imgSet.getFileName(),
+#                                 outputSet, preprocessClass=self._preprocessClass)
+#         else:
+#             print 'Entro en set of particles'
+#             outputSet = self._createSetOfParticles()
+#             outputSet.copyInfo(imgSet)
+#             if not self.newAssignmentPerformed:
+#                 outputSet.setAlignmentProj()
+#             print 'before read particles'
+#             readSetOfParticles(imgSet.getFileName(),
+#                                 outputSet, preprocessClass=self._preprocessClass)
+#         
+#        
         outputSet.copyItems(imgSet,
                             updateItemCallback=self._processRow,
                             itemDataIterator=md.iterRows(imgFn, sortByLabel=md.MDL_ITEM_ID))
-        self._defineOutputs(outputParticles=outputSet)
+        self._defineOutputs(outputClasses=outputSet)
         self._defineSourceRelation(self.inputSet, outputSet)
+
+    def _preprocessClass(self, classItem, classRow):
+        print 'entro en preprocesss'
+        KendersomBaseClassify._preprocessClass(self, classItem, classRow)
+        ref = classRow.getValue(xmipp.MDL_REF) # get class number
+        print 'references ======'
+        print ref
+        print '=============='
+        classItem.spectraPlot = Image()
+        classItem.spectraPlot.setFileName(self._createSpectraPlot('class', 
+                                                                  self.classArray, 
+                                                                  ref))
+
+    def _createSpectraPlot(self, label, array, index, objId=None):
+        if objId is None:
+            objId = index
+        # Number of harmonics calculated
+        print '---------------------------'
+        print self.classArray
+        plotter = Plotter()
+        a = plotter.createSubPlot('Spectrum for %s %d' % (label, objId), 
+                                  xlabel='Harmonics', ylabel='Energy')
+        
+        n = self.spectraHighHarmonic.get() - self.spectraLowHarmonic.get() + 1
+        i1 = (index-1) * n
+        i2 = i1 + n
+        xdata = range(self.spectraLowHarmonic.get(), self.spectraHighHarmonic.get()+1)
+        ydata = array[i1:i2]
+        a.plot(xdata, ydata)
+        
+        plotFile = join(self.plotsDir, 'spectra_%s%06d.png' % (label, objId))
+        plotter.savefig(plotFile)
+        
+        return plotFile
 
     def _processRow(self, particle, row):
         setXmippAttributes(particle, row,
@@ -230,7 +302,7 @@ class XmippProtCompareReprojections(ProtAnalysis3D):
     
     def _methods(self):
         methods = []
-        if hasattr(self, 'outputParticles'):
+        if hasattr(self, 'outputClasses'):
             methods.append("We evaluated %i input images %s regarding to volume %s."\
                            %(self.inputSet.get().getSize(), self.getObjectTag('inputSet'), self.getObjectTag('inputVolume')) )
             methods.append("The residuals were evaluated according to their mean, variance and covariance structure [Cherian2013].")

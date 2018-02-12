@@ -301,17 +301,24 @@ class XmippViewer(Viewer):
                                        'labels': '_size',
                                        'sortby': 'id'})
 
-
-
         elif issubclass(cls, XmippProtCompareReprojections):
-                fn = obj.outputParticles.getFileName()
-                labels = 'id enabled _index _xmipp_image._filename _xmipp_imageRef._filename _xmipp_imageResidual._filename _xmipp_imageCovariance._filename _xmipp_cost _xmipp_zScoreResCov _xmipp_zScoreResMean _xmipp_zScoreResVar _xmipp_continuousA _xmipp_continuousB _xmipp_continuousX _xmipp_continuousY'
-                labelRender = "_xmipp_image._filename _xmipp_imageRef._filename _xmipp_imageResidual._filename _xmipp_imageCovariance._filename"
-                self._views.append(ObjectView(self._project, obj.outputParticles.strId(), fn,
-                                              viewParams={ORDER: labels,
-                                                      VISIBLE: labels,
-                                                      SORT_BY: '_xmipp_cost asc', RENDER:labelRender,
-                                                      MODE: MODE_MD}))
+            self._visualize(obj.outputClasses,
+                            viewParams={'columns': obj.SomXdim.get(),
+                                        RENDER: ' spectraPlot._filename average._filename',
+                                        ZOOM: 30,
+                                        VISIBLE:  'enabled id _size average._filename spectraPlot._filename',
+                                        'labels': 'id _size',
+                                        SORT_BY: 'id'})
+
+#         elif issubclass(cls, XmippProtCompareReprojections):
+#                 fn = obj.outputClasses.getFileName()
+#                 labels = 'id enabled _index _xmipp_image._filename _xmipp_imageRef._filename _xmipp_imageResidual._filename _xmipp_imageCovariance._filename _xmipp_cost _xmipp_zScoreResCov _xmipp_zScoreResMean _xmipp_zScoreResVar _xmipp_continuousA _xmipp_continuousB _xmipp_continuousX _xmipp_continuousY'
+#                 labelRender = "_xmipp_image._filename _xmipp_imageRef._filename _xmipp_imageResidual._filename _xmipp_imageCovariance._filename"
+#                 self._views.append(ObjectView(self._project, obj.outputClasses.strId(), fn,
+#                                               viewParams={ORDER: labels,
+#                                                       VISIBLE: labels,
+#                                                       SORT_BY: '_xmipp_cost asc', RENDER:labelRender,
+#                                                       MODE: MODE_MD}))
 
         elif issubclass(cls, XmippParticlePickingAutomatic):
             micSet = obj.getInputMicrographs()
