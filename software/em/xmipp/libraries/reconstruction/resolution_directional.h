@@ -120,6 +120,9 @@ public:
     void defineSegment(Matrix1D<double> &r0, Matrix1D<double> &rF,
 			MultidimArray<int> &arrows, double &elongation);
 
+    void removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &resolutionMat);
+
+    void ellipsoidFitting(Matrix2D<double> &anglesMat, Matrix2D<double> &resolutionMat);
 
     void run();
 

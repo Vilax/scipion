@@ -625,8 +625,6 @@ void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
 
 	size_t idx = 0;
 
-
-
 	int nn=0;
 	for(int k=0; k<ZSIZE(resolutionVol); ++k)
 	{
@@ -941,6 +939,155 @@ void ProgResDir::defineSegment(Matrix1D<double> &r0, Matrix1D<double> &rF,
 
 	DIRECT_A3D_ELEM(arrows,(int)round(ZZ(r)),(int)round(YY(r)),(int)round(XX(r)))=1;
 
+}
+
+void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &resolutionMat)
+{
+	double x1, y1, z1, x2, y2, z2, distance, resolution, sigma,
+				rot, tilt, threshold, sigma2, lastMinDistance;
+	double meandistance = 0, distance_2 = 0;
+	int xrows = angles.mdimx, N=0;
+
+	double criticalZ = icdf_gauss(significance);
+
+	for (int k = 0; k<NVoxelsOriginalMask; ++k)
+	{
+		meandistance = 0;
+		distance_2 = 0;
+
+		for (int i = 0; i<xrows; ++i)
+		{
+			resolution = MAT_ELEM(resolutionMat, i, k);
+			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
+			tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
+			x1 = resolution*sin(tilt)*cos(rot);
+			y1 = resolution*sin(tilt)*sin(rot);
+			z1 = resolution*cos(tilt);
+			lastMinDistance = 1e38;
+			for (int j = 0; j<xrows; ++j)
+			{
+				rot = MAT_ELEM(anglesMat,0, j)*PI/180;
+				tilt = MAT_ELEM(anglesMat,1, j)*PI/180;
+				resolution = MAT_ELEM(resolutionMat, j, k);
+				x2 = resolution*sin(tilt)*cos(rot);
+				y2 = resolution*sin(tilt)*sin(rot);
+				z2 = resolution*cos(tilt);
+				if (i != j)
+				{
+					distance = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1);
+					if (distance < lastMinDistance)
+						lastMinDistance = distance;
+				}
+			}
+			meandistance +=distance;
+			distance_2 += distance*distance;
+
+			sigma2 = distance_2/N;
+			meandistance = meandistance/N;
+		}
+
+		threshold = meandistance + criticalZ*sqrt(sigma2);
+
+		for (int i = 0; i<xrows; ++i)
+		{
+			resolution = MAT_ELEM(resolutionMat, i, k);
+			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
+			tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
+			x1 = resolution*sin(tilt)*cos(rot);
+			y1 = resolution*sin(tilt)*sin(rot);
+			z1 = resolution*cos(tilt);
+			lastMinDistance = 1e38;
+			for (int j = 0; j<xrows; ++j)
+			{
+				rot = MAT_ELEM(anglesMat,0, j)*PI/180;
+				tilt = MAT_ELEM(anglesMat,1, j)*PI/180;
+				resolution = MAT_ELEM(resolutionMat, j, k);
+				x2 = resolution*sin(tilt)*cos(rot);
+				y2 = resolution*sin(tilt)*sin(rot);
+				z2 = resolution*cos(tilt);
+				if (i != j)
+				{
+					distance = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1);
+					if (distance < lastMinDistance)
+						lastMinDistance = distance;
+				}
+			}
+			if (lastMinDistance>=threshold)
+			{
+				MAT_ELEM(resolutionMat, i, k) = -1;
+			}
+		}
+	}
+}
+
+
+void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
+									Matrix2D<double> &resolutionMat)
+{
+	double x, y, z, resolution, rot, tilt;
+	int xrows = angles.mdimx;
+	std::vector<double> list_distances;
+
+	//MAT_ELEM(resolutionMat, direccion, resolucion)
+
+	Matrix2D<double> ellipMat;
+	int dimMatrix = 0;
+	Matrix2D<double> pseudoinv, quadricMatrix;
+	Matrix1D<double> onesVector, leastSquares;
+	Matrix2D<double> eigenvectors;
+	Matrix1D<double> eigenvalues;
+
+	ellipMat.initZeros(resolutionMat);
+
+	for (int k = 0; k<NVoxelsOriginalMask; ++k)
+	{
+		dimMatrix = 0;
+		for (int i = 0; i<xrows; ++i)
+		{
+		resolution = MAT_ELEM(resolutionMat, i, k);
+		if (MAT_ELEM(resolutionMat, i, k) > 0)
+			++dimMatrix;
+		}
+
+		ellipMat.initZeros(dimMatrix, 6);
+		for (int i = 0; i<xrows; ++i)
+		{
+			resolution = MAT_ELEM(resolutionMat, i, k);
+			if (resolution>0)
+			{
+				rot = MAT_ELEM(anglesMat,0, i)*PI/180;
+				tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
+				x = resolution*sin(tilt)*cos(rot);
+				y = resolution*sin(tilt)*sin(rot);
+				z = resolution*cos(tilt);
+
+				MAT_ELEM(ellipMat, i, 0) = x*x;
+				MAT_ELEM(ellipMat, i, 1) = y*y;
+				MAT_ELEM(ellipMat, i, 2) = z*z;
+				MAT_ELEM(ellipMat, i, 3) = x*y;
+				MAT_ELEM(ellipMat, i, 4) = x*z;
+				MAT_ELEM(ellipMat, i, 5) = y*z;
+			}
+		}
+		ellipMat.inv(pseudoinv);
+		onesVector.initConstant(6, 1.0);
+		leastSquares = pseudoinv*onesVector;
+
+		MAT_ELEM(quadricMatrix, 0, 0) = VEC_ELEM(leastSquares, 0);
+		MAT_ELEM(quadricMatrix, 0, 1) = VEC_ELEM(leastSquares, 3);
+		MAT_ELEM(quadricMatrix, 0, 2) = VEC_ELEM(leastSquares, 4);
+		MAT_ELEM(quadricMatrix, 1, 0) = VEC_ELEM(leastSquares, 3);
+		MAT_ELEM(quadricMatrix, 1, 1) = VEC_ELEM(leastSquares, 1);
+		MAT_ELEM(quadricMatrix, 1, 2) = VEC_ELEM(leastSquares, 5);
+		MAT_ELEM(quadricMatrix, 2, 0) = VEC_ELEM(leastSquares, 4);
+		MAT_ELEM(quadricMatrix, 2, 1) = VEC_ELEM(leastSquares, 5);
+		MAT_ELEM(quadricMatrix, 2, 2) = VEC_ELEM(leastSquares, 2);
+
+		diagSymMatrix3x3(quadricMatrix, eigenvalues, eigenvectors);
+
+		gain = 1/
+
+	}
 }
 
 
@@ -1325,7 +1472,7 @@ void ProgResDir::run()
 
 				if (meanS<0.001*AvgNoise)//0001*max_meanS)
 				{
-					//std::cout << "  meanS= " << meanS << " sigma2S= " << sigma2S << " NS= " << NS << std::endl;
+					//std::cout << "  meanS= " << meanS << " sigma2S= " << sigma2S << " NS	= " << NS << std::endl;
 					//std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
 					std::cout << "Search of resolutions stopped due to too low signal" << std::endl;
 					std::cout << "\n"<< std::endl;
@@ -1435,6 +1582,15 @@ void ProgResDir::run()
 		std::cout << "----------------direction-finished----------------" << std::endl;
 	}
 
+	//Remove outliers
+	removeOutliers(angles, resolutionMatrix);
+
+	//Ellipsoid fitting
+	ellipsoidFitting();
+
+
+
+
 	Matrix2D<double> InertiaMatrix;
 	InertiaMatrix.initZeros(3,3);
 
@@ -1452,6 +1608,7 @@ void ProgResDir::run()
 	const int gridStep=10;
 	size_t n=0;
 	int maskPos=0;
+
 
 	std::cout << "Antes del FOR ALL DIRECT ELEMENTS" << std::endl;
 //	FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(arrows)
