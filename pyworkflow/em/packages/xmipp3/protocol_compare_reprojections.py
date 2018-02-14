@@ -50,7 +50,7 @@ from os.path import join
 
 FN_SSNR_CLUSTER = "ssnrClusters.txt" 
         
-class XmippProtCompareReprojections(ProtAnalysis3D):
+class XmippProtCompareReprojections(KendersomBaseClassify):
     """Compares a set of classes or averages with the corresponding projections of a reference volume.
     The set of images must have a 3D angular assignment and the protocol computes the residues
     (the difference between the experimental images and the reprojections). The zscore of the mean
@@ -62,12 +62,11 @@ class XmippProtCompareReprojections(ProtAnalysis3D):
     _lastUpdateVersion = VERSION_1_1
     
     def __init__(self, **args):
-        ProtAnalysis3D.__init__(self, **args)
-#         KendersomBaseClassify.__init__(self, **args)
+        KendersomBaseClassify.__init__(self, **args)
         
     
     #--------------------------- DEFINE param functions --------------------------------------------
-    def _defineParams(self, form):
+    def _addParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputSet', PointerParam, label="Input images", important=True, 
                       pointerClass='SetOfClasses2D, SetOfAverages, SetOfParticles')
@@ -172,8 +171,6 @@ class XmippProtCompareReprojections(ProtAnalysis3D):
             i+=1
         mdCont.write(fnCont)
         np.savetxt(self._getExtraPath(FN_SSNR_CLUSTER),kmeans.cluster_centers_)
-        print(kmeans.cluster_centers_)
-        
     
     def evaluateResiduals(self):
         # Evaluate each image
@@ -191,8 +188,24 @@ class XmippProtCompareReprojections(ProtAnalysis3D):
     def createOutputStep(self):
         self.plotsDir = self._getExtraPath('plots')
         makePath(self.plotsDir)
-
+        
         fnClassVectors = self._getExtraPath(FN_SSNR_CLUSTER)
+#         fnClassVectors = fnClassVectors.replace('txt', 'vec')
+        print fnClassVectors
+        f = open(fnClassVectors)
+
+        self.classArray = np.fromfile(f, dtype=np.float32)
+        print self.classArray
+        f.close()
+        
+        imgSet = self.inputSet.get()
+        classes2DSet = self._createSetOfClasses2D(imgSet)
+        print 
+        readSetOfClasses2D(classes2DSet, imgSet.getFileName(), 
+                           preprocessClass=self._preprocessClass)
+        self._defineOutputs(outputClasses=classes2DSet)
+        self._defineSourceRelation(self.inputSet, classes2DSet)
+        """
 #         fnClassVectors = fnClassVectors.replace('txt', 'vec')
         print fnClassVectors
         f = open(fnClassVectors)
@@ -215,7 +228,8 @@ class XmippProtCompareReprojections(ProtAnalysis3D):
             outputSet = self._createSetOfClasses2D(imgSet)
 #             outputSet.copyInfo(imgSet.getImages())
             readSetOfClasses2D(outputSet, imgSet.getFileName(), 
-                           preprocessClass=self._preprocessClass)
+                           preprocessClass=self._preprocessClass2,
+                           postprocessImageRow=self._postprocessImageRow)
 #         elif isinstance(imgSet, SetOfAverages):
 #             print 'Entro en set of averages'
 #             outputSet = self._createSetOfAverages()
@@ -238,7 +252,7 @@ class XmippProtCompareReprojections(ProtAnalysis3D):
                             itemDataIterator=md.iterRows(imgFn, sortByLabel=md.MDL_ITEM_ID))
         self._defineOutputs(outputClasses=outputSet)
         self._defineSourceRelation(self.inputSet, outputSet)
-
+"""
     def _preprocessClass(self, classItem, classRow):
         print 'entro en preprocesss'
         KendersomBaseClassify._preprocessClass(self, classItem, classRow)
@@ -250,6 +264,15 @@ class XmippProtCompareReprojections(ProtAnalysis3D):
         classItem.spectraPlot.setFileName(self._createSpectraPlot('class', 
                                                                   self.classArray, 
                                                                   ref))
+
+    def _postprocessImageRow(self, img, imgRow):
+        self.imgCount += 1
+        img.spectraPlot = Image()
+        img.spectraPlot.setFileName(self._createSpectraPlot('image', 
+                                                            self.imgArray, 
+                                                            self.imgCount, 
+                                                            img.getObjId()))
+
 
     def _createSpectraPlot(self, label, array, index, objId=None):
         if objId is None:
