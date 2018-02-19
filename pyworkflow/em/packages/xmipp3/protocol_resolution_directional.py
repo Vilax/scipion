@@ -184,21 +184,15 @@ class XmippProtMonoDir(ProtAnalysis3D):
         
     def createOutputStep(self):
         volume_path_doa = self._getExtraPath(OUTPUT_DOA_FILE)
-        volume_path_var = self._getExtraPath(OUTPUT_VARIANCE_FILE)
         
         self.volumesSet_doa = self._createSetOfVolumes('doaVol')
-        self.volumesSet_var = self._createSetOfVolumes('varianceVol')
         
         self.volumesSet_doa.setSamplingRate(self.inputVolumes.get().getSamplingRate())
-        self.volumesSet_var.setSamplingRate(self.inputVolumes.get().getSamplingRate())
 
         readSetOfVolumes(volume_path_doa, self.volumesSet_doa)
-        readSetOfVolumes(volume_path_var, self.volumesSet_var)
         self._defineOutputs(outputVolume_doa=self.volumesSet_doa)
-        self._defineOutputs(outputVolume_var=self.volumesSet_var)
         
         self._defineSourceRelation(self.inputVolumes, self.volumesSet_doa)
-        self._defineSourceRelation(self.inputVolumes, self.volumesSet_var)
 
     # --------------------------- INFO functions ------------------------------
 

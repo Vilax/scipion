@@ -122,7 +122,9 @@ public:
 
     void removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &resolutionMat);
 
-    void ellipsoidFitting(Matrix2D<double> &anglesMat, Matrix2D<double> &resolutionMat);
+    void ellipsoidFitting(Matrix2D<double> &anglesMat,
+			Matrix2D<double> &resolutionMat,
+			Matrix2D<double> &axis);
 
     void run();
 
