@@ -1566,11 +1566,11 @@ void ProgResDir::run()
 							++maskPos;
 						}
 					}
-					#ifdef DEBUG_MASK
-					FileName fnmask_debug;
-					fnmask_debug = formatString("maske_%i.vol", iter);
-					mask.write(fnmask_debug);
-					#endif
+//					#ifdef DEBUG_MASK
+//					FileName fnmask_debug;
+//					fnmask_debug = formatString("maske_%i.vol", iter);
+//					mask.write(fnmask_debug);
+//					#endif
 
 					//#ifdef DEBUG
 						std::cout << "thresholdNoise = " << thresholdNoise << std::endl;
