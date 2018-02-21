@@ -1046,7 +1046,7 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		}
 
 		ellipMat.initZeros(dimMatrix, 6);
-		mycounter = 0;
+		mycounter = 0; //It is required to store the matrix ellipMat
 
 		for (int i = 0; i<xrows; ++i)
 		{
@@ -1055,6 +1055,25 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 			{
 				rot = MAT_ELEM(anglesMat,0, mycounter)*PI/180;
 				tilt = MAT_ELEM(anglesMat,1, mycounter)*PI/180;
+
+				if ((k==100) || (k==200) || (k==300))
+				{
+					double resVal = MAT_ELEM(resolutionMatrix, i, k);
+					double r_xyz2 = resVal*resVal;
+
+					MetaData md;
+					size_t objId;
+					FileName fn_md;
+					fn_md = formatString("res_%i.xmd", k);
+					md.read(fn_md);
+
+					objId = md.addObject();
+					md.setValue(MDL_IDX, (size_t) k, objId);
+					md.setValue(MDL_ANGLE_ROT, rot, objId);
+					md.setValue(MDL_ANGLE_TILT, tilt, objId);
+					md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
+					md.write(fn_md);
+				}
 
 				x = resolution*sin(tilt)*cos(rot);
 				y = resolution*sin(tilt)*sin(rot);
@@ -1096,10 +1115,17 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 
 		diagSymMatrix3x3(quadricMatrix, eigenvalues, eigenvectors);
 
+
 		a = 1/sqrt(VEC_ELEM(eigenvalues, 0));
 		b = 1/sqrt(VEC_ELEM(eigenvalues, 1));
 		c = 1/sqrt(VEC_ELEM(eigenvalues, 2));
-
+		if ((k==100) || (k==200) || (k==300))
+		{
+			std::cout << "k = " << k << std::endl;
+			std::cout << "a = " << a << std::endl;
+			std::cout << "c = " << c << std::endl;
+			std::cout << "-----------------------------" << std::endl;
+		}
 //		std::cout << "a = " << a << std::endl;
 //		std::cout << "b = " << b << std::endl;
 //		std::cout << "c = " << c << std::endl;
@@ -1566,9 +1592,9 @@ void ProgResDir::run()
 //		fftVRiesz.clear();
 		
 		int NVoxelsOriginalMask_bis = 0;
-		FOR_ALL_ELEMENTS_IN_ARRAY3D(mask())
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mask())
 		{
-			if (A3D_ELEM(mask(), k, i, j) == 1)
+			if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
 				++NVoxelsOriginalMask_bis;
 		}
 		//////////////////
@@ -1636,8 +1662,8 @@ void ProgResDir::run()
 			++idx;
 		}
 	}
-	std::cout << "despues del for" << std::endl;
-	std::cout << "idx = " << idx << std::endl;
+
+
 
 	Image<double> imgdoa;
 	imgdoa = pdoaVol;
