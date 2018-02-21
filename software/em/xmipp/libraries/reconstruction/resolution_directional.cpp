@@ -1338,15 +1338,15 @@ void ProgResDir::run()
 
 	double cone_angle = 20.0; //(degrees)
 
-	std::cout <<" maskMatrix.mdimx = " << maskMatrix.mdimx << std::endl;
-	std::cout <<" maskMatrix.mdimy = " << maskMatrix.mdimy << std::endl;
-	std::cout <<" resolutionMatrix.mdimx = " << resolutionMatrix.mdimx << std::endl;
-	std::cout <<" resolutionMatrix.mdimy = " << resolutionMatrix.mdimy << std::endl;
-
-	std::cout << "MAT_ELEM(maskMatrix, 2, maskPos) = " << MAT_ELEM(maskMatrix, 2, 10) << std::endl;
-	std::cout << "MAT_ELEM(maskMatrix, 2, maskPos) = " << MAT_ELEM(maskMatrix, 20, 10) << std::endl;
-	std::cout << "MAT_ELEM(maskMatrix, 0, maskPos) = " << MAT_ELEM(maskMatrix, 0, 10) << std::endl;
-
+//	std::cout <<" maskMatrix.mdimx = " << maskMatrix.mdimx << std::endl;
+//	std::cout <<" maskMatrix.mdimy = " << maskMatrix.mdimy << std::endl;
+//	std::cout <<" resolutionMatrix.mdimx = " << resolutionMatrix.mdimx << std::endl;
+//	std::cout <<" resolutionMatrix.mdimy = " << resolutionMatrix.mdimy << std::endl;
+//
+//	std::cout << "MAT_ELEM(maskMatrix, 2, maskPos) = " << MAT_ELEM(maskMatrix, 2, 10) << std::endl;
+//	std::cout << "MAT_ELEM(maskMatrix, 2, maskPos) = " << MAT_ELEM(maskMatrix, 20, 10) << std::endl;
+//	std::cout << "MAT_ELEM(maskMatrix, 0, maskPos) = " << MAT_ELEM(maskMatrix, 0, 10) << std::endl;
+//
 
 	for (size_t dir=0; dir<N_directions; dir++)
 	{
@@ -1492,7 +1492,8 @@ void ProgResDir::run()
 				}
 			#endif
 
-			if ( (NS/NVoxelsOriginalMask)<cut_value ) //when the 2.5% is reached then the iterative process stops
+				std::cout << "NS = " << NS << std::endl;
+			if ( (NS/(double) NVoxelsOriginalMask)<cut_value ) //when the 2.5% is reached then the iterative process stops
 			{
 				std::cout << "Search of resolutions stopped due to mask has been completed" << std::endl;
 				doNextIteration =false;
@@ -1618,13 +1619,13 @@ void ProgResDir::run()
 			}
 		}
 //		#endif
-		#ifdef DEBUG_DIR
+//		#ifdef DEBUG_DIR
 		Image<double> saveImg;
 		saveImg = pResolutionVol;
 		FileName fnres = formatString("resolution_dir_%i.vol", dir+1);
 		saveImg.write(fnres);
 		saveImg.clear();
-		#endif
+//		#endif
 		pResolutionVol.clear();
 		list.clear();
 
