@@ -514,14 +514,14 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 
 
 		#ifdef MONO_AMPLITUDE
-//		Image<double> saveImg2;
-//		saveImg2 = amplitude;
-//		if (fnDebug.c_str() != "")
-//		{
-//			FileName iternumber = formatString("smoothed_volume_%i_%i.vol", dir+1, count);
-//			saveImg2.write(fnDebug+iternumber);
-//		}
-//		saveImg2.clear();
+		Image<double> saveImg2;
+		saveImg2 = amplitude;
+		if (fnDebug.c_str() != "")
+		{
+			FileName iternumber = formatString("smoothed_volume_%i_%i.vol", dir+1, count);
+			saveImg2.write(fnDebug+iternumber);
+		}
+		saveImg2.clear();
 		#endif
 
 
@@ -545,14 +545,14 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 //	transformer_inv.inverseFourierTransform();
 
 	#ifdef MONO_AMPLITUDE
-//
+
 //	if (fnDebug.c_str() != "")
 //	{
-//		saveImg2 = amplitude;
-//		iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir+1, count);
-//		saveImg2.write(fnDebug+iternumber);
+		saveImg2 = amplitude;
+		FileName iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir+1, count);
+		saveImg2.write(fnDebug+iternumber);
 //	}
-//	saveImg2.clear();
+	saveImg2.clear();
 	#endif // DEBUG
 
 }
