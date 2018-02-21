@@ -27,9 +27,9 @@
 #include "resolution_directional.h"
 //#define DEBUG
 //#define DEBUG_MASK
-//#define DEBUG_DIR
+#define DEBUG_DIR
 //define DEBUG_FILTER
-//#define MONO_AMPLITUDE
+#define MONO_AMPLITUDE
 //define DEBUG_SYMMETRY
 
 void ProgResDir::readParams()
@@ -399,7 +399,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
-//					DIRECT_MULTIDIM_ELEM(coneVol, n) = DIRECT_MULTIDIM_ELEM(conefilter, n);
+					DIRECT_MULTIDIM_ELEM(coneVol, n) = DIRECT_MULTIDIM_ELEM(conefilter, n);
 				} else if (un>freq)
 				{
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
@@ -407,7 +407,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
-//					DIRECT_MULTIDIM_ELEM(coneVol, n) = DIRECT_MULTIDIM_ELEM(conefilter, n);
+					DIRECT_MULTIDIM_ELEM(coneVol, n) = DIRECT_MULTIDIM_ELEM(conefilter, n);
 				}
 				++n;
 			}
@@ -417,21 +417,21 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 	#ifdef DEBUG_DIR
 //	if ( (count == 0) )
 //	{
-//		Image<double> direction;
-//		direction = coneVol;
-//		direction.write(formatString("cone_%i_%i.vol", dir+1, count));
+		Image<double> direction;
+		direction = coneVol;
+		direction.write(formatString("cone_%i_%i.vol", dir+1, count));
 //	}
 	#endif
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
 	#ifdef DEBUG_DIR
-//	if (count == 0)
-//	{
-//		Image<double> filteredvolume;
-//		filteredvolume = VRiesz;
-//		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir+1,count));
-//	}
+	if (count == 0)
+	{
+		Image<double> filteredvolume;
+		filteredvolume = VRiesz;
+		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir+1,count));
+	}
 	#endif
 
 
@@ -1316,21 +1316,22 @@ void ProgResDir::run()
 	step = 0.3;
 
 	std::cout << "Analyzing directions " << std::endl;
-//	std::cout << "maxRes = " << maxRes << std::endl;
-//	std::cout << "minRes = " << minRes << std::endl;
-//	std::cout << "N_freq = " << N_freq << std::endl;
-//	std::cout << "step = " << step << std::endl;
+	std::cout << "maxRes = " << maxRes << std::endl;
+	std::cout << "minRes = " << minRes << std::endl;
+	std::cout << "N_freq = " << N_freq << std::endl;
+	std::cout << "step = " << step << std::endl;
+	std::cout << "criticalZ = " << criticalZ << std::endl;
 
 	Image<double> outputResolution;
 	MultidimArray<double> amplitudeMS, amplitudeMN;
 
 	double w, wH;
 	int volsize = ZSIZE(VRiesz);
-	FFT_IDX2DIGFREQ(10, volsize, w)
-	FFT_IDX2DIGFREQ(11, volsize, wH)
+	FFT_IDX2DIGFREQ(10, volsize, w);
+	FFT_IDX2DIGFREQ(11, volsize, wH); //Frequency chosen for a first estimation
 
 	double AvgNoise;
-	AvgNoise = firstMonoResEstimation(fftV, w, wH, amplitudeMS)/9.0;
+	AvgNoise = firstMonoResEstimation(fftV, w, wH, amplitudeMS)/10;///9.0;
 
 	N_directions=angles.mdimx;
 
@@ -1365,7 +1366,6 @@ void ProgResDir::run()
 
 		int fourier_idx = 5, last_fourier_idx = -1, iter = 0, fourier_idx_2;
 		int count_res = 0;
-		double criticalW=-1;
 		double rot = MAT_ELEM(angles, 0, dir);
 		double tilt = MAT_ELEM(angles, 1, dir);
 		std::cout << "--------------NEW DIRECTION--------------" << std::endl;
@@ -1381,7 +1381,6 @@ void ProgResDir::run()
 
 		defineCone(fftV, conefilter, rot, tilt);
 
-		int aa = 0;
 		do
 		{
 			continueIter = false;
@@ -1619,13 +1618,13 @@ void ProgResDir::run()
 			}
 		}
 //		#endif
-//		#ifdef DEBUG_DIR
+		#ifdef DEBUG_DIR
 		Image<double> saveImg;
 		saveImg = pResolutionVol;
 		FileName fnres = formatString("resolution_dir_%i.vol", dir+1);
 		saveImg.write(fnres);
 		saveImg.clear();
-//		#endif
+		#endif
 		pResolutionVol.clear();
 		list.clear();
 
