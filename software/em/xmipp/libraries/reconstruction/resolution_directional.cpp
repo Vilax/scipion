@@ -1547,25 +1547,29 @@ void ProgResDir::run()
 					{
 						if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 						{
-							if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)>thresholdNoise)
+							if (MAT_ELEM(maskMatrix, 0, maskPos) >=1)
 							{
-//								DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution;//sampling/freq;
-								MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution;
-								MAT_ELEM(maskMatrix, 0, maskPos) = 1;
-							}
-							else
-							{
-								MAT_ELEM(maskMatrix, 0, maskPos) += 1;
-								if (MAT_ELEM(maskMatrix, 0, maskPos) >2)
+								if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)>thresholdNoise)
 								{
-									MAT_ELEM(maskMatrix, 0, maskPos) = 0;
-									MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution_2;
-//									DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution_2; //resolution + counter*step;
+	//								DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution;//sampling/freq;
+									MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution;
+									MAT_ELEM(maskMatrix, 0, maskPos) = 1;
 								}
+								else
+								{
+									MAT_ELEM(maskMatrix, 0, maskPos) += 1;
+									if (MAT_ELEM(maskMatrix, 0, maskPos) >2)
+									{
+										MAT_ELEM(maskMatrix, 0, maskPos) = 0;
+										MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution_2;
+	//									DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution_2; //resolution + counter*step;
+									}
+								}
+								++maskPos;
 							}
-							++maskPos;
 						}
 					}
+
 //					#ifdef DEBUG_MASK
 //					FileName fnmask_debug;
 //					fnmask_debug = formatString("maske_%i.vol", iter);
