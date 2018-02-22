@@ -24,5 +24,5 @@
  ***************************************************************************/
 
 
-#include <reconstruction/validation_tilt_pairs.h>
+#include <reconstruction/validation_tilt_pairs_new.h>
 RUN_XMIPP_PROGRAM(ProgValidationTiltPairs)

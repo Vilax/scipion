@@ -614,7 +614,7 @@ for p in ['angular_break_symmetry',
           'tomo_remove_fluctuations',
           'tomo_extract_subvolume',
           'validation_nontilt',
-          'validation_tilt_pairs',
+          'validation_tilt_pairs_new',
 
           'volume_center',
           'volume_correct_bfactor',
