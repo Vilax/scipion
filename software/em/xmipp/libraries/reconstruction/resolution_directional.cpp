@@ -164,7 +164,7 @@ void ProgResDir::produceSideInfo()
 
 	resolutionMatrix.initConstant(xrows, NVoxelsOriginalMask, maxRes);
 	inertiaMatrixVariable.initZeros(7, NVoxelsOriginalMask);
-	maskMatrix.initConstant(1, NVoxelsOriginalMask, 1);
+
 
 	#ifdef DEBUG_MASK
 	std::cout << "-------------DEBUG-----------" <<std::endl;
@@ -1380,7 +1380,7 @@ void ProgResDir::run()
 		double last_resolution = 0;
 
 		defineCone(fftV, conefilter, rot, tilt);
-
+		maskMatrix.initConstant(1, NVoxelsOriginalMask, 1);
 		do
 		{
 			continueIter = false;
@@ -1621,6 +1621,7 @@ void ProgResDir::run()
 				++maskPos;
 			}
 		}
+		std::cout << "number of mask = " << maskPos << std::endl;
 //		#endif
 		#ifdef DEBUG_DIR
 		Image<double> saveImg;
