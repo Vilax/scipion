@@ -1424,7 +1424,8 @@ void ProgResDir::run()
 
 			double uz, uy, ux;
 
-			amplitudeMS.setXmippOrigin();
+			//amplitudeMS.setXmippOrigin();
+			//TODO: check the set xmipp origin
 
 			//TODO: check if can be taken out side the loop
 			MultidimArray<double> coneVol;
@@ -1433,6 +1434,11 @@ void ProgResDir::run()
 			int z_size = ZSIZE(amplitudeMS);
 			int x_size = XSIZE(amplitudeMS);
 			int y_size = YSIZE(amplitudeMS);
+
+			std::cout << "z_size = " << z_size << std::endl;
+			std::cout << "x_size = " << x_size << std::endl;
+			std::cout << "y_size = " << y_size << std::endl;
+
 
 			for(int k=0; k<z_size; ++k)
 			{
