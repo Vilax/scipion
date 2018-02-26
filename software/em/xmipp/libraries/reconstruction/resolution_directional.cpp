@@ -29,7 +29,7 @@
 //#define DEBUG_MASK
 #define DEBUG_DIR
 //define DEBUG_FILTER
-#define MONO_AMPLITUDE
+//#define MONO_AMPLITUDE
 //define DEBUG_SYMMETRY
 
 void ProgResDir::readParams()
@@ -414,14 +414,14 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 		}
 	}
 
-	#ifdef DEBUG_DIR
-//	if ( (count == 0) )
-//	{
-		Image<double> direction;
-		direction = coneVol;
-		direction.write(formatString("cone_%i_%i.vol", dir+1, count));
-//	}
-	#endif
+//	#ifdef DEBUG_DIR
+////	if ( (count == 0) )
+////	{
+//		Image<double> direction;
+//		direction = coneVol;
+//		direction.write(formatString("cone_%i_%i.vol", dir+1, count));
+////	}
+//	#endif
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
@@ -513,16 +513,16 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 	//TODO: Use the square of the monogenic amplitude
 
 
-		#ifdef MONO_AMPLITUDE
+//		#ifdef MONO_AMPLITUDE
 		Image<double> saveImg2;
-		saveImg2 = amplitude;
-		if (fnDebug.c_str() != "")
-		{
-			FileName iternumber = formatString("smoothed_volume_%i_%i.vol", dir+1, count);
-			saveImg2.write(fnDebug+iternumber);
-		}
-		saveImg2.clear();
-		#endif
+//		saveImg2 = amplitude;
+//		if (fnDebug.c_str() != "")
+//		{
+//			FileName iternumber = formatString("smoothed_volume_%i_%i.vol", dir+1, count);
+//			saveImg2.write(fnDebug+iternumber);
+//		}
+//		saveImg2.clear();
+//		#endif
 
 
 	//amplitude.setXmippOrigin();
@@ -1485,17 +1485,17 @@ void ProgResDir::run()
 				}
 			}
 
-			#ifdef DEBUG_DIR
-				if (iter == 0)
-				{
-				Image<double> img;
-
-				FileName iternumber;
-				iternumber = formatString("cone_noise_%i_%i.vol", dir, iter);
-				img = coneVol;
-				img.write(iternumber);
-				}
-			#endif
+//			#ifdef DEBUG_DIR
+//				if (iter == 0)
+//				{
+//				Image<double> img;
+//
+//				FileName iternumber;
+//				iternumber = formatString("cone_noise_%i_%i.vol", dir, iter);
+//				img = coneVol;
+//				img.write(iternumber);
+//				}
+//			#endif
 
 				std::cout << "NS = " << NS << std::endl;
 			if ( (NS/(double) NVoxelsOriginalMask)<cut_value ) //when the 2.5% is reached then the iterative process stops
@@ -1571,8 +1571,8 @@ void ProgResDir::run()
 	//									DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution_2; //resolution + counter*step;
 									}
 								}
-								++maskPos;
 							}
+							++maskPos;
 						}
 					}
 
