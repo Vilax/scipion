@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 
-from math import floor
+from math import floor, ceil
 import numpy as np
 import os
 
@@ -32,16 +32,19 @@ from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import PointerParam, StringParam, FloatParam, BooleanParam, IntParam
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from pyworkflow.em.constants import ALIGN_PROJ
-from pyworkflow.utils.path import cleanPath, cleanPattern, moveFile
+from pyworkflow.utils.path import cleanPath, cleanPattern, moveFile, makePath
 from pyworkflow.em.protocol import ProtAnalysis3D
 from pyworkflow.em.data import SetOfClasses2D, Image, SetOfAverages, SetOfParticles, Class2D
-from pyworkflow.em.packages.xmipp3.convert import setXmippAttributes, xmippToLocation
+from pyworkflow.em.packages.xmipp3.convert import rowToParticle, setXmippAttributes, xmippToLocation
 import pyworkflow.em.metadata as md
-from pyworkflow.protocol.constants import LEVEL_ADVANCED
+from pyworkflow.gui.plotter import Plotter
+from itertools import izip
 
 import xmipp
 from xmipp3 import ProjMatcher
 from pyworkflow.em.packages.xmipp3.convert import rowToAlignment
+from scipy.io.arff.arffread import MetaData
+# from Crypto.Util.number import str2long
 
         
 class XmippProtCompareReprojections(ProtAnalysis3D):
@@ -175,31 +178,83 @@ class XmippProtCompareReprojections(ProtAnalysis3D):
         cleanPath(fnAutoCorrelations)
     
     def createOutputStep(self):
+        self.plotsDir = self._getExtraPath('plots')
+        makePath(self.plotsDir)
+        filessnr = self._getExtraPath("ssnrClusters.txt")
+        
+        
         fnImgs = self._getExtraPath('images.stk')
         if os.path.exists(fnImgs):
             cleanPath(fnImgs)
 
-        outputSet = self._createSetOfParticles()
+#         outputSet = self._createSetOfParticles()
         imgSet = self.inputSet.get()
         imgFn = self._getExtraPath("anglesCont.xmd")
         self.newAssignmentPerformed = os.path.exists(self._getExtraPath("angles.xmd"))
         self.samplingRate = self.inputSet.get().getSamplingRate()
-        if isinstance(imgSet, SetOfClasses2D):
-            outputSet = self._createSetOfClasses2D(imgSet)
-            outputSet.copyInfo(imgSet.getImages())
-        elif isinstance(imgSet, SetOfAverages):
-            outputSet = self._createSetOfAverages()
-            outputSet.copyInfo(imgSet)
-        else:
-            outputSet = self._createSetOfParticles()
-            outputSet.copyInfo(imgSet)
-            if not self.newAssignmentPerformed:
-                outputSet.setAlignmentProj()
-        outputSet.copyItems(imgSet,
-                            updateItemCallback=self._processRow,
-                            itemDataIterator=md.iterRows(imgFn, sortByLabel=md.MDL_ITEM_ID))
-        self._defineOutputs(outputParticles=outputSet)
+#         if isinstance(imgSet, SetOfClasses2D):
+#             outputSet = self._createSetOfClasses2D(imgSet)
+#             outputSet.copyInfo(imgSet.getImages())
+#         elif isinstance(imgSet, SetOfAverages):
+#             outputSet = self._createSetOfAverages()
+#             outputSet.copyInfo(imgSet)
+#         else:
+#             outputSet = self._createSetOfParticles()
+#             outputSet.copyInfo(imgSet)
+#             if not self.newAssignmentPerformed:
+#                 outputSet.setAlignmentProj()
+#         if isinstance(imgSet, SetOfClasses2D):
+        outputSet = self._createSetOfClasses2D(imgSet)
+        self.createPlotsRepresentatives(filessnr, outputSet)
+
+        self.fillingSetOfClasses(imgFn, outputSet)
+
+#         outputSet.copyInfo(imgSet.getImages())
+#         elif isinstance(imgSet, SetOfAverages):
+#             outputSet = self._createSetOfAverages()
+#             outputSet.copyInfo(imgSet)
+#         else:
+#             outputSet = self._createSetOfParticles()
+#             outputSet.copyInfo(imgSet)
+#             if not self.newAssignmentPerformed:
+#                 outputSet.setAlignmentProj()
+#         outputSet.copyItems(imgSet,
+#                             updateItemCallback=self._processRow,
+#                             itemDataIterator=md.iterRows(imgFn, sortByLabel=md.MDL_ITEM_ID))
+#         self._defineOutputs(outputParticles=outputSet)
+        self._defineOutputs(outputClasses=outputSet)
         self._defineSourceRelation(self.inputSet, outputSet)
+
+        
+    def fillingSetOfClasses(self, mdfn, myclasses):
+        mtda = md.MetaData(mdfn)
+        for imgRow in md.iterRows(mtda, sortByLabel=xmipp.MDL_SSNR1D_GROUP):
+            classid = imgRow.getValue(xmipp.MDL_SSNR1D_GROUP)
+            myclass = myclasses[classid]
+            part = rowToParticle(imgRow)
+            self._processRow(part,imgRow)
+            myclass.enableAppend()
+            myclass.append(part)
+            myclasses.update(myclass)
+            
+        
+
+    def createPlotsRepresentatives(self, path, myclasses):
+        fileSSNR = open(path, 'r')
+        count = 1
+        for line in fileSSNR: 
+            Y = np.fromstring(line, dtype=float, sep=' ')
+            X = range(len(Y))
+            plotter = self.createSSNRPlot(X, Y, count)
+            filename = 'plots/class_%i' % count
+            plotter.savefig(self._getExtraPath(filename))
+            img = Image(self._getExtraPath(filename+'.png'))
+            newclass = Class2D(objId = count)
+            newclass.setRepresentative(img)
+            myclasses.append(newclass)
+            count = count + 1
+            
+        fileSSNR.close()    
 
     def _processRow(self, particle, row):
         setXmippAttributes(particle, row,
@@ -216,10 +271,43 @@ class XmippProtCompareReprojections(ProtAnalysis3D):
                 img = getattr(particle, attr)
             img.setLocation(xmippToLocation(row.getValue(label)))
         
+#         self._saveSSNRPlots(row, xmipp.MDL_SSNR1D)
+
         __setXmippImage(xmipp.MDL_IMAGE)
         __setXmippImage(xmipp.MDL_IMAGE_REF)
         __setXmippImage(xmipp.MDL_IMAGE_RESIDUAL)
         __setXmippImage(xmipp.MDL_IMAGE_COVARIANCE)
+        
+#         __setXmippImage(xmipp.MDL_SSNR1D)
+
+
+    def createSSNRPlot(self, X, Y, classnumber):
+        """ Create a plotter with the cumulative shift per frame. """
+        figureSize = (1, 1)
+        plotter = Plotter(*figureSize)
+        figure = plotter.getFigure()
+    
+        ax = figure.add_subplot(111)
+        ax.grid()
+        titlestr = 'SSNR plot %i' %classnumber
+        ax.set_title(titlestr)
+        ax.set_xlabel(' ')
+        ax.set_ylabel('SSNR a.u.')
+        ax.plot(0, 0, 'r')
+    
+        ax.plot(X, Y, color='b')
+    
+        plotter.tightLayout()
+    
+        return plotter
+
+
+#     def _saveSSNRPlots(self, objRow, label):
+#         """ Compute the SSNR plot and save to file as a png image. """
+#         Y = objRow.getValueAsObject(label)
+#         X = range(len(Y))
+#         plotter = self.createSSNRPlot(X, Y)
+#         plotter.savefig(self._getExtraPath('plotsm'))
 
     #--------------------------- INFO functions --------------------------------------------
     def _summary(self):
@@ -230,10 +318,10 @@ class XmippProtCompareReprojections(ProtAnalysis3D):
     
     def _methods(self):
         methods = []
-        if hasattr(self, 'outputParticles'):
-            methods.append("We evaluated %i input images %s regarding to volume %s."\
-                           %(self.inputSet.get().getSize(), self.getObjectTag('inputSet'), self.getObjectTag('inputVolume')) )
-            methods.append("The residuals were evaluated according to their mean, variance and covariance structure [Cherian2013].")
+#         if hasattr(self, 'outputParticles'):
+#             methods.append("We evaluated %i input images %s regarding to volume %s."\
+#                            %(self.inputSet.get().getSize(), self.getObjectTag('inputSet'), self.getObjectTag('inputVolume')) )
+        methods.append("The residuals were evaluated according to their mean, variance and covariance structure [Cherian2013].")
         return methods
     
     #--------------------------- UTILS functions --------------------------------------------
