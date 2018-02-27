@@ -218,7 +218,7 @@ class XmippProtCompareReprojections(ProtAnalysis3D):
         fnAutoCorrelations = self._getExtraPath("autocorrelations.xmd")
         stkAutoCorrelations = self._getExtraPath("autocorrelations.stk")
         stkResiduals = self._getExtraPath("residuals.stk")
-        anglesOutFn=FN_MD_ANGLESCONT
+        anglesOutFn=self._getFileName(FN_MD_ANGLESCONT)
         self.runJob("xmipp_image_residuals", 
                     " -i %s -o %s --save_metadata_stack %s" 
                     % (stkResiduals, stkAutoCorrelations, fnAutoCorrelations),
