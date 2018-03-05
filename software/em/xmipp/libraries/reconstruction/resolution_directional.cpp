@@ -368,8 +368,8 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 		double rot, double tilt)
 {
 	fftVRiesz.initZeros(myfftV);
-	MultidimArray<double> coneVol;
-	coneVol.initZeros(myfftV);
+//	MultidimArray<double> coneVol;
+//	coneVol.initZeros(myfftV);
 	fftVRiesz_aux.initZeros(myfftV);
 	amplitude.resizeNoCopy(VRiesz);
 	std::complex<double> J(0,1);
@@ -392,14 +392,13 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 				//TODO: The cone filter can be used as storage variable
 				if (freqH<=un && un<=freq)
 				{
-					//TODO: Check if fftVRiesz can be made equal to myfftV
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= DIRECT_MULTIDIM_ELEM(conefilter, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-freq)*ideltal));//H;
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
-					DIRECT_MULTIDIM_ELEM(coneVol, n) = DIRECT_MULTIDIM_ELEM(conefilter, n);
+//					DIRECT_MULTIDIM_ELEM(coneVol, n) = DIRECT_MULTIDIM_ELEM(conefilter, n);
 				} else if (un>freq)
 				{
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
@@ -407,7 +406,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
-					DIRECT_MULTIDIM_ELEM(coneVol, n) = DIRECT_MULTIDIM_ELEM(conefilter, n);
+//					DIRECT_MULTIDIM_ELEM(coneVol, n) = DIRECT_MULTIDIM_ELEM(conefilter, n);
 				}
 				++n;
 			}
@@ -425,14 +424,14 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
-	#ifdef DEBUG_DIR
-	if (count == 0)
-	{
-		Image<double> filteredvolume;
-		filteredvolume = VRiesz;
-		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir+1,count));
-	}
-	#endif
+//	#ifdef DEBUG_DIR
+//	if (count == 0)
+//	{
+//		Image<double> filteredvolume;
+//		filteredvolume = VRiesz;
+//		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir+1,count));
+//	}
+//	#endif
 
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
@@ -487,6 +486,27 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 
 	double limit_radius = (z_size*0.5-N_smoothing);
 	n=0;
+//	for(int k=STARTINGZ(amplitude); k<FINISHINGZ(amplitude); ++k)
+//	{
+////		uz = k;
+//		for(int i=STARTINGY(amplitude); i<FINISHINGY(amplitude); ++i)
+//		{
+////			uy = i;
+//			for(int j=STARTINGX(amplitude); j<FINISHINGX(amplitude); ++j)
+//			{
+////				ux = j;
+//				DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+//				DIRECT_MULTIDIM_ELEM(amplitude,n)=sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
+//
+//				double radius = sqrt(j*j + i*i + k*k);
+//				if ((radius>=limit_radius) && (radius<=(z_size*0.5)))
+//					DIRECT_MULTIDIM_ELEM(amplitude, n) *= 0.5*(1+cos(PI*(limit_radius-radius)/(N_smoothing)));
+//				else if (radius>(0.5*z_size))
+//					DIRECT_MULTIDIM_ELEM(amplitude, n) = 0;
+//				++n;
+//			}
+//		}
+//	}
 	for(int k=0; k<z_size; ++k)
 	{
 		uz = (k - z_size*0.5);
@@ -509,12 +529,11 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 		}
 	}
 	//TODO: change (k - z_size*0.5)
-	//TODO: check the number of un=1.0/DIRECT_MULTIDIM_ELEM(iu,n); and optimize
 	//TODO: Use the square of the monogenic amplitude
 
 
 //		#ifdef MONO_AMPLITUDE
-		Image<double> saveImg2;
+//		Image<double> saveImg2;
 //		saveImg2 = amplitude;
 //		if (fnDebug.c_str() != "")
 //		{
@@ -531,9 +550,28 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 
 
 	// Low pass filter the monogenic amplitude
-	lowPassFilter.w1 = freq;
-	amplitude.setXmippOrigin();
-	lowPassFilter.applyMaskSpace(amplitude);
+//	lowPassFilter.w1 = freq;
+//	amplitude.setXmippOrigin();
+//	lowPassFilter.applyMaskSpace(amplitude);
+//
+//	amplitude.setXmippOrigin();
+
+	transformer_inv.FourierTransform(amplitude, fftVRiesz, false);
+
+	 double raised_w = PI/(freqL-freq);
+
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fftVRiesz)
+	{
+			double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
+			if ((freqL)>=un && un>=freq)
+				DIRECT_MULTIDIM_ELEM(fftVRiesz,n) *= 0.5*(1 + cos(raised_w*(un-freq)));
+			else
+				if (un>(freqL))
+					DIRECT_MULTIDIM_ELEM(fftVRiesz,n) = 0;
+	}
+	transformer_inv.inverseFourierTransform();
+
+
 
 //    double raised_w = PI/(freqL-freq);
 //
@@ -593,6 +631,7 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 				//double dotproduct = (uy*x_dir + ux*y_dir + uz*z_dir)*iun;
 				double dotproduct = (ux*x_dir + uy*y_dir + uz*z_dir)*iun;
 				double acosine = acos(fabs(dotproduct));
+				//TODO: remove fabs
 
 				//4822.53 mean a smoothed cone angle of 20 degrees
 				double arg_exp = acosine*acosine*acosine*acosine*4822.53;
@@ -603,147 +642,6 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 	}
 }
 
-
-void ProgResDir::inertiaMatrix(MultidimArray<double> &resolutionVol,
-							   MultidimArray<double> &Inertia_11,
-							   MultidimArray<double> &Inertia_12,
-							   MultidimArray<double> &Inertia_13,
-							   MultidimArray<double> &Inertia_22,
-							   MultidimArray<double> &Inertia_23,
-							   MultidimArray<double> &Inertia_33,
-							   MultidimArray<double> &SumRes,
-							   double rot, double tilt, size_t dir)
-{
-	double x_dir, y_dir, z_dir, resVal, x_dir_sym, y_dir_sym, z_dir_sym, r_xyz2;
-	x_dir = sin(tilt*PI/180)*cos(rot*PI/180);
-	y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
-	z_dir = cos(tilt*PI/180);
-	x_dir_sym = -sin(tilt*PI/180)*cos(rot*PI/180);
-	y_dir_sym = -sin(tilt*PI/180)*sin(rot*PI/180);
-	z_dir_sym = -cos(tilt*PI/180);
-
-	//std::cout << "x_dir = " << x_dir << "  y_dir = " << y_dir<< "  z_dir = " << z_dir << std::endl;
-
-	size_t idx = 0;
-
-	int nn=0;
-	for(int k=0; k<ZSIZE(resolutionVol); ++k)
-	{
-		for(int i=0; i<YSIZE(resolutionVol); ++i)
-		{
-			for(int j=0; j<XSIZE(resolutionVol); ++j)
-			{
-				if (DIRECT_MULTIDIM_ELEM(mask(), nn) == 1)
-				{
-					resVal = DIRECT_MULTIDIM_ELEM(resolutionVol,nn);//*DIRECT_MULTIDIM_ELEM(resolutionVol,n);
-					double aux_val = DIRECT_A3D_ELEM(resolutionVol,k,i,j);
-					r_xyz2 = resVal*resVal;
-		//			r_xyz2 = 10;
-
-					if ( ( (k == 30)  || (k == 35) || (k == 40) || (k == 45) || (k == 50) ||
-							(k == 55) || (k == 60) || (k == 65) || (k == 70) || (k == 75)
-							|| (k == 80) || (k == 85)) && (i==52) && (j==62) )
-					{
-						MetaData md;
-						size_t objId;
-						FileName fn_md;
-						fn_md = formatString("res_%i.xmd", k);
-						md.read(fn_md);
-
-						objId = md.addObject();
-						md.setValue(MDL_IDX, dir, objId);
-						md.setValue(MDL_XCOOR, i, objId);
-						md.setValue(MDL_YCOOR, j, objId);
-						md.setValue(MDL_ZCOOR, k, objId);
-						md.setValue(MDL_ANGLE_ROT, rot, objId);
-						md.setValue(MDL_ANGLE_TILT, tilt, objId);
-						md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
-						md.write(fn_md);
-					}
-					DIRECT_MULTIDIM_ELEM(Inertia_11,nn) += r_xyz2*(1-x_dir*x_dir);
-					DIRECT_MULTIDIM_ELEM(Inertia_12,nn) -= r_xyz2*x_dir*y_dir;
-					DIRECT_MULTIDIM_ELEM(Inertia_13,nn) -= r_xyz2*x_dir*z_dir;
-					DIRECT_MULTIDIM_ELEM(Inertia_22,nn) += r_xyz2*(1-y_dir*y_dir);
-					DIRECT_MULTIDIM_ELEM(Inertia_23,nn) -= r_xyz2*y_dir*z_dir;
-					DIRECT_MULTIDIM_ELEM(Inertia_33,nn) += r_xyz2*(1-z_dir*z_dir);
-
-					DIRECT_MULTIDIM_ELEM(Inertia_11,nn) += r_xyz2*(1-x_dir_sym*x_dir_sym);
-					DIRECT_MULTIDIM_ELEM(Inertia_12,nn) -= r_xyz2*x_dir_sym*y_dir_sym;
-					DIRECT_MULTIDIM_ELEM(Inertia_13,nn) -= r_xyz2*x_dir_sym*z_dir_sym;
-					DIRECT_MULTIDIM_ELEM(Inertia_22,nn) += r_xyz2*(1-y_dir_sym*y_dir_sym);
-					DIRECT_MULTIDIM_ELEM(Inertia_23,nn) -= r_xyz2*y_dir_sym*z_dir_sym;
-					DIRECT_MULTIDIM_ELEM(Inertia_33,nn) += r_xyz2*(1-z_dir_sym*z_dir_sym);
-
-					DIRECT_MULTIDIM_ELEM(SumRes,nn) += 2;
-					++idx;
-				}
-				++nn;
-			}
-		}
-	}
-
-}
-
-void ProgResDir::inertiaMatrixNew(Matrix2D<double> &resolutionMatrix,
-							   Matrix2D<double> &inertiaMatrix,
-							   double rot, double tilt, size_t dir)
-{
-	double x_dir, y_dir, z_dir, resVal, x_dir_sym, y_dir_sym, z_dir_sym, r_xyz2;
-	x_dir = sin(tilt*PI/180)*cos(rot*PI/180);
-	y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
-	z_dir = cos(tilt*PI/180);
-	x_dir_sym = -sin(tilt*PI/180)*cos(rot*PI/180);
-	y_dir_sym = -sin(tilt*PI/180)*sin(rot*PI/180);
-	z_dir_sym = -cos(tilt*PI/180);
-
-	int nn=0;
-	int maskpos = 0;
-	for(int k=0; k<ZSIZE(mask()); ++k)
-	{
-		for(int i=0; i<YSIZE(mask()); ++i)
-		{
-			for(int j=0; j<XSIZE(mask()); ++j)
-			{
-				if (DIRECT_MULTIDIM_ELEM(mask(), nn) == 1)
-				{
-					resVal = MAT_ELEM(resolutionMatrix, dir, maskpos);
-					r_xyz2 = resVal*resVal;
-
-					if ( ( (k == 30)  || (k == 35) || (k == 40) || (k == 45) || (k == 50) ||
-							(k == 55) || (k == 60) || (k == 65) || (k == 70) || (k == 75)
-							|| (k == 80) || (k == 85)) && (i==52) && (j==62) )
-					{
-						MetaData md;
-						size_t objId;
-						FileName fn_md;
-						fn_md = formatString("res_%i.xmd", k);
-						md.read(fn_md);
-
-						objId = md.addObject();
-						md.setValue(MDL_IDX, dir, objId);
-						md.setValue(MDL_XCOOR, i, objId);
-						md.setValue(MDL_YCOOR, j, objId);
-						md.setValue(MDL_ZCOOR, k, objId);
-						md.setValue(MDL_ANGLE_ROT, rot, objId);
-						md.setValue(MDL_ANGLE_TILT, tilt, objId);
-						md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
-						md.write(fn_md);
-					}
-
-					MAT_ELEM(inertiaMatrix, 0, maskpos) += (r_xyz2*(1-x_dir*x_dir) + r_xyz2*(1-x_dir_sym*x_dir_sym));
-					MAT_ELEM(inertiaMatrix, 1, maskpos) -= (r_xyz2*x_dir*y_dir + r_xyz2*x_dir_sym*y_dir_sym);
-					MAT_ELEM(inertiaMatrix, 2, maskpos) -= (r_xyz2*x_dir*z_dir + r_xyz2*x_dir_sym*z_dir_sym);
-					MAT_ELEM(inertiaMatrix, 3, maskpos) += (r_xyz2*(1-y_dir*y_dir) + r_xyz2*(1-y_dir_sym*y_dir_sym));
-					MAT_ELEM(inertiaMatrix, 4, maskpos) -= (r_xyz2*y_dir*z_dir + r_xyz2*y_dir_sym*z_dir_sym);
-					MAT_ELEM(inertiaMatrix, 5, maskpos) += (r_xyz2*(1-z_dir*z_dir) + r_xyz2*(1-z_dir_sym*z_dir_sym));
-					MAT_ELEM(inertiaMatrix, 6, maskpos) += 2;
-					++maskpos;
-				}
-				++nn;
-			}
-		}
-	}
-}
 
 void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A,
 					Matrix1D<double> &eigenvalues, Matrix2D<double> &eigenvectors)
@@ -758,56 +656,6 @@ void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A,
 	generalizedEigs(A, B, eigenvalues, eigenvectors);
 }
 
-void ProgResDir::degreeOfAnisotropy(Matrix1D<double> eigenvalues,
-									Matrix2D<double> eigenvectors,
-									double &doa,
-							double &direction_x, double &direction_y, double &direction_z,
-							int &counter)
-{
-	++counter;
-
-	direction_x = MAT_ELEM(eigenvectors, 0, 1);
-	direction_y = MAT_ELEM(eigenvectors, 1, 1);
-	direction_z = MAT_ELEM(eigenvectors, 2, 1);
-
-	Matrix2D<double> invA;
-	Matrix1D<double> inertia_vector(3), ellipsoid_axes(3);
-	invA.initConstant(3,3,0.5);
-
-	MAT_ELEM(invA, 0, 0) = -0.5;
-	MAT_ELEM(invA, 1, 1) = -0.5;
-	MAT_ELEM(invA, 2, 2) = -0.5;
-
-	VEC_ELEM(inertia_vector, 0) = 3.0*VEC_ELEM(eigenvalues,0);
-	VEC_ELEM(inertia_vector, 1) = 3.0*VEC_ELEM(eigenvalues,1);
-	VEC_ELEM(inertia_vector, 2) = 3.0*VEC_ELEM(eigenvalues,2);
-
-	ellipsoid_axes = invA*inertia_vector;
-
-	//lambda_1, lambda_2, lambda_3 are the square of lambda_1, lambda_2, lambda_3
-	double lambda_1 = sqrt(VEC_ELEM(ellipsoid_axes, 0));
-	double lambda_2 = sqrt(VEC_ELEM(ellipsoid_axes, 1));
-	double lambda_3 = sqrt(VEC_ELEM(ellipsoid_axes, 2));
-
-	double lambda_values[3] = {lambda_1, lambda_2, lambda_3};
-
-	std::sort(lambda_values, lambda_values+3);
-
-	double aux = (lambda_values[0]/lambda_values[2]);
-	doa = 1 - aux*aux;
-
-	if (counter == 34)
-	{
-		std::cout << "lambda_1 = " << lambda_1 << std::endl;
-		std::cout << "lambda_2 = " << lambda_2 << std::endl;
-		std::cout << "lambda_3 = " << lambda_3 << std::endl;
-
-		std::cout << "doa = " << doa << std::endl;
-		std::cout << "lambda_list[2] = " << lambda_values[2] << std::endl;
-		std::cout << "lambda_list[1] = " << lambda_values[1] << std::endl;
-		std::cout << "lambda_list[0] = " << lambda_values[0] << std::endl;
-	}
-}
 
 void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 								double &resolution, double &last_resolution,
@@ -939,6 +787,8 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 	double meandistance = 0, distance_2 = 0;
 	int xrows = angles.mdimx, N=0;
 
+//	std::cout << "xrows = " << xrows << std::endl;
+
 	double criticalZ = icdf_gauss(significance);
 
 	for (int k = 0; k<NVoxelsOriginalMask; ++k)
@@ -949,33 +799,42 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 		for (int i = 0; i<xrows; ++i)
 		{
 			resolution = MAT_ELEM(resolutionMat, i, k);
+			if (resolution <1)
+				std::cout << "RESOLUTIONNN" << std::endl;
 			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
 			tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
-			x1 = resolution*sin(tilt)*cos(rot);
-			y1 = resolution*sin(tilt)*sin(rot);
-			z1 = resolution*cos(tilt);
+			x1 = resolution*MAT_ELEM(trigProducts, 0, i);
+			y1 = resolution*MAT_ELEM(trigProducts, 1, i);
+			z1 = resolution*MAT_ELEM(trigProducts, 2, i);
+//			x1 = resolution*sin(tilt)*cos(rot);
+//			y1 = resolution*sin(tilt)*sin(rot);
+//			z1 = resolution*cos(tilt);
 			lastMinDistance = 1e38;
 			for (int j = 0; j<xrows; ++j)
 			{
 				rot = MAT_ELEM(anglesMat,0, j)*PI/180;
 				tilt = MAT_ELEM(anglesMat,1, j)*PI/180;
 				resolution = MAT_ELEM(resolutionMat, j, k);
-				x2 = resolution*sin(tilt)*cos(rot);
-				y2 = resolution*sin(tilt)*sin(rot);
-				z2 = resolution*cos(tilt);
+				x2 = resolution*MAT_ELEM(trigProducts, 0, j);
+				y2 = resolution*MAT_ELEM(trigProducts, 1, j);
+				z2 = resolution*MAT_ELEM(trigProducts, 2, j);
+//				x2 = resolution*sin(tilt)*cos(rot);
+//				y2 = resolution*sin(tilt)*sin(rot);
+//				z2 = resolution*cos(tilt);
 				if (i != j)
 				{
-					distance = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1);
+					distance = sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1));
+//					std::cout << "distance = " << distance << std::endl;
 					if (distance < lastMinDistance)
 						lastMinDistance = distance;
 				}
 			}
-			meandistance +=distance;
-			distance_2 += distance*distance;
-
-			sigma2 = distance_2/N;
-			meandistance = meandistance/N;
+			meandistance += lastMinDistance;
+			distance_2 += lastMinDistance*lastMinDistance;
 		}
+
+		meandistance = (meandistance)/((double) xrows);
+		sigma2 = distance_2/((double) xrows) - meandistance*meandistance;
 
 		threshold = meandistance + criticalZ*sqrt(sigma2);
 
@@ -984,33 +843,39 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 			resolution = MAT_ELEM(resolutionMat, i, k);
 			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
 			tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
-			x1 = resolution*sin(tilt)*cos(rot);
-			y1 = resolution*sin(tilt)*sin(rot);
-			z1 = resolution*cos(tilt);
+			x1 = resolution*MAT_ELEM(trigProducts, 0, i);
+			y1 = resolution*MAT_ELEM(trigProducts, 1, i);
+			z1 = resolution*MAT_ELEM(trigProducts, 2, i);
+//			x1 = resolution*sin(tilt)*cos(rot);
+//			y1 = resolution*sin(tilt)*sin(rot);
+//			z1 = resolution*cos(tilt);
 			lastMinDistance = 1e38;
 			for (int j = 0; j<xrows; ++j)
 			{
 				rot = MAT_ELEM(anglesMat,0, j)*PI/180;
 				tilt = MAT_ELEM(anglesMat,1, j)*PI/180;
 				resolution = MAT_ELEM(resolutionMat, j, k);
-				x2 = resolution*sin(tilt)*cos(rot);
-				y2 = resolution*sin(tilt)*sin(rot);
-				z2 = resolution*cos(tilt);
+				x2 = resolution*MAT_ELEM(trigProducts, 0, j);
+				y2 = resolution*MAT_ELEM(trigProducts, 1, j);
+				z2 = resolution*MAT_ELEM(trigProducts, 2, j);
+//				x2 = resolution*sin(tilt)*cos(rot);
+//				y2 = resolution*sin(tilt)*sin(rot);
+//				z2 = resolution*cos(tilt);
 				if (i != j)
 				{
-					distance = (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1);
+					distance = sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1));
 					if (distance < lastMinDistance)
 						lastMinDistance = distance;
 				}
 			}
 			if (lastMinDistance>=threshold)
 			{
+				if (k == 300)
+					std::cout << "resolution = " << MAT_ELEM(resolutionMat, i, k) << std::endl;
 				MAT_ELEM(resolutionMat, i, k) = -1;
 			}
 		}
 	}
-
-
 }
 
 
@@ -1021,6 +886,8 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 	double x, y, z, a, b, c, resolution, rot, tilt;
 	int xrows = angles.mdimx;
 	std::vector<double> list_distances;
+
+	std::cout << "xrows = " << xrows << std::endl;
 
 	//MAT_ELEM(resolutionMat, direccion, resolucion)
 
@@ -1033,14 +900,13 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 	Matrix1D<double> eigenvalues;
 	axis.initZeros(3, NVoxelsOriginalMask);
 
-	ellipMat.initZeros(xrows, 6);
 	quadricMatrix.initZeros(3,3);
 	for (int k = 0; k<NVoxelsOriginalMask; ++k)
 	{
 		dimMatrix = 0;
 		for (int i = 0; i<xrows; ++i)
 		{
-			resolution = MAT_ELEM(resolutionMat, i, k);
+//			resolution = MAT_ELEM(resolutionMat, i, k);
 			if (MAT_ELEM(resolutionMat, i, k) > 0)
 				++dimMatrix;
 		}
@@ -1051,15 +917,36 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		for (int i = 0; i<xrows; ++i)
 		{
 			resolution = MAT_ELEM(resolutionMat, i, k);
+			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
+			tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
+//			if ((k==100) || (k==200) || (k==300))
+//			{
+//				double resVal = MAT_ELEM(resolutionMatrix, i, k);
+////					double r_xyz2 = resVal*resVal;
+//
+//				MetaData md;
+//				size_t objId;
+//				FileName fn_md;
+//				fn_md = formatString("res_%i_bis.xmd", k);
+//				md.read(fn_md);
+//
+//				objId = md.addObject();
+//				md.setValue(MDL_IDX, (size_t) k, objId);
+//				md.setValue(MDL_ITEM_ID, mycounter, objId);
+//				md.setValue(MDL_ANGLE_ROT, rot, objId);
+//				md.setValue(MDL_ANGLE_TILT, tilt, objId);
+//				md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
+//				md.write(fn_md);
+//			}
 			if (resolution>0)
 			{
-				rot = MAT_ELEM(anglesMat,0, mycounter)*PI/180;
-				tilt = MAT_ELEM(anglesMat,1, mycounter)*PI/180;
+				rot = MAT_ELEM(anglesMat,0, i)*PI/180;
+				tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
 
 				if ((k==100) || (k==200) || (k==300))
 				{
 					double resVal = MAT_ELEM(resolutionMatrix, i, k);
-					double r_xyz2 = resVal*resVal;
+//					double r_xyz2 = resVal*resVal;
 
 					MetaData md;
 					size_t objId;
@@ -1069,22 +956,26 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 
 					objId = md.addObject();
 					md.setValue(MDL_IDX, (size_t) k, objId);
+					md.setValue(MDL_ITEM_ID, mycounter, objId);
 					md.setValue(MDL_ANGLE_ROT, rot, objId);
 					md.setValue(MDL_ANGLE_TILT, tilt, objId);
 					md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
 					md.write(fn_md);
 				}
 
-				x = resolution*sin(tilt)*cos(rot);
-				y = resolution*sin(tilt)*sin(rot);
-				z = resolution*cos(tilt);
+				x = resolution*MAT_ELEM(trigProducts, 0, i);
+				y = resolution*MAT_ELEM(trigProducts, 1, i);
+				z = resolution*MAT_ELEM(trigProducts, 2, i);
+//				x = resolution*sin(tilt)*cos(rot);
+//				y = resolution*sin(tilt)*sin(rot);
+//				z = resolution*cos(tilt);
 
 				MAT_ELEM(ellipMat, mycounter, 0) = x*x;
 				MAT_ELEM(ellipMat, mycounter, 1) = y*y;
 				MAT_ELEM(ellipMat, mycounter, 2) = z*z;
-				MAT_ELEM(ellipMat, mycounter, 3) = x*y;
-				MAT_ELEM(ellipMat, mycounter, 4) = x*z;
-				MAT_ELEM(ellipMat, mycounter, 5) = y*z;
+				MAT_ELEM(ellipMat, mycounter, 3) = 2*x*y;
+				MAT_ELEM(ellipMat, mycounter, 4) = 2*x*z;
+				MAT_ELEM(ellipMat, mycounter, 5) = 2*y*z;
 				++mycounter;
 			}
 		}
@@ -1119,6 +1010,7 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		a = 1/sqrt(VEC_ELEM(eigenvalues, 0));
 		b = 1/sqrt(VEC_ELEM(eigenvalues, 1));
 		c = 1/sqrt(VEC_ELEM(eigenvalues, 2));
+
 		if ((k==100) || (k==200) || (k==300))
 		{
 			std::cout << "k = " << k << std::endl;
@@ -1331,23 +1223,16 @@ void ProgResDir::run()
 	FFT_IDX2DIGFREQ(11, volsize, wH); //Frequency chosen for a first estimation
 
 	double AvgNoise;
-	AvgNoise = firstMonoResEstimation(fftV, w, wH, amplitudeMS)/10;///9.0;
+	AvgNoise = firstMonoResEstimation(fftV, w, wH, amplitudeMS)/9.0;
 
 	N_directions=angles.mdimx;
 
 	std::cout << "N_directions = " << N_directions << std::endl;
 
 	double cone_angle = 20.0; //(degrees)
+	cone_angle = PI*cone_angle/180;
 
-//	std::cout <<" maskMatrix.mdimx = " << maskMatrix.mdimx << std::endl;
-//	std::cout <<" maskMatrix.mdimy = " << maskMatrix.mdimy << std::endl;
-//	std::cout <<" resolutionMatrix.mdimx = " << resolutionMatrix.mdimx << std::endl;
-//	std::cout <<" resolutionMatrix.mdimy = " << resolutionMatrix.mdimy << std::endl;
-//
-//	std::cout << "MAT_ELEM(maskMatrix, 2, maskPos) = " << MAT_ELEM(maskMatrix, 2, 10) << std::endl;
-//	std::cout << "MAT_ELEM(maskMatrix, 2, maskPos) = " << MAT_ELEM(maskMatrix, 20, 10) << std::endl;
-//	std::cout << "MAT_ELEM(maskMatrix, 0, maskPos) = " << MAT_ELEM(maskMatrix, 0, 10) << std::endl;
-//
+	trigProducts.initZeros(3, N_directions);
 
 	for (size_t dir=0; dir<N_directions; dir++)
 	{
@@ -1368,12 +1253,12 @@ void ProgResDir::run()
 		int count_res = 0;
 		double rot = MAT_ELEM(angles, 0, dir);
 		double tilt = MAT_ELEM(angles, 1, dir);
+		MAT_ELEM(trigProducts, 0, dir) = sin(tilt*PI/180)*cos(rot*PI/180);
+		MAT_ELEM(trigProducts, 1, dir) = sin(tilt*PI/180)*sin(rot*PI/180);
+		MAT_ELEM(trigProducts, 2, dir) = cos(tilt*PI/180);
 		std::cout << "--------------NEW DIRECTION--------------" << std::endl;
 		std::cout << "direction = " << dir+1 << "   rot = " << rot << "   tilt = " << tilt << std::endl;
 
-//		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-//			if (DIRECT_MULTIDIM_ELEM(pMask, n) == 1)
-//				DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = maxRes;
 
 		std::vector<double> noiseValues;
 		FileName fnDebug;
@@ -1424,24 +1309,70 @@ void ProgResDir::run()
 
 			double uz, uy, ux;
 
-			//amplitudeMS.setXmippOrigin();
-			//TODO: check the set xmipp origin
-
 			//TODO: check if can be taken out side the loop
-			MultidimArray<double> coneVol;
-			coneVol.initZeros(amplitudeMS);
+//			MultidimArray<double> coneVol;
+//			coneVol.initZeros(amplitudeMS);
 			int n=0;
 			int z_size = ZSIZE(amplitudeMS);
 			int x_size = XSIZE(amplitudeMS);
 			int y_size = YSIZE(amplitudeMS);
 
 			std::cout << "z_size = " << z_size << std::endl;
-			std::cout << "x_size = " << x_size << std::endl;
-			std::cout << "y_size = " << y_size << std::endl;
+			int startX = STARTINGX(amplitudeMS);
+			int startY = STARTINGY(amplitudeMS);
+			int startZ = STARTINGZ(amplitudeMS);
+			int endX = FINISHINGX(amplitudeMS);
+			int endY = FINISHINGY(amplitudeMS);
+			int endZ = FINISHINGZ(amplitudeMS);
 
+			std::cout << " startX = " << startX << "  endX = " << endX << std::endl;
+			std::cout << " startY = " << startY << "  endY = " << endY << std::endl;
+			std::cout << " startZ = " << startZ << "  endZ = " << endZ << std::endl;
 
+//
+//
+//			for(int k=startZ; k<endZ; ++k)
+//			{
+//				for(int i=startY; i<endY; ++i)
+//				{
+//					for(int j=startX; j<endX; ++j)
+//					{
+//					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
+//					{
+//						amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+//						sumS  += amplitudeValue;
+//						++NS;
+//					}
+//					else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
+//					{
+//
+//						double rad = sqrt(k*k + i*i + j*j);
+//						double iun = 1/rad;
+//
+//						//BE CAREFULL with the order
+//						double dotproduct = (j*y_dir + i*x_dir + k*z_dir)*iun;
+//
+//						double acosine = acos(dotproduct);
+//
+//						//TODO: change efficienty the if condition
+//						if (((acosine<(cone_angle)) || (acosine>(PI-cone_angle)) )
+//								&& (rad>Rparticle))
+//						{
+//
+//		//								DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
+//							amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+//							sumN  += amplitudeValue;
+//							sumN2 += amplitudeValue*amplitudeValue;
+//							++NN;
+//						}
+//					}
+//					++n;
+//				}
+//			}
+//		}
 			for(int k=0; k<z_size; ++k)
 			{
+//				std::cout << " k = " << k  <<std::endl;
 				for(int i=0; i<y_size; ++i)
 				{
 					for(int j=0; j<x_size; ++j)
@@ -1450,17 +1381,16 @@ void ProgResDir::run()
 						{
 							amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
 							sumS  += amplitudeValue;
-//							sumS2 += amplitudeValue*amplitudeValue;
 							++NS;
 						}
 						else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
 						{
 							uz = (k - z_size*0.5);
+//							std::cout << " uz = " << uz  <<std::endl;
 							ux = (j - x_size*0.5);
 							uy = (i - y_size*0.5);
 
 							double rad = sqrt(ux*ux + uy*uy + uz*uz);
-//							std::cout << "rad = " << rad << std::endl;
 							double iun = 1/rad;
 
 							//BE CAREFULL with the order
@@ -1468,12 +1398,12 @@ void ProgResDir::run()
 
 							double acosine = acos(dotproduct);
 
-							//TODO: change efficienty the if condition
-							if (((acosine<(PI*cone_angle/180)) || (acosine>(PI*(180-cone_angle)/180)) )
+							//TODO: change efficienty the if condition by means of fabs(cos(angle))
+							if (((acosine<(cone_angle)) || (acosine>(PI-cone_angle)) )
 									&& (rad>Rparticle))
 							{
 
-								DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
+//								DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
 								amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
 								sumN  += amplitudeValue;
 								sumN2 += amplitudeValue*amplitudeValue;
@@ -1497,7 +1427,7 @@ void ProgResDir::run()
 //				}
 //			#endif
 
-				std::cout << "NS = " << NS << std::endl;
+//				std::cout << "NS = " << NS << std::endl;
 			if ( (NS/(double) NVoxelsOriginalMask)<cut_value ) //when the 2.5% is reached then the iterative process stops
 			{
 				std::cout << "Search of resolutions stopped due to mask has been completed" << std::endl;
@@ -1643,12 +1573,13 @@ void ProgResDir::run()
 	}
 
 	//Remove outliers
-	removeOutliers(angles, resolutionMatrix);
+	removeOutliers(trigProducts, resolutionMatrix);
+//	removeOutliers(angles, resolutionMatrix);
 
 	//Ellipsoid fitting
 	Matrix2D<double> axis;
-	ellipsoidFitting(angles, resolutionMatrix, axis);
-
+	ellipsoidFitting(trigProducts, resolutionMatrix, axis);
+//	ellipsoidFitting(angles, resolutionMatrix, axis);
 
 	Image<double> doaVol;
 	MultidimArray<double> &pdoaVol = doaVol();
@@ -1667,8 +1598,8 @@ void ProgResDir::run()
 		{
 			double a = MAT_ELEM(axis, 0, idx);
 			double c = MAT_ELEM(axis, 2, idx);
-			std::cout << "a = " << a << std::endl;
-			std::cout << "c = " << c << std::endl;
+//			std::cout << "a = " << a << std::endl;
+//			std::cout << "c = " << c << std::endl;
 			DIRECT_MULTIDIM_ELEM(pdoaVol, n) = c/a;
 			++idx;
 		}

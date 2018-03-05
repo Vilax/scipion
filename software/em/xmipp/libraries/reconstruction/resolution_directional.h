@@ -137,7 +137,7 @@ public:
 	FourierFilter lowPassFilter, FilterBand;
 	int N_smoothing;
 	Sampling mysampling;
-	Matrix2D<double> angles, resolutionMatrix, inertiaMatrixVariable, maskMatrix;
+	Matrix2D<double> angles, resolutionMatrix, inertiaMatrixVariable, maskMatrix, trigProducts;
 	Matrix1D<double> freq_fourier;
 
 };
