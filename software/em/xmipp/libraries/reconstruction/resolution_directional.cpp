@@ -363,7 +363,7 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 //	saveImg2.clear();
 
 
-void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<double> > &myfftV,
+void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::complex<double> > &myfftV,
 		double freq, double freqH, double freqL, MultidimArray<double> &amplitude, int count, int dir, FileName fnDebug,
 		double rot, double tilt)
 {
@@ -393,7 +393,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 				if (freqH<=un && un<=freq)
 				{
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= DIRECT_MULTIDIM_ELEM(conefilter, n);
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= DIRECT_MULTIDIM_ELEM(conefilter, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-freq)*ideltal));//H;
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
@@ -402,7 +402,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 				} else if (un>freq)
 				{
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= DIRECT_MULTIDIM_ELEM(conefilter, n);
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= DIRECT_MULTIDIM_ELEM(conefilter, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
@@ -596,17 +596,17 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<dou
 }
 
 void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
-		MultidimArray<double> &conefilter, double rot, double tilt)
+		MultidimArray< std::complex<double> > &conefilter, double rot, double tilt)
 {
-	conefilter.initZeros(myfftV);
-
+//	conefilter.initZeros(myfftV);
+	conefilter = myfftV;
 	// Filter the input volume and add it to amplitude
 	long n=0;
 
-	#ifdef DEBUG_DIR
-	MultidimArray<double> coneVol;
-	coneVol.initZeros(iu);
-	#endif
+//	#ifdef DEBUG_DIR
+//	MultidimArray<double> coneVol;
+//	coneVol.initZeros(iu);
+//	#endif
 
 	double x_dir, y_dir, z_dir;
 
@@ -635,7 +635,8 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 
 				//4822.53 mean a smoothed cone angle of 20 degrees
 				double arg_exp = acosine*acosine*acosine*acosine*4822.53;
-				DIRECT_MULTIDIM_ELEM(conefilter, n) = exp(-arg_exp);
+				DIRECT_MULTIDIM_ELEM(conefilter, n) *= exp(-arg_exp);
+//				DIRECT_MULTIDIM_ELEM(conefilter, n) *= DIRECT_MULTIDIM_ELEM(myfftV, n);
 				++n;
 			}
 		}
@@ -674,7 +675,6 @@ void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 	//TODO: I am sure that the abs can be removed
 	if ( fabs(resolution - last_resolution)<min_step )
 	{
-		std::cout << "entro last_resolution = "  << last_resolution << "res = " << resolution  << std::endl;
 		freq = sampling/(last_resolution-min_step);
 		DIGFREQ2FFT_IDX(freq, volsize, fourier_idx);
 		FFT_IDX2DIGFREQ(fourier_idx, volsize, freq);
@@ -806,9 +806,6 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 			x1 = resolution*MAT_ELEM(trigProducts, 0, i);
 			y1 = resolution*MAT_ELEM(trigProducts, 1, i);
 			z1 = resolution*MAT_ELEM(trigProducts, 2, i);
-//			x1 = resolution*sin(tilt)*cos(rot);
-//			y1 = resolution*sin(tilt)*sin(rot);
-//			z1 = resolution*cos(tilt);
 			lastMinDistance = 1e38;
 			for (int j = 0; j<xrows; ++j)
 			{
@@ -818,9 +815,7 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 				x2 = resolution*MAT_ELEM(trigProducts, 0, j);
 				y2 = resolution*MAT_ELEM(trigProducts, 1, j);
 				z2 = resolution*MAT_ELEM(trigProducts, 2, j);
-//				x2 = resolution*sin(tilt)*cos(rot);
-//				y2 = resolution*sin(tilt)*sin(rot);
-//				z2 = resolution*cos(tilt);
+
 				if (i != j)
 				{
 					distance = sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1));
@@ -846,9 +841,6 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 			x1 = resolution*MAT_ELEM(trigProducts, 0, i);
 			y1 = resolution*MAT_ELEM(trigProducts, 1, i);
 			z1 = resolution*MAT_ELEM(trigProducts, 2, i);
-//			x1 = resolution*sin(tilt)*cos(rot);
-//			y1 = resolution*sin(tilt)*sin(rot);
-//			z1 = resolution*cos(tilt);
 			lastMinDistance = 1e38;
 			for (int j = 0; j<xrows; ++j)
 			{
@@ -858,9 +850,7 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 				x2 = resolution*MAT_ELEM(trigProducts, 0, j);
 				y2 = resolution*MAT_ELEM(trigProducts, 1, j);
 				z2 = resolution*MAT_ELEM(trigProducts, 2, j);
-//				x2 = resolution*sin(tilt)*cos(rot);
-//				y2 = resolution*sin(tilt)*sin(rot);
-//				z2 = resolution*cos(tilt);
+
 				if (i != j)
 				{
 					distance = sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1));
@@ -1296,7 +1286,7 @@ void ProgResDir::run()
 
 			fnDebug = "Signal";
 
-			amplitudeMonogenicSignal3D_fast(fftV, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, rot, tilt);
+			amplitudeMonogenicSignal3D_fast(conefilter, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, rot, tilt);
 
 			double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
 			noiseValues.clear();
@@ -1317,17 +1307,17 @@ void ProgResDir::run()
 			int x_size = XSIZE(amplitudeMS);
 			int y_size = YSIZE(amplitudeMS);
 
-			std::cout << "z_size = " << z_size << std::endl;
-			int startX = STARTINGX(amplitudeMS);
-			int startY = STARTINGY(amplitudeMS);
-			int startZ = STARTINGZ(amplitudeMS);
-			int endX = FINISHINGX(amplitudeMS);
-			int endY = FINISHINGY(amplitudeMS);
-			int endZ = FINISHINGZ(amplitudeMS);
-
-			std::cout << " startX = " << startX << "  endX = " << endX << std::endl;
-			std::cout << " startY = " << startY << "  endY = " << endY << std::endl;
-			std::cout << " startZ = " << startZ << "  endZ = " << endZ << std::endl;
+//			std::cout << "z_size = " << z_size << std::endl;
+//			int startX = STARTINGX(amplitudeMS);
+//			int startY = STARTINGY(amplitudeMS);
+//			int startZ = STARTINGZ(amplitudeMS);
+//			int endX = FINISHINGX(amplitudeMS);
+//			int endY = FINISHINGY(amplitudeMS);
+//			int endZ = FINISHINGZ(amplitudeMS);
+//
+//			std::cout << " startX = " << startX << "  endX = " << endX << std::endl;
+//			std::cout << " startY = " << startY << "  endY = " << endY << std::endl;
+//			std::cout << " startZ = " << startZ << "  endZ = " << endZ << std::endl;
 
 //
 //
@@ -1557,7 +1547,6 @@ void ProgResDir::run()
 				++maskPos;
 			}
 		}
-		std::cout << "number of mask = " << maskPos << std::endl;
 //		#endif
 		#ifdef DEBUG_DIR
 		Image<double> saveImg;

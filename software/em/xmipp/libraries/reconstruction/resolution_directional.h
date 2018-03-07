@@ -72,27 +72,13 @@ public:
 
     /* Mogonogenid amplitud of a volume, given an input volume,
      * the monogenic amplitud is calculated and low pass filtered at frequency w1*/
-    void amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<double> > &myfftV,
+    void amplitudeMonogenicSignal3D_fast(const MultidimArray< std::complex<double> > &myfftV,
     		double w1, double w1l, double wH, MultidimArray<double> &amplitude,
     		int count, int dir, FileName fnDebug,
     		double rot, double tilt);
 
     void defineCone(MultidimArray< std::complex<double> > &myfftV,
-    		MultidimArray<double> &conefilter, double rot, double tilt);
-
-    void inertiaMatrix(MultidimArray<double> &resolutionVol,
-			   MultidimArray<double> &Inertia_11,
-			   MultidimArray<double> &Inertia_12,
-			   MultidimArray<double> &Inertia_13,
-			   MultidimArray<double> &Inertia_22,
-			   MultidimArray<double> &Inertia_23,
-			   MultidimArray<double> &Inertia_33,
-			   MultidimArray<double> &SumRes,
-			   double rot, double tilt, size_t dir);
-
-    void inertiaMatrixNew(Matrix2D<double> &resolutionMatrix,
-			   Matrix2D<double> &inertiaMatrix,
-			   double rot, double tilt, size_t dir);
+    		MultidimArray< std::complex<double> > &conefilter, double rot, double tilt);
 
     void diagSymMatrix3x3(Matrix2D<double> A,
 			Matrix1D<double> &eigenvalues, Matrix2D<double> &P);
@@ -130,8 +116,8 @@ public:
 
 public:
     Image<int> mask;
-    MultidimArray<double> iu, VRiesz, fftVRiesz_test, conefilter; // Inverse of the frequency
-	MultidimArray< std::complex<double> > fftV, *fftN; // Fourier transform of the input volume
+    MultidimArray<double> iu, VRiesz, fftVRiesz_test; // Inverse of the frequency
+	MultidimArray< std::complex<double> > fftV, *fftN, conefilter; // Fourier transform of the input volume
 	FourierTransformer transformer_inv, transformer_direct;
 	MultidimArray< std::complex<double> > fftVRiesz, fftVRiesz_aux;
 	FourierFilter lowPassFilter, FilterBand;
