@@ -27,7 +27,7 @@
 #include "resolution_directional.h"
 //#define DEBUG
 //#define DEBUG_MASK
-#define DEBUG_DIR
+//#define DEBUG_DIR
 //define DEBUG_FILTER
 //#define MONO_AMPLITUDE
 //define DEBUG_SYMMETRY
@@ -750,7 +750,8 @@ void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 }
 
 void ProgResDir::defineDirection(Matrix1D<double> &r0, Matrix1D<double> &rF,
-							Matrix2D<double> &direction, double &eigenvalue, double &eigenvalue_max,  int eigdir,
+							double xcoor, double ycoor, double zcoor,
+							double &eigenvalue, double &eigenvalue_max,
 							int k, int i, int j)
 {
 //	std::cout << "direction = " << MAT_ELEM(direction,0,eigdir) <<
@@ -759,13 +760,13 @@ void ProgResDir::defineDirection(Matrix1D<double> &r0, Matrix1D<double> &rF,
 
 	double aux = eigenvalue/eigenvalue_max;
 
-	VECTOR_R3(r0,j-5.0*aux*MAT_ELEM(direction,0,eigdir),
-				 i-5.0*aux*MAT_ELEM(direction,1,eigdir),
-				 k-5.0*aux*MAT_ELEM(direction,2,eigdir));
+	VECTOR_R3(r0,j-5.0*aux*xcoor,
+				 i-5.0*aux*ycoor,
+				 k-5.0*aux*zcoor);
 
-	VECTOR_R3(rF,j+5.0*aux*MAT_ELEM(direction,0,eigdir),
-				 i+5.0*aux*MAT_ELEM(direction,1,eigdir),
-				 k+5.0*aux*MAT_ELEM(direction,2,eigdir));
+	VECTOR_R3(rF,j+5.0*aux*xcoor,
+				 i+5.0*aux*ycoor,
+				 k+5.0*aux*zcoor);
 	std::cout << " " << std::endl;
 }
 
@@ -888,7 +889,11 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 	Matrix1D<double> onesVector, leastSquares;
 	Matrix2D<double> eigenvectors;
 	Matrix1D<double> eigenvalues;
-	axis.initZeros(3, NVoxelsOriginalMask);
+	//rows 1 2 3 (lenght axis a b c- where a is the smallest one)
+	//rows 4 5 6 x y z coordinates of the first eigenvector
+	//rows 7 8 9 x y z coordinates of the second eigenvector
+	//rows 10 11 12 x y z coordinates of the third eigenvector
+	axis.initZeros(12, NVoxelsOriginalMask);
 
 	quadricMatrix.initZeros(3,3);
 	for (int k = 0; k<NVoxelsOriginalMask; ++k)
@@ -1015,6 +1020,20 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		MAT_ELEM(axis,0, k) = a;
 		MAT_ELEM(axis,1, k) = b;
 		MAT_ELEM(axis,2, k) = c;
+
+		MAT_ELEM(axis,3, k) = MAT_ELEM(eigenvectors,0,0);
+		MAT_ELEM(axis,4, k) = MAT_ELEM(eigenvectors,1,0);
+		MAT_ELEM(axis,5, k) = MAT_ELEM(eigenvectors,2,0);
+
+		MAT_ELEM(axis,6, k) = MAT_ELEM(eigenvectors,0,1);
+		MAT_ELEM(axis,7, k) = MAT_ELEM(eigenvectors,1,1);
+		MAT_ELEM(axis,8, k) = MAT_ELEM(eigenvectors,2,1);
+
+		MAT_ELEM(axis,9, k) = MAT_ELEM(eigenvectors,0,2);
+		MAT_ELEM(axis,10, k) = MAT_ELEM(eigenvectors,1,2);
+		MAT_ELEM(axis,11, k) = MAT_ELEM(eigenvectors,2,2);
+
+
 	}
 }
 
@@ -1600,28 +1619,22 @@ void ProgResDir::run()
 	imgdoa = pdoaVol;
 	imgdoa.write(fnDoA);
 
-
-/*
-	Matrix2D<double> InertiaMatrix;
-	InertiaMatrix.initZeros(3,3);
-
-	//MultidimArray<double> &pAvgResolution = AvgResolution();
-
+///////////////////////
 	double lambda_1, lambda_2, lambda_3, doa;
 	double direction_x, direction_y, direction_z;
 	int counter = 0;
 	Matrix2D<double> eigenvectors;
 	Matrix1D<double> eigenvalues, r0_1(3), rF_1(3), r0_2(3), rF_2(3), r0_3(3), rF_3(3), r(3);
 	MultidimArray<int> arrows;
-	MultidimArray<double> doaVol;
-	doaVol.initZeros(arrows);
 	arrows.initZeros(mask());
 	const int gridStep=10;
 	size_t n=0;
 	int maskPos=0;
-
+///////////////////////
 
 	std::cout << "Antes del FOR ALL DIRECT ELEMENTS" << std::endl;
+	idx = 0;
+	double xcoor, ycoor, zcoor;
 //	FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(arrows)
 //	{
 	for(int k=0; k<ZSIZE(arrows); ++k)
@@ -1632,24 +1645,8 @@ void ProgResDir::run()
 			{
 				if (DIRECT_MULTIDIM_ELEM(mask(),n) == 1 )
 				{
-					double val = 1/MAT_ELEM(inertiaMatrixVariable, 6, maskPos);
-
-					MAT_ELEM(InertiaMatrix, 0, 0) = MAT_ELEM(inertiaMatrixVariable, 0, maskPos)*val;
-					MAT_ELEM(InertiaMatrix, 0, 1) = MAT_ELEM(inertiaMatrixVariable, 1, maskPos)*val;
-					MAT_ELEM(InertiaMatrix, 0, 2) = MAT_ELEM(inertiaMatrixVariable, 2, maskPos)*val;
-					MAT_ELEM(InertiaMatrix, 1, 1) = MAT_ELEM(inertiaMatrixVariable, 3, maskPos)*val;
-					MAT_ELEM(InertiaMatrix, 1, 0) = MAT_ELEM(inertiaMatrixVariable, 1, maskPos)*val;
-					MAT_ELEM(InertiaMatrix, 1, 2) = MAT_ELEM(inertiaMatrixVariable, 4, maskPos)*val;
-					MAT_ELEM(InertiaMatrix, 2, 0) = MAT_ELEM(inertiaMatrixVariable, 2, maskPos)*val;
-					MAT_ELEM(InertiaMatrix, 2, 1) = MAT_ELEM(inertiaMatrixVariable, 4, maskPos)*val;
-					MAT_ELEM(InertiaMatrix, 2, 2) = MAT_ELEM(inertiaMatrixVariable, 5, maskPos)*val;
-
-					diagSymMatrix3x3(InertiaMatrix, eigenvalues, eigenvectors);
-
-					degreeOfAnisotropy(eigenvalues, eigenvectors, doa,
-							direction_x, direction_y, direction_z, counter);
-
-					DIRECT_MULTIDIM_ELEM(doaVol,n) = doa;
+//					degreeOfAnisotropy(eigenvalues, eigenvectors, doa,
+//							direction_x, direction_y, direction_z, counter);
 
 					//lambda_1 is assumed as the least eigenvalue
 					if ( (i%gridStep==0) && (j%gridStep==0) && (k%gridStep==0) )
@@ -1658,13 +1655,24 @@ void ProgResDir::run()
 		//				std::cout << "eigenvalues = " << eigenvalues << std::endl;
 		//				std::cout << "eigenvectors = " << eigenvectors << std::endl;
 
-						double lambda_1 = VEC_ELEM(eigenvalues, 0);
-						double lambda_2 = VEC_ELEM(eigenvalues, 1);
-						double lambda_3 = VEC_ELEM(eigenvalues, 2);
+						double lambda_1 = MAT_ELEM(axis, 0, idx);
+						double lambda_2 = MAT_ELEM(axis, 1, idx);
+						double lambda_3 = MAT_ELEM(axis, 2, idx);
 
-						defineDirection(r0_1, rF_1, eigenvectors, lambda_1, lambda_3, 0, k, i, j);
-						defineDirection(r0_2, rF_2, eigenvectors, lambda_2, lambda_3, 1, k, i, j);
-						defineDirection(r0_3, rF_3, eigenvectors, lambda_3, lambda_3, 2, k, i, j);
+						xcoor = MAT_ELEM(axis, 3, idx);
+						ycoor = MAT_ELEM(axis, 4, idx);
+						zcoor = MAT_ELEM(axis, 5, idx);
+						defineDirection(r0_1, rF_1, xcoor, ycoor, zcoor, lambda_1, lambda_3, k, i, j);
+
+						xcoor = MAT_ELEM(axis, 6, idx);
+						ycoor = MAT_ELEM(axis, 7, idx);
+						zcoor = MAT_ELEM(axis, 8, idx);
+						defineDirection(r0_2, rF_2, xcoor, ycoor, zcoor, lambda_2, lambda_3, k, i, j);
+
+						xcoor = MAT_ELEM(axis, 9, idx);
+						ycoor = MAT_ELEM(axis, 10, idx);
+						zcoor = MAT_ELEM(axis, 11, idx);
+						defineDirection(r0_3, rF_3, xcoor, ycoor, zcoor, lambda_3, lambda_3, k, i, j);
 
 						for (double t=0; t<1; t+=0.02)
 						{
@@ -1673,17 +1681,17 @@ void ProgResDir::run()
 							defineSegment(r0_3, rF_3, arrows, t);
 						}
 					}
-					++maskPos;
+					++idx;
 				}
 				++n;
 			}
 		}
 	}
-	*/
+
 //	}
-//	Image<int> preferreddir;
-//	preferreddir()=arrows;
-//	preferreddir.write(fnDirections);
+	Image<int> preferreddir;
+	preferreddir()=arrows;
+	preferreddir.write(fnDirections);
 
 
 }

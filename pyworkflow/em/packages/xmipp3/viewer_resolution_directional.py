@@ -124,16 +124,7 @@ class XmippMonoDirViewer(ProtocolViewer):
         groupDoA.addParam('doShowDoAChimera', LabelParam,
                        label="Show DoA map in Chimera")
         
-        groupVariance = form.addGroup('Variance information')
-        groupVariance.addParam('doShowVarianceSlices', LabelParam,
-              label="Show variance slices")
-        
-        groupVariance.addParam('doShowVarianceColorSlices', LabelParam,
-               label="Show variance colored slices")
-        
-        groupVariance.addParam('doShowVarianceChimera', LabelParam,
-                      label="Show variance map in Chimera")
-       
+
         group = form.addGroup('Choose a Color Map')
         group.addParam('colorMap', EnumParam, choices=COLOR_CHOICES.values(),
                       default=COLOR_JET,
@@ -158,9 +149,6 @@ class XmippMonoDirViewer(ProtocolViewer):
                 'doShowDoAColorSlices': self._showDoAColorSlices,
                 'doShowDoAChimera': self._showDoAChimera,
                 'doShowDoAHistogram': self._plotHistogram,
-                'doShowVarianceSlices': self._showVarianceSlices,
-                'doShowVarianceColorSlices': self._showVarianceColorSlices,
-                'doShowVarianceChimera': self._showChimera
                 }
 
     def _showDoASlices(self, param=None):
@@ -173,17 +161,6 @@ class XmippMonoDirViewer(ProtocolViewer):
     def _showDoAChimera(self, param=None):
         self._showChimera(OUTPUT_DOA_FILE_CHIMERA, CHIMERA_CMD_DOA)
         
-        
-    def _showVarianceSlices(self, param=None):
-        cm = DataView(self.protocol._getExtraPath(OUTPUT_VARIANCE_FILE))
-        return [cm]          
-
-    def _showVarianceColorSlices(self, param=None):
-        self._showColorSlices(OUTPUT_VARIANCE_FILE)
-    
-    def _showVarianceChimera(self, param=None):
-        self._showChimera(OUTPUT_VARIANCE_FILE_CHIMERA, CHIMERA_CMD_VARIANCE)
-       
     def _showOriginalVolumeSlices(self, param=None):
         if self.protocol.halfVolumes.get() is True:
             cm = DataView(self.protocol.inputVolume.get().getFileName())
@@ -203,7 +180,7 @@ class XmippMonoDirViewer(ProtocolViewer):
         
         min_Res = np.amin(imgData2)
         fig, im = self._plotVolumeSlices('MonoDir slices', imgData2,
-                                         min_Res, max_Res, self.getColorMap(), dataAxis=self._getAxis())
+                                         0, 1, self.getColorMap(), dataAxis=self._getAxis())
         cax = fig.add_axes([0.9, 0.1, 0.03, 0.8])
         cbar = fig.colorbar(im, cax=cax)
         cbar.ax.invert_yaxis()

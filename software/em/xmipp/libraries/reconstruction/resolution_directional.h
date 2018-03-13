@@ -100,8 +100,9 @@ public:
     		Matrix2D<double> &angles);
 
     void defineDirection(Matrix1D<double> &r0, Matrix1D<double> &rF,
-			Matrix2D<double> &direction, double &eigenvalue, double &eigenvalue_max, int eigdir,
-			int k , int i, int j);
+			double xcoor, double ycoor, double zcoor,
+			double &eigenvalue, double &eigenvalue_max,
+			int k, int i, int j);
 
     void defineSegment(Matrix1D<double> &r0, Matrix1D<double> &rF,
 			MultidimArray<int> &arrows, double &elongation);
