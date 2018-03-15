@@ -42,7 +42,7 @@
 //	addParamsLine(" --untilt <metadata> : Metadata with angular assignment for the untilted images");
 //	addParamsLine(" -o <metadata> : Metadata with matrix transformation");
 //}
-//
+
 void ProgValidationTiltPairs::defineParams()
 {
     //Usage
@@ -70,6 +70,7 @@ void ProgValidationTiltPairs::readParams()
     maxshift = getIntParam("--maxshift");
 }
 
+
 void ProgValidationTiltPairs::generateProjections(const FileName &fnVol, double smprt)
 {
     //TODO	: Check the behaviour of this function
@@ -86,14 +87,15 @@ void ProgValidationTiltPairs::generateProjections(const FileName &fnVol, double 
     system(cmd.c_str());
 }
 
+
 void ProgValidationTiltPairs::angularAssignment(const Matrix2D<double> &angles_rot_tilt,
 		Matrix2D<double> &bestAngularAsignMatrix, Matrix2D<double> &secondAngularAsignMatrix,
-		const std::vector<std::string> Untilted_filenames,
+		const std::vector<std::string> Untilted_filenames, int numberOfBest,
 		const MultidimArray<double> allGalleryProjection, const FileName particle_type)
 {
 	size_t len_u = Untilted_filenames.size();
 	size_t len_p = angles_rot_tilt.mdimx;
-	std::cout << "Check if this number is higher than 2  mdimx = " << len_p << std::endl;
+	std::cout << "Check if this number is higher than 2 mdimx = " << len_p << std::endl;
 	Matrix2D<double> transformation_matrix;
 	bestAngularAsignMatrix.initZeros(6,len_u);
 
@@ -101,7 +103,7 @@ void ProgValidationTiltPairs::angularAssignment(const Matrix2D<double> &angles_r
 	Image<double> ImgUn_exp;
 
 
-	for (size_t k=0; k<(len_u); k++)
+	for (size_t k=0; k<(len_u); ++k)
 	{
 		std::cout << "particle  " << k << "/" << len_u-1 << std::endl;
 

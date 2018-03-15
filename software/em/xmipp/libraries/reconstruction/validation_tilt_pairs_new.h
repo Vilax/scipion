@@ -91,7 +91,7 @@ public:
 
     void angularAssignment(const Matrix2D<double> &angles_rot_tilt,
     		Matrix2D<double> &bestAngularAsignMatrix, Matrix2D<double> &secondAngularAsignMatrix,
-    		const std::vector<std::string> Untilted_filenames,
+    		const std::vector<std::string> Untilted_filenames, int numberOfBest,
     		const MultidimArray<double> allGalleryProjection, const FileName particle_type);
 
     /// Execute de program
