@@ -516,6 +516,9 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
                 errors.append('Particle diameter (%d) can not be greater than '
                               'size (%d)' % (self.particleDiameter,
                                              self.getInputDimA()))
+            if self.getInputReferences().isOddX():
+                errors.append("Relion only works with even values for the "
+                              "average dimensions!")
         else:
             if self.particleDiameter <= 0:
                 errors.append('When using Gaussian blobs, you need to specify '
@@ -605,7 +608,7 @@ class ProtRelion2Autopick(ProtParticlePickingAuto, ProtRelionBase):
         micsSampling = inputMics.getSamplingRate()
 
         if inputRefs is None:
-            boxSize = int(self.maskDiameter.get() * 1.25 / micsSampling)
+            boxSize = int(self.particleDiameter.get() * 1.25 / micsSampling)
         else:
             # Scale boxsize if the pixel size of the references is not the same
             # of the micrographs

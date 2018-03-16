@@ -40,6 +40,7 @@ from pyworkflow.protocol.constants import STATUS_RUNNING
 from pyworkflow.protocol import getUpdatedProtocol
 
 from pyworkflow.em.plotter import EmPlotter
+from math import isinf
 
 CTF_LOG_SQLITE = 'ctf_log.sqlite'
 
@@ -69,8 +70,8 @@ class ProtMonitorCTF(ProtMonitor):
         form.addParam('minDefocus', params.FloatParam,default=1000,
               label="Raise Alarm if minimum defocus (A) <",
               help="Raise alarm if defocus is smaller than given value")
-        form.addParam('astigmatism', params.FloatParam,default=0.2,
-              label="Raise Alarm if astigmatism >",
+        form.addParam('astigmatism', params.FloatParam,default=2000,
+              label="Raise Alarm if astigmatism (A) >",
               help="Raise alarm if astigmatism is greater than given value")
 
         form.addParam('monitorTime', params.FloatParam, default=300,
@@ -155,6 +156,17 @@ class MonitorCTF(Monitor):
             defocusU = ctf.getDefocusU()
             defocusV = ctf.getDefocusV()
             defocusAngle = ctf.getDefocusAngle()
+            if defocusAngle > 360 or defocusAngle< -360:
+                defocusAngle = 0
+            astig = abs(defocusU - defocusV)
+            resolution = ctf.getResolution()
+            if isinf(resolution):
+                 resolution = 0.
+            
+            fitQuality = ctf.getFitQuality()
+            if fitQuality is None or isinf(fitQuality): 
+                  fitQuality = 0.
+            
             psdPath = os.path.abspath(ctf.getPsdFile())
             micPath = os.path.abspath(ctf.getMicrograph().getFileName())
             shiftPlot = (getattr(ctf.getMicrograph(), 'plotCart', None)
@@ -177,18 +189,18 @@ class MonitorCTF(Monitor):
 #            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,psdPath)
 #                     VALUES(%f,%f,%f,%f,"%s");""" % (self._tableName, defocusU,
 #                     defocusV, defocusAngle, defocusU / defocusV, psdPath)
-            sql = """INSERT INTO %s(defocusU,defocusV,astigmatism,ratio,micPath,psdPath,shiftPlotPath )
-                     VALUES(%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, defocusU,
-                     defocusV, defocusAngle, defocusU / defocusV, micPath, psdPath, shiftPlotPath)
+            sql = """INSERT INTO %s(ctfID, defocusU,defocusV,astigmatism,ratio, resolution, fitQuality, micPath,psdPath,shiftPlotPath )
+                     VALUES(%d,%f,%f,%f,%f,%f,%f,"%s","%s","%s");""" % (self._tableName, ctfID, defocusU,
+                     defocusV, astig, defocusU / defocusV, resolution, fitQuality, micPath, psdPath, shiftPlotPath)
             try:
                 self.cur.execute(sql)
             except Exception as e:
                 print("ERROR: saving one data point (CTF monitor). I continue")
                 print e
 
-            if (defocusU / defocusV) > (1. + astigmatism):
-                self.warning("Defocus ratio (defocusU / defocusV)  = %f."
-                             % (defocusU / defocusV))
+            if abs(defocusU - defocusV) > astigmatism:
+                self.warning("Astigmatism (defocusU - defocusV)  = %f."
+                             % abs(defocusU - defocusV))
 
             if defocusU > self.maxDefocus:
                 self.warning("DefocusU (%f) is larger than defocus "
@@ -208,11 +220,14 @@ class MonitorCTF(Monitor):
         self.cur.execute("""CREATE TABLE IF NOT EXISTS  %s(
                                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                                 timestamp DATE DEFAULT (datetime('now','localtime')),
+                                ctfID INTEGER,
                                 defocusU FLOAT,
                                 defocusV FLOAT,
                                 defocus FLOAT,
                                 astigmatism FLOAT,
-                                ratio FLOAT, 
+                                ratio FLOAT,
+                                resolution FLOAT,
+				fitQuality FLOAT,
                                 micPath STRING,
                                 psdPath STRING,
                                 shiftPlotPath STRING)
@@ -232,7 +247,9 @@ class MonitorCTF(Monitor):
             'defocusV': get('defocusV'),
             'astigmatism': get('astigmatism'),
             'ratio': get('ratio'),
-            'idValues': get('id'),
+            'idValues': get('ctfID'),
+            'resolution': get('resolution'),
+            'fitQuality': get('fitQuality'),
             'imgMicPath': get('micPath'),
             'imgPsdPath': get('psdPath'),
             'imgShiftPath': get('shiftPlotPath')
