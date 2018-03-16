@@ -938,25 +938,25 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 				rot = MAT_ELEM(anglesMat,0, i)*PI/180;
 				tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
 
-				if ((k==100) || (k==200) || (k==300))
-				{
-					double resVal = MAT_ELEM(resolutionMatrix, i, k);
-//					double r_xyz2 = resVal*resVal;
-
-					MetaData md;
-					size_t objId;
-					FileName fn_md;
-					fn_md = formatString("res_%i.xmd", k);
-					md.read(fn_md);
-
-					objId = md.addObject();
-					md.setValue(MDL_IDX, (size_t) k, objId);
-					md.setValue(MDL_ITEM_ID, mycounter, objId);
-					md.setValue(MDL_ANGLE_ROT, rot, objId);
-					md.setValue(MDL_ANGLE_TILT, tilt, objId);
-					md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
-					md.write(fn_md);
-				}
+//				if ((k==100) || (k==200) || (k==300))
+//				{
+//					double resVal = MAT_ELEM(resolutionMatrix, i, k);
+////					double r_xyz2 = resVal*resVal;
+//
+//					MetaData md;
+//					size_t objId;
+//					FileName fn_md;
+//					fn_md = formatString("res_%i.xmd", k);
+//					md.read(fn_md);
+//
+//					objId = md.addObject();
+//					md.setValue(MDL_IDX, (size_t) k, objId);
+//					md.setValue(MDL_ITEM_ID, mycounter, objId);
+//					md.setValue(MDL_ANGLE_ROT, rot, objId);
+//					md.setValue(MDL_ANGLE_TILT, tilt, objId);
+//					md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
+//					md.write(fn_md);
+//				}
 
 				x = resolution*MAT_ELEM(trigProducts, 0, i);
 				y = resolution*MAT_ELEM(trigProducts, 1, i);

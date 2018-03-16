@@ -102,6 +102,7 @@ void ProgValidationTiltPairs::angularAssignment(const Matrix2D<double> &angles_r
 	MultidimArray<double> imgGallery;
 	Image<double> ImgUn_exp;
 
+	std::vector<double> corrList;
 
 	for (size_t k=0; k<(len_u); ++k)
 	{
