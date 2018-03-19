@@ -89,10 +89,10 @@ public:
 
     void generateProjections(const FileName &fnVol, double smprt);
 
-    void angularAssignment(const Matrix2D<double> &angles_rot_tilt,
-    		Matrix2D<double> &bestAngularAsignMatrix, Matrix2D<double> &secondAngularAsignMatrix,
-    		const std::vector<std::string> Untilted_filenames,
-    		const MultidimArray<double> allGalleryProjection, const FileName particle_type);
+    void assignParticle(Image<double> ImgUn_exp,
+			const Matrix2D<double> &angles_rot_tilt,
+			const MultidimArray<double> allGalleryProjection,
+			Matrix2D<double> &outAssignment, int Nbest);
 
     /// Execute de program
     void run();
