@@ -1618,7 +1618,7 @@ void ProgResDir::run()
 	Image<double> imgdoa;
 	imgdoa = pdoaVol;
 	imgdoa.write(fnDoA);
-
+/*
 ///////////////////////
 	double lambda_1, lambda_2, lambda_3, doa;
 	double direction_x, direction_y, direction_z;
@@ -1692,6 +1692,6 @@ void ProgResDir::run()
 	Image<int> preferreddir;
 	preferreddir()=arrows;
 	preferreddir.write(fnDirections);
-
+*/
 
 }
