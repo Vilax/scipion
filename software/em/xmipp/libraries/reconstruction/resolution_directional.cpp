@@ -45,6 +45,7 @@ void ProgResDir::readParams()
 	significance = getDoubleParam("--significance");
 	fnDoA = getParam("--doa_vol");
 	fnDirections = getParam("--directions");
+	analyze_res = checkParam("--analyze");
 }
 
 
@@ -65,6 +66,7 @@ void ProgResDir::defineParams()
 	addParamsLine("  [--significance <s=0.95>]    : The level of confidence for the hypothesis test.");
 	addParamsLine("  [--doa_vol <vol_file=\"\">]  : Output filename with DoA volume");
 	addParamsLine("  [--directions <vol_file=\"\">]  : Output preffered directions");
+	addParamsLine("  [--analyze] 				  : Analyze radial and azimuthal resolution");
 }
 
 void ProgResDir::produceSideInfo()
@@ -571,17 +573,6 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 	}
 	transformer_inv.inverseFourierTransform();
 
-
-
-//    double raised_w = PI/(freqL-freq);
-//
-//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fftVRiesz)
-//	{
-//		double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
-//
-//	}
-//	transformer_inv.inverseFourierTransform();
-
 	#ifdef MONO_AMPLITUDE
 
 //	if (fnDebug.c_str() != "")
@@ -1006,13 +997,13 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		b = 1/sqrt(VEC_ELEM(eigenvalues, 1));
 		c = 1/sqrt(VEC_ELEM(eigenvalues, 2));
 
-		if ((k==100) || (k==200) || (k==300))
-		{
-			std::cout << "k = " << k << std::endl;
-			std::cout << "a = " << a << std::endl;
-			std::cout << "c = " << c << std::endl;
-			std::cout << "-----------------------------" << std::endl;
-		}
+//		if ((k==100) || (k==200) || (k==300))
+//		{
+//			std::cout << "k = " << k << std::endl;
+//			std::cout << "a = " << a << std::endl;
+//			std::cout << "c = " << c << std::endl;
+//			std::cout << "-----------------------------" << std::endl;
+//		}
 //		std::cout << "a = " << a << std::endl;
 //		std::cout << "b = " << b << std::endl;
 //		std::cout << "c = " << c << std::endl;
@@ -1203,6 +1194,17 @@ double ProgResDir::firstMonoResEstimation(MultidimArray< std::complex<double> > 
 
 void ProgResDir::run()
 {
+
+	if (analyze_res)
+	{
+
+	}
+	else
+	{
+
+
+
+
 	produceSideInfo();
 
 	bool continueIter = false, breakIter = false;
@@ -1618,7 +1620,7 @@ void ProgResDir::run()
 	Image<double> imgdoa;
 	imgdoa = pdoaVol;
 	imgdoa.write(fnDoA);
-/*
+
 ///////////////////////
 	double lambda_1, lambda_2, lambda_3, doa;
 	double direction_x, direction_y, direction_z;
@@ -1692,6 +1694,6 @@ void ProgResDir::run()
 	Image<int> preferreddir;
 	preferreddir()=arrows;
 	preferreddir.write(fnDirections);
-*/
 
+	}
 }

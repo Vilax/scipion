@@ -64,6 +64,9 @@ public:
 	/** Step in digital frequency */
 	double N_freq, significance;
 
+	/** Analyze radial and azimuthal resolutoin */
+	bool analyze_res;
+
 public:
 
     void defineParams();
