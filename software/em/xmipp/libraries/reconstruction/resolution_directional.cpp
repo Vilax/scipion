@@ -1194,17 +1194,6 @@ double ProgResDir::firstMonoResEstimation(MultidimArray< std::complex<double> > 
 
 void ProgResDir::run()
 {
-
-	if (analyze_res)
-	{
-
-	}
-	else
-	{
-
-
-
-
 	produceSideInfo();
 
 	bool continueIter = false, breakIter = false;
@@ -1602,6 +1591,10 @@ void ProgResDir::run()
 //	std::cout << "antes del for = " << MAT_ELEM(axis, 0, 0) << std::endl;
 	std::cout << "NVoxelsOriginalMask = " << NVoxelsOriginalMask << std::endl;
 
+
+	double niquist;
+
+	niquist = 2*sampling;
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pdoaVol)
 	{
 		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
@@ -1610,7 +1603,7 @@ void ProgResDir::run()
 			double c = MAT_ELEM(axis, 2, idx);
 //			std::cout << "a = " << a << std::endl;
 //			std::cout << "c = " << c << std::endl;
-			DIRECT_MULTIDIM_ELEM(pdoaVol, n) = c/a;
+			DIRECT_MULTIDIM_ELEM(pdoaVol, n) = (c-niquist+1e-38)/(a-niquist+1e-38);
 			++idx;
 		}
 	}
@@ -1694,6 +1687,4 @@ void ProgResDir::run()
 	Image<int> preferreddir;
 	preferreddir()=arrows;
 	preferreddir.write(fnDirections);
-
-	}
 }
