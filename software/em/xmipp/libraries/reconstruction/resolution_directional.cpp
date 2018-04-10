@@ -401,7 +401,6 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 
 				double un=1.0/iun;
-				//TODO: The cone filter can be used as storage variable
 				if (freqH<=un && un<=freq)
 				{
 					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
@@ -450,7 +449,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 		DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 
 	// Calculate first component of Riesz vector
-	fftVRiesz.initZeros(myfftV);
+	//fftVRiesz.initZeros(myfftV);
 	n=0;
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
@@ -498,27 +497,6 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 
 	double limit_radius = (z_size*0.5-N_smoothing);
 	n=0;
-//	for(int k=STARTINGZ(amplitude); k<FINISHINGZ(amplitude); ++k)
-//	{
-////		uz = k;
-//		for(int i=STARTINGY(amplitude); i<FINISHINGY(amplitude); ++i)
-//		{
-////			uy = i;
-//			for(int j=STARTINGX(amplitude); j<FINISHINGX(amplitude); ++j)
-//			{
-////				ux = j;
-//				DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
-//				DIRECT_MULTIDIM_ELEM(amplitude,n)=sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
-//
-//				double radius = sqrt(j*j + i*i + k*k);
-//				if ((radius>=limit_radius) && (radius<=(z_size*0.5)))
-//					DIRECT_MULTIDIM_ELEM(amplitude, n) *= 0.5*(1+cos(PI*(limit_radius-radius)/(N_smoothing)));
-//				else if (radius>(0.5*z_size))
-//					DIRECT_MULTIDIM_ELEM(amplitude, n) = 0;
-//				++n;
-//			}
-//		}
-//	}
 	for(int k=0; k<z_size; ++k)
 	{
 		uz = (k - z_size*0.5);
@@ -555,19 +533,6 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 //		saveImg2.clear();
 //		#endif
 
-
-	//amplitude.setXmippOrigin();
-
-	//transformer_inv.FourierTransform(amplitude, fftVRiesz, false);
-
-
-	// Low pass filter the monogenic amplitude
-//	lowPassFilter.w1 = freq;
-//	amplitude.setXmippOrigin();
-//	lowPassFilter.applyMaskSpace(amplitude);
-//
-//	amplitude.setXmippOrigin();
-
 	transformer_inv.FourierTransform(amplitude, fftVRiesz, false);
 
 	 double raised_w = PI/(freqL-freq);
@@ -602,7 +567,7 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 //	conefilter.initZeros(myfftV);
 	conefilter = myfftV;
 	// Filter the input volume and add it to amplitude
-	long n=0;
+
 
 //	#ifdef DEBUG_DIR
 //	MultidimArray<double> coneVol;
@@ -616,7 +581,7 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 	z_dir = cos(tilt*PI/180);
 
 	double uz, uy, ux;
-	n=0;
+	long n = 0;
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
 		uz = VEC_ELEM(freq_fourier,k);
@@ -643,7 +608,6 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 		}
 	}
 }
-
 
 void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A,
 					Matrix1D<double> &eigenvalues, Matrix2D<double> &eigenvectors)
@@ -1328,59 +1292,6 @@ void ProgResDir::run()
 			int x_size = XSIZE(amplitudeMS);
 			int y_size = YSIZE(amplitudeMS);
 
-//			std::cout << "z_size = " << z_size << std::endl;
-//			int startX = STARTINGX(amplitudeMS);
-//			int startY = STARTINGY(amplitudeMS);
-//			int startZ = STARTINGZ(amplitudeMS);
-//			int endX = FINISHINGX(amplitudeMS);
-//			int endY = FINISHINGY(amplitudeMS);
-//			int endZ = FINISHINGZ(amplitudeMS);
-//
-//			std::cout << " startX = " << startX << "  endX = " << endX << std::endl;
-//			std::cout << " startY = " << startY << "  endY = " << endY << std::endl;
-//			std::cout << " startZ = " << startZ << "  endZ = " << endZ << std::endl;
-
-//
-//
-//			for(int k=startZ; k<endZ; ++k)
-//			{
-//				for(int i=startY; i<endY; ++i)
-//				{
-//					for(int j=startX; j<endX; ++j)
-//					{
-//					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
-//					{
-//						amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-//						sumS  += amplitudeValue;
-//						++NS;
-//					}
-//					else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
-//					{
-//
-//						double rad = sqrt(k*k + i*i + j*j);
-//						double iun = 1/rad;
-//
-//						//BE CAREFULL with the order
-//						double dotproduct = (j*y_dir + i*x_dir + k*z_dir)*iun;
-//
-//						double acosine = acos(dotproduct);
-//
-//						//TODO: change efficienty the if condition
-//						if (((acosine<(cone_angle)) || (acosine>(PI-cone_angle)) )
-//								&& (rad>Rparticle))
-//						{
-//
-//		//								DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
-//							amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
-//							sumN  += amplitudeValue;
-//							sumN2 += amplitudeValue*amplitudeValue;
-//							++NN;
-//						}
-//					}
-//					++n;
-//				}
-//			}
-//		}
 			for(int k=0; k<z_size; ++k)
 			{
 //				std::cout << " k = " << k  <<std::endl;
