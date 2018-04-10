@@ -148,13 +148,23 @@ void ProgResDir::produceSideInfo()
 
 	N_smoothing = 7;
 	NVoxelsOriginalMask = 0;
+	double radius = 0;
 	FOR_ALL_ELEMENTS_IN_ARRAY3D(pMask)
 	{
+
+		if (A3D_ELEM(pMask, k, i, j) == 1)
+		{
+			if ((k*k + i*i + j*j)>radius)
+				radius = k*k + i*i + j*j;
+		}
+		//std::cout << "i j k " << i << " " << j << " " << k << std::endl;
+
 		if (A3D_ELEM(pMask, k, i, j) == 1)
 			++NVoxelsOriginalMask;
 		if (i*i+j*j+k*k > (R-N_smoothing)*(R-N_smoothing))
 			A3D_ELEM(pMask, k, i, j) = -1;
 	}
+	Rparticle = round(sqrt(radius));
 
 	size_t xrows = angles.mdimx;
 //	Matrix2D<double> aaa;
@@ -762,13 +772,14 @@ void ProgResDir::defineDirection(Matrix1D<double> &r0, Matrix1D<double> &rF,
 }
 
 void ProgResDir::defineSegment(Matrix1D<double> &r0, Matrix1D<double> &rF,
-							MultidimArray<int> &arrows, double &elongation)
+							MultidimArray<int> &arrows, double &elongation, int siz)
 {
 	Matrix1D<double> r(3);
 	XX(r)=(1-elongation)*XX(r0)+elongation*XX(rF);
 	YY(r)=(1-elongation)*YY(r0)+elongation*YY(rF);
 	ZZ(r)=(1-elongation)*ZZ(r0)+elongation*ZZ(rF);
 
+	if ( ((int)round(ZZ(r))<siz) && ((int)round(YY(r))<siz) &&  ((int)round(XX(r))<siz))
 	DIRECT_A3D_ELEM(arrows,(int)round(ZZ(r)),(int)round(YY(r)),(int)round(XX(r)))=1;
 }
 
@@ -1629,6 +1640,8 @@ void ProgResDir::run()
 
 	std::cout << "Antes del FOR ALL DIRECT ELEMENTS" << std::endl;
 	idx = 0;
+	int siz;
+	siz = XSIZE(arrows);
 	double xcoor, ycoor, zcoor;
 //	FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(arrows)
 //	{
@@ -1671,9 +1684,9 @@ void ProgResDir::run()
 
 						for (double t=0; t<1; t+=0.02)
 						{
-							defineSegment(r0_1, rF_1, arrows, t);
-							defineSegment(r0_2, rF_2, arrows, t);
-							defineSegment(r0_3, rF_3, arrows, t);
+							defineSegment(r0_1, rF_1, arrows, t, siz);
+							defineSegment(r0_2, rF_2, arrows, t, siz);
+							defineSegment(r0_3, rF_3, arrows, t, siz);
 						}
 					}
 					++idx;

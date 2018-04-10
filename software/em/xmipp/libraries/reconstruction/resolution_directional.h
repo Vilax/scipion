@@ -108,7 +108,7 @@ public:
 			int k, int i, int j);
 
     void defineSegment(Matrix1D<double> &r0, Matrix1D<double> &rF,
-			MultidimArray<int> &arrows, double &elongation);
+			MultidimArray<int> &arrows, double &elongation, int siz);
 
     void removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &resolutionMat);
 
