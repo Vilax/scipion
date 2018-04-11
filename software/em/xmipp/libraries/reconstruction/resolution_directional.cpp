@@ -165,6 +165,7 @@ void ProgResDir::produceSideInfo()
 			A3D_ELEM(pMask, k, i, j) = -1;
 	}
 	Rparticle = round(sqrt(radius));
+	std::cout << "Particle Radiues = " << Rparticle << std::endl;
 
 	size_t xrows = angles.mdimx;
 //	Matrix2D<double> aaa;
