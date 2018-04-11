@@ -33,6 +33,9 @@ from pyworkflow.em import ImageHandler
 from pyworkflow.utils import getExt
 import numpy as np
 import pyworkflow.em.metadata as md
+from pyworkflow.em.metadata.constants import (MDL_XCOOR, MDL_YCOOR, MDL_ZCOOR,
+                                              MDL_ANGLE_ROT, MDL_ANGLE_TILT, 
+                                              MDL_MAX, MDL_MIN)
 
 
 MONORES_METHOD_URL = 'http://github.com/I2PC/scipion/wiki/XmippProtMonoDir'
@@ -44,7 +47,9 @@ FN_MEAN_VOL = 'mean_volume.vol'
 METADATA_ANGLES_FILE = 'angles_md.xmd'
 OUTPUT_DOA_FILE = 'local_anisotropy.vol'
 OUTPUT_VARIANCE_FILE = 'resolution_variance.vol'
-OUTPUT_DIRECTIONS_FILE = 'preffered.vol'
+OUTPUT_DIRECTIONS_FILE = 'ellipsoids.xmd'
+OUTPUT_DESCR = 'ellipsoid.descr'
+OUTPUT_ELLIP = 'ellipsoid.vol'
 
 
 class XmippProtMonoDir(ProtAnalysis3D):
@@ -127,6 +132,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
 
         self._insertFunctionStep('createOutputStep', prerequisites=[MS])
 
+        self._insertFunctionStep("createEllipsoid")
         self._insertFunctionStep("createHistrogram")
         
         
@@ -170,6 +176,35 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params += ' --directions %s' % self._getExtraPath(OUTPUT_DIRECTIONS_FILE)
 
         self.runJob('xmipp_resolution_directional', params)
+
+    def createEllipsoid(self):
+
+        xdim, ydim, zdim = self.inputVolumes.get().getDim()
+        f = open(self._getExtraPath(OUTPUT_DESCR),'w') 
+        str_ = '%i %i %i 0\n' %(xdim, ydim, zdim)     
+        f.write(str_)
+        
+        mtd = md.MetaData()
+        mtd.read(self._getExtraPath(OUTPUT_DIRECTIONS_FILE))
+        for objId in mtd:
+            xcoor = mtd.getValue(MDL_XCOOR, objId)
+            ycoor = mtd.getValue(MDL_YCOOR, objId)
+            zcoor = mtd.getValue(MDL_ZCOOR, objId)
+            rot = mtd.getValue(MDL_ANGLE_ROT, objId)
+            tilt = mtd.getValue(MDL_ANGLE_TILT, objId)
+            len_max = mtd.getValue(MDL_MAX, objId)
+            len_min = mtd.getValue(MDL_MIN, objId)
+            str_ = 'ell = 1 %i %i %i %f %f %f %f %f 0\n' %(xcoor, ycoor, zcoor, 
+                                            len_max, len_min, len_min, rot, tilt)
+            f.write(str_)
+        
+        f.close()
+
+        params = ' -i %s' % self._getExtraPath(OUTPUT_DESCR)
+        params += ' -o %s' % self._getExtraPath(OUTPUT_ELLIP)
+        
+        self.runJob('xmipp_phantom_create', params)
+
 
     def createHistrogram(self):
 
