@@ -176,7 +176,8 @@ class XmippProtMonoDir(ProtAnalysis3D):
             tilt = mtd.getValue(MDL_ANGLE_TILT, objId)
             len_max = mtd.getValue(MDL_MAX, objId)
             len_min = mtd.getValue(MDL_MIN, objId)
-            str_ = 'ell = 1 %i %i %i %f %f %f %f %f 0\n' %(xcoor, ycoor, zcoor, 
+            doa = mtd.getValue(MDL_MIN, objId)
+            str_ = 'ell = %f %i %i %i %f %f %f %f %f 0\n' %(doa, xcoor, ycoor, zcoor, 
                                             len_max, len_min, len_min, rot, tilt)
             f.write(str_)
         

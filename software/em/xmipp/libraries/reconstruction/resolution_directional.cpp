@@ -378,7 +378,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 //	coneVol.initZeros(myfftV);
 	fftVRiesz_aux.initZeros(myfftV);
 	amplitude.resizeNoCopy(VRiesz);
-	std::complex<double> J(0,1);
+	std::complex<double> J(0,1), aux_val;
 
 	// Filter the input volume and add it to amplitude
 	long n=0;
@@ -440,7 +440,13 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
-		DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+	{
+		un = DIRECT_MULTIDIM_ELEM(VRiesz,n);
+				un *= un;
+				DIRECT_MULTIDIM_ELEM(amplitude,n)+= un;
+	}
+//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
+//		DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 
 	// Calculate first component of Riesz vector
 	//fftVRiesz.initZeros(myfftV);
@@ -451,17 +457,22 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 		{
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
-				DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= VEC_ELEM(freq_fourier,j);  //ux*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n)
-				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+				aux_val = VEC_ELEM(freq_fourier,j);
+				aux_val *= DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+				//DIRECT_MULTIDIM_ELEM(fftVRiesz, n)= ux*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n)
+				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = aux_val;
 				++n;
 			}
 		}
 	}
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
+
+	//we use un due to it was defined
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 	{
-		DIRECT_MULTIDIM_ELEM(VRiesz,n) *= DIRECT_MULTIDIM_ELEM(VRiesz,n);
-		DIRECT_MULTIDIM_ELEM(amplitude,n)+= DIRECT_MULTIDIM_ELEM(VRiesz,n);
+		un = DIRECT_MULTIDIM_ELEM(VRiesz,n);
+		un *= un;
+		DIRECT_MULTIDIM_ELEM(amplitude,n)+= un;
 	}
 
 	// Calculate second and third component of Riesz vector
@@ -474,9 +485,11 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 			uy = VEC_ELEM(freq_fourier,i);
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
-				DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= uz;
-				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
-				DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= uy;
+				aux_val = uz;
+				aux_val *= DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = aux_val;
+				aux_val = uy;
+				DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= aux_val;
 				++n;
 			}
 		}
@@ -485,9 +498,15 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 	{
-		DIRECT_MULTIDIM_ELEM(VRiesz,n) *= DIRECT_MULTIDIM_ELEM(VRiesz,n);
-		DIRECT_MULTIDIM_ELEM(amplitude,n)+= DIRECT_MULTIDIM_ELEM(VRiesz,n);
+		un = DIRECT_MULTIDIM_ELEM(VRiesz,n);
+		un *= un;
+		DIRECT_MULTIDIM_ELEM(amplitude,n)+= un;
 	}
+
+	//	{
+//		DIRECT_MULTIDIM_ELEM(VRiesz,n) *= DIRECT_MULTIDIM_ELEM(VRiesz,n);
+//		DIRECT_MULTIDIM_ELEM(amplitude,n)+= DIRECT_MULTIDIM_ELEM(VRiesz,n);
+//	}
 
 	transformer_inv.inverseFourierTransform(fftVRiesz_aux, VRiesz);
 
@@ -511,8 +530,12 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 			for(int j=0; j<z_size; ++j)
 			{
 				ux = (j - siz);
-				DIRECT_MULTIDIM_ELEM(VRiesz,n) *= DIRECT_MULTIDIM_ELEM(VRiesz,n);
-				DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n);
+				//Again we use un for do not declare a new variable
+				un = DIRECT_MULTIDIM_ELEM(VRiesz,n);
+				un *= un;
+				DIRECT_MULTIDIM_ELEM(amplitude,n)+=un;
+//				DIRECT_MULTIDIM_ELEM(VRiesz,n) *= DIRECT_MULTIDIM_ELEM(VRiesz,n);
+//				DIRECT_MULTIDIM_ELEM(amplitude,n)+=un;
 				DIRECT_MULTIDIM_ELEM(amplitude,n)=sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
 
 				double radius = sqrt(ux*ux + uy*uy + uz*uz);
@@ -1616,6 +1639,7 @@ void ProgResDir::run()
 
 					//write md wwith values!
 					objId = md.addObject();
+					md.setValue(MDL_AVG, lambda_1/lambda_3, objId);
 					md.setValue(MDL_ANGLE_ROT, rot, objId);
 					md.setValue(MDL_ANGLE_TILT, tilt, objId);
 					md.setValue(MDL_XCOOR, (int) j, objId);
