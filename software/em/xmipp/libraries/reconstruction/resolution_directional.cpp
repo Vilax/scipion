@@ -910,11 +910,11 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		ellipMat.initZeros(dimMatrix, 6);
 		mycounter = 0; //It is required to store the matrix ellipMat
 
+		std::cout << "new voxel" << std::endl;
 		for (int i = 0; i<xrows; ++i)
 		{
 			resolution = MAT_ELEM(resolutionMat, i, k);
-			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
-			tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
+
 //			if ((k==100) || (k==200) || (k==300))
 //			{
 //				double resVal = MAT_ELEM(resolutionMatrix, i, k);
@@ -938,7 +938,7 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 			{
 				rot = MAT_ELEM(anglesMat,0, i)*PI/180;
 				tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
-
+				std::cout << resolution << "  " << rot << "  " << tilt << ";" << std::endl;
 //				if ((k==100) || (k==200) || (k==300))
 //				{
 //					double resVal = MAT_ELEM(resolutionMatrix, i, k);
