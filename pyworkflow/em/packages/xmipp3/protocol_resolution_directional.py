@@ -76,12 +76,6 @@ class XmippProtMonoDir(ProtAnalysis3D):
                       help='The mask determines which points are specimen and which ones not')
 
         group = form.addGroup('Extra parameters')
-        group.addParam('symmetry', StringParam, default='c1',
-                      label="Symmetry",
-                      help='Symmetry group. By default = c1.'
-                      'See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]'
-                      'for a description of the symmetry groups format, If no symmetry is present, give c1.')
-        
         group.addParam('angularsampling', FloatParam, default=15, expertLevel=LEVEL_ADVANCED,
                       label="Angular Sampling",
                       help='Angular sampling to cover the projection sphere')
@@ -103,16 +97,6 @@ class XmippProtMonoDir(ProtAnalysis3D):
                       'to be performed inside that premask, and out of the provieded mask asked in the previus'
                       'box. The radius value, determines the radius of the spherical premask. By default'
                       'radius = -1 use the half of the volume size as radius')
-        
-        group.addParam('particleRadius', FloatParam, default=-1,
-                      label="Particle radius (px)",
-                      help='When the original volume is originally premasked, the noise estimation ought'
-                      'to be performed inside that premask, and out of the provieded mask asked in the previus'
-                      'box. The radius value, determines the radius of the spherical premask. By default'
-                      'radius = -1 use the half of the volume size as radius')
-
-        group.addParam('stepSize', FloatParam, allowsNull=True,
-                      expertLevel=LEVEL_ADVANCED, label='Step')
 
 
     # --------------------------- INSERT steps functions --------------------------------------------
@@ -168,9 +152,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params += ' -o %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
         params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
         params += ' --angular_sampling %f' % self.angularsampling.get()
-        params += ' --particleRadius %s' % self.particleRadius.get()
         params += ' --volumeRadius %f' % xdim
-        params += ' --sym %s' % self.symmetry.get()
         params += ' --significance %f' % self.significance.get()
         params += ' --doa_vol %s' % self._getExtraPath(OUTPUT_DOA_FILE)
         params += ' --directions %s' % self._getExtraPath(OUTPUT_DIRECTIONS_FILE)

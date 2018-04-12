@@ -45,6 +45,7 @@ OUTPUT_VARIANCE_FILE_CHIMERA = 'MG_Chimera_resolution.vol'
 CHIMERA_CMD_DOA = 'chimera_DoA.cmd'
 CHIMERA_CMD_VARIANCE = 'chimera_Variance.cmd'
 CHIMERA_CMD_SPH = 'chimera_Sph.cmd'
+CHIMERA_ELLIP = 'ellipsoid.vol'
 
 
 OUTPUT_RESOLUTION_MEAN = 'mean_volume.vol'
@@ -56,7 +57,7 @@ OUTPUT_SPH_FILE = 'sphericity.vol'
 
 #TODO: prepare volumes for chimera
 OUTPUT_VARIANCE_FILE_CHIMERA = 'varResolution_Chimera.vol'
-OUTPUT_DOA_FILE_CHIMERA = 'DoA_Chimera.vol'
+OUTPUT_DOA_FILE_CHIMERA = 'local_anisotropy.vol'
 OUTPUT_RESOLUTION_MEAN_CHIMERA = 'mean_volume_Chimera.vol'
 
 # Color maps
@@ -121,7 +122,7 @@ class XmippMonoDirViewer(ProtocolViewer):
         groupDoA.addParam('doShowDoAColorSlices', LabelParam,
                label="Show DoA colored slices")
         
-        groupDoA.addParam('doShowDoAChimera', LabelParam,
+        groupDoA.addParam('doShowChimera', LabelParam,
                        label="Show DoA map in Chimera")
         
 
@@ -147,7 +148,7 @@ class XmippMonoDirViewer(ProtocolViewer):
         return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices,
                 'doShowDoASlices': self._showDoASlices,
                 'doShowDoAColorSlices': self._showDoAColorSlices,
-                'doShowDoAChimera': self._showDoAChimera,
+                'doShowChimera': self._showChimera,
                 'doShowDoAHistogram': self._plotHistogram,
                 }
 
@@ -157,9 +158,6 @@ class XmippMonoDirViewer(ProtocolViewer):
  
     def _showDoAColorSlices(self, param=None):
         self._showColorSlices(OUTPUT_DOA_FILE)
-
-    def _showDoAChimera(self, param=None):
-        self._showChimera(OUTPUT_DOA_FILE_CHIMERA, CHIMERA_CMD_DOA)
         
     def _showOriginalVolumeSlices(self, param=None):
         if self.protocol.halfVolumes.get() is True:
@@ -261,10 +259,9 @@ class XmippMonoDirViewer(ProtocolViewer):
         
         return f, im 
 
-    def _showChimera(self, inputfilename, outputfilename):
-        self.createChimeraScript(inputfilename, outputfilename)
-        self.createChimeraScript(inputfilename, outputfilename)
-        cmdFile = self.protocol._getPath(outputfilename)
+    def _showChimera(self,  param=None):
+        self.createChimeraScriptDoA(OUTPUT_DOA_FILE_CHIMERA, CHIMERA_CMD_DOA, CHIMERA_ELLIP)
+        cmdFile = self.protocol._getPath('chimera_DoA.cmd')
         view = ChimeraView(cmdFile)
         return [view]
     
@@ -276,38 +273,32 @@ class XmippMonoDirViewer(ProtocolViewer):
             colors_labels += round(min_Res + step*inter,2),
         return colors_labels
 
-    def createChimeraScript(self, infile, outfile):
+    def createChimeraScriptDoA(self, infile, outfile, ellipfile):
         fnRoot = "extra/"
         scriptFile = self.protocol._getPath(outfile)
         fhCmd = open(scriptFile, 'w')
         imageFile = self.protocol._getExtraPath(infile)
         img = ImageHandler().read(imageFile)
         imgData = img.getData()
-        min_Res = round(np.amin(imgData)*100)/100
-        max_Res = round(np.amax(imgData)*100)/100
+        min_Res = 0.0#round(np.amin(imgData)*100)/100
+        max_Res = 1.0#round(np.amax(imgData)*100)/100
 
         numberOfColors = 21
         colors_labels = self.numberOfColors(min_Res, max_Res, numberOfColors)
         colorList = self.colorMapToColorList(colors_labels, self.getColorMap())
         
-        if self.protocol.halfVolumes.get() is True:
-            #fhCmd.write("open %s\n" % (fnRoot+FN_MEAN_VOL)) #Perhaps to check the use of mean volume is useful
-            fnbase = removeExt(self.protocol.inputVolume.get().getFileName())
-            ext = getExt(self.protocol.inputVolume.get().getFileName())
-            fninput = abspath(fnbase + ext[0:4])
-            fhCmd.write("open %s\n" % fninput)
-        else:
-            fnbase = removeExt(self.protocol.inputVolumes.get().getFileName())
-            ext = getExt(self.protocol.inputVolumes.get().getFileName())
-            fninput = abspath(fnbase + ext[0:4])
-            fhCmd.write("open %s\n" % fninput)
+        fnbase = removeExt(self.protocol.inputVolumes.get().getFileName())
+        ext = getExt(self.protocol.inputVolumes.get().getFileName())
+        fninput = abspath(fnbase + ext[0:4])
+        fhCmd.write("open %s\n" % fninput)
         fhCmd.write("open %s\n" % (fnRoot + infile))
-        if self.protocol.halfVolumes.get() is True:
-            smprt = self.protocol.inputVolume.get().getSamplingRate()
-        else:
-            smprt = self.protocol.inputVolumes.get().getSamplingRate()
+        
+        fhCmd.write("open %s\n" % (fnRoot + ellipfile))
+        smprt = self.protocol.inputVolumes.get().getSamplingRate()
         fhCmd.write("volume #0 voxelSize %s\n" % (str(smprt)))
         fhCmd.write("volume #1 voxelSize %s\n" % (str(smprt)))
+        fhCmd.write("volume #2 voxelSize %s\n" % (str(smprt)))
+        fhCmd.write("volume #2 style mesh\n")
         fhCmd.write("vol #1 hide\n")
         
         scolorStr = '%s,%s:' * numberOfColors
@@ -331,6 +322,8 @@ class XmippMonoDirViewer(ProtocolViewer):
         fhCmd.write(line)
 
         fhCmd.close()
+
+
 
     @staticmethod
     def colorMapToColorList(steps, colorMap):

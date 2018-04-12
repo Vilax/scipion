@@ -40,12 +40,9 @@ void ProgResDir::readParams()
 	sampling = getDoubleParam("--sampling_rate");
 	ang_sampling = getDoubleParam("--angular_sampling");
 	R = getDoubleParam("--volumeRadius");
-	Rparticle = getDoubleParam("--particleRadius");
-	fnSym = getParam("--sym");
 	significance = getDoubleParam("--significance");
 	fnDoA = getParam("--doa_vol");
 	fnDirections = getParam("--directions");
-	analyze_res = checkParam("--analyze");
 }
 
 
@@ -57,16 +54,13 @@ void ProgResDir::defineParams()
 	addParamsLine("                               :+ If two half volume are given, the noise is estimated from them");
 	addParamsLine("                               :+ Otherwise the noise is estimated outside the mask");
 	addParamsLine("  [-o <output=\"MGresolution.vol\">]: Local resolution volume (in Angstroms)");
-	addParamsLine("  [--sym <symmetry>]			  : Symmetry (c1, c2, c3,..d1, d2, d3,...)");
 	addParamsLine("  [--sampling_rate <s=1>]      : Sampling rate (A/px)");
 	addParamsLine("  [--angular_sampling <s=15>]  : Angular Sampling rate (degrees)");
 	addParamsLine("  [--volumeRadius <s=100>]     : This parameter determines the radius of a sphere where the volume is");
-	addParamsLine("  [--particleRadius <s=100>]     : This parameter determines the radius of the particle");
 	addParamsLine("  [--varVol <vol_file=\"\">]   : Output filename with varianze resolution volume");
 	addParamsLine("  [--significance <s=0.95>]    : The level of confidence for the hypothesis test.");
 	addParamsLine("  [--doa_vol <vol_file=\"\">]  : Output filename with DoA volume");
 	addParamsLine("  [--directions <vol_file=\"\">]  : Output preffered directions");
-	addParamsLine("  [--analyze] 				  : Analyze radial and azimuthal resolution");
 }
 
 void ProgResDir::produceSideInfo()
@@ -375,7 +369,6 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 //	}
 //	saveImg2.clear();
 
-
 void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::complex<double> > &myfftV,
 		double freq, double freqH, double freqL, MultidimArray<double> &amplitude, int count, int dir, FileName fnDebug,
 		double rot, double tilt)
@@ -666,7 +659,6 @@ void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A,
 	generalizedEigs(A, B, eigenvalues, eigenvectors);
 }
 
-
 void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 								double &resolution, double &last_resolution,
 								int &last_fourier_idx,
@@ -879,7 +871,6 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 	}
 }
 
-
 void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 									Matrix2D<double> &resolutionMat,
 									Matrix2D<double> &axis)
@@ -1047,7 +1038,6 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 	}
 }
 
-
 double ProgResDir::firstMonoResEstimation(MultidimArray< std::complex<double> > &myfftV,
 		double freq, double freqH, MultidimArray<double> &amplitude)
 {
@@ -1209,7 +1199,6 @@ double ProgResDir::firstMonoResEstimation(MultidimArray< std::complex<double> > 
 	return mean_noise;
 
 }
-
 
 void ProgResDir::run()
 {
