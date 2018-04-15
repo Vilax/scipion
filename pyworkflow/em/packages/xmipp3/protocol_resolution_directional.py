@@ -25,7 +25,7 @@
 # *
 # **************************************************************************
 from pyworkflow import VERSION_1_1
-from pyworkflow.protocol.params import (PointerParam, StringParam, BooleanParam, FloatParam, LEVEL_ADVANCED)
+from pyworkflow.protocol.params import (PointerParam, BooleanParam, FloatParam, LEVEL_ADVANCED)
 from pyworkflow.em.protocol.protocol_3d import ProtAnalysis3D
 from convert import readSetOfVolumes
 from pyworkflow.object import Float
@@ -35,7 +35,7 @@ import numpy as np
 import pyworkflow.em.metadata as md
 from pyworkflow.em.metadata.constants import (MDL_XCOOR, MDL_YCOOR, MDL_ZCOOR,
                                               MDL_ANGLE_ROT, MDL_ANGLE_TILT, 
-                                              MDL_MAX, MDL_MIN)
+                                              MDL_MAX, MDL_MIN, MDL_INTSCALE)
 
 
 MONORES_METHOD_URL = 'http://github.com/I2PC/scipion/wiki/XmippProtMonoDir'
@@ -176,7 +176,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
             tilt = mtd.getValue(MDL_ANGLE_TILT, objId)
             len_max = mtd.getValue(MDL_MAX, objId)
             len_min = mtd.getValue(MDL_MIN, objId)
-            doa = mtd.getValue(MDL_MIN, objId)
+            doa = mtd.getValue(MDL_INTSCALE, objId)
             str_ = 'ell = %f %i %i %i %f %f %f %f %f 0\n' %(doa, xcoor, ycoor, zcoor, 
                                             len_max, len_min, len_min, rot, tilt)
             f.write(str_)

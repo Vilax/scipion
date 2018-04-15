@@ -609,7 +609,6 @@ void ProgResDir::diagSymMatrix3x3(Matrix2D<double> A,
 	generalizedEigs(A, B, eigenvalues, eigenvectors);
 }
 
-
 void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 								double &resolution, double &last_resolution,
 								int &last_fourier_idx,
@@ -814,14 +813,11 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 			}
 			if (lastMinDistance>=threshold)
 			{
-				if (k == 300)
-					std::cout << "resolution = " << MAT_ELEM(resolutionMat, i, k) << std::endl;
 				MAT_ELEM(resolutionMat, i, k) = -1;
 			}
 		}
 	}
 }
-
 
 void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 									Matrix2D<double> &resolutionMat,
@@ -842,7 +838,7 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 	Matrix1D<double> onesVector, leastSquares;
 	Matrix2D<double> eigenvectors;
 	Matrix1D<double> eigenvalues;
-	//rows 1 2 3 (lenght axis a b c- where a is the smallest one)
+	//rows 1 2 3 (length axis a b c- where a is the smallest one)
 	//rows 4 5 6 x y z coordinates of the first eigenvector
 	//rows 7 8 9 x y z coordinates of the second eigenvector
 	//rows 10 11 12 x y z coordinates of the third eigenvector
@@ -861,62 +857,25 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 
 		ellipMat.initZeros(dimMatrix, 6);
 		mycounter = 0; //It is required to store the matrix ellipMat
-
+		std::cout << "--------------NEW VOXEL--------------" << std::endl;
 		for (int i = 0; i<xrows; ++i)
 		{
 			resolution = MAT_ELEM(resolutionMat, i, k);
+			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
+			tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
 
-//			if ((k==100) || (k==200) || (k==300))
-//			{
-//				double resVal = MAT_ELEM(resolutionMatrix, i, k);
-////					double r_xyz2 = resVal*resVal;
-//
-//				MetaData md;
-//				size_t objId;
-//				FileName fn_md;
-//				fn_md = formatString("res_%i_bis.xmd", k);
-//				md.read(fn_md);
-//
-//				objId = md.addObject();
-//				md.setValue(MDL_IDX, (size_t) k, objId);
-//				md.setValue(MDL_ITEM_ID, mycounter, objId);
-//				md.setValue(MDL_ANGLE_ROT, rot, objId);
-//				md.setValue(MDL_ANGLE_TILT, tilt, objId);
-//				md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
-//				md.write(fn_md);
-//			}
+//			if (k<100)
+//				std::cout << resolution << "  " << rot << "  " << tilt << ";" << std::endl;
+
 			if (resolution>0)
 			{
 				rot = MAT_ELEM(anglesMat,0, i)*PI/180;
 				tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
-				std::cout << resolution << "  " << rot << "  " << tilt << ";" << std::endl;
 
-//				if ((k==100) || (k==200) || (k==300))
-//				{
-//					double resVal = MAT_ELEM(resolutionMatrix, i, k);
-////					double r_xyz2 = resVal*resVal;
-//
-//					MetaData md;
-//					size_t objId;
-//					FileName fn_md;
-//					fn_md = formatString("res_%i.xmd", k);
-//					md.read(fn_md);
-//
-//					objId = md.addObject();
-//					md.setValue(MDL_IDX, (size_t) k, objId);
-//					md.setValue(MDL_ITEM_ID, mycounter, objId);
-//					md.setValue(MDL_ANGLE_ROT, rot, objId);
-//					md.setValue(MDL_ANGLE_TILT, tilt, objId);
-//					md.setValue(MDL_RESOLUTION_FREQREAL, resVal, objId);
-//					md.write(fn_md);
-//				}
 
 				x = resolution*MAT_ELEM(trigProducts, 0, i);
 				y = resolution*MAT_ELEM(trigProducts, 1, i);
 				z = resolution*MAT_ELEM(trigProducts, 2, i);
-//				x = resolution*sin(tilt)*cos(rot);
-//				y = resolution*sin(tilt)*sin(rot);
-//				z = resolution*cos(tilt);
 
 				MAT_ELEM(ellipMat, mycounter, 0) = x*x;
 				MAT_ELEM(ellipMat, mycounter, 1) = y*y;
@@ -929,18 +888,9 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		}
 
 		ellipMat.inv(pseudoinv);
-//		if (k==0)
-//		{
-//			std::cout << "pseudoinverse = " << ellipMat << std::endl;
-//			std::cout << "pseudoinverse = " << pseudoinv << std::endl;
-//		}
 
 		onesVector.initConstant(mycounter, 1.0);
 		leastSquares = pseudoinv*onesVector;
-//		if (k==0)
-//		{
-//			std::cout << "leastSquaresCalculado = " << leastSquares << std::endl;
-//		}
 
 		MAT_ELEM(quadricMatrix, 0, 0) = VEC_ELEM(leastSquares, 0);
 		MAT_ELEM(quadricMatrix, 0, 1) = VEC_ELEM(leastSquares, 3);
@@ -959,13 +909,6 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		b = 1/sqrt(VEC_ELEM(eigenvalues, 1));
 		c = 1/sqrt(VEC_ELEM(eigenvalues, 2));
 
-//		if ((k==100) || (k==200) || (k==300))
-//		{
-//			std::cout << "k = " << k << std::endl;
-//			std::cout << "a = " << a << std::endl;
-//			std::cout << "c = " << c << std::endl;
-//			std::cout << "-----------------------------" << std::endl;
-//		}
 //		std::cout << "a = " << a << std::endl;
 //		std::cout << "b = " << b << std::endl;
 //		std::cout << "c = " << c << std::endl;
@@ -985,11 +928,8 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		MAT_ELEM(axis,9, k) = MAT_ELEM(eigenvectors,0,2);
 		MAT_ELEM(axis,10, k) = MAT_ELEM(eigenvectors,1,2);
 		MAT_ELEM(axis,11, k) = MAT_ELEM(eigenvectors,2,2);
-
-
 	}
 }
-
 
 double ProgResDir::firstMonoResEstimation(MultidimArray< std::complex<double> > &myfftV,
 		double freq, double freqH, MultidimArray<double> &amplitude)
@@ -1153,7 +1093,6 @@ double ProgResDir::firstMonoResEstimation(MultidimArray< std::complex<double> > 
 
 }
 
-
 void ProgResDir::run()
 {
 	produceSideInfo();
@@ -1181,8 +1120,27 @@ void ProgResDir::run()
 
 	double w, wH;
 	int volsize = ZSIZE(VRiesz);
-	FFT_IDX2DIGFREQ(10, volsize, w);
-	FFT_IDX2DIGFREQ(11, volsize, wH); //Frequency chosen for a first estimation
+//	FFT_IDX2DIGFREQ(10, volsize, w);
+//	FFT_IDX2DIGFREQ(11, volsize, wH); //Frequency chosen for a first estimation
+
+	//Checking with MonoRes at 50A;
+	int aux_idx;
+	double aux_freq;
+	aux_freq = sampling/50;
+	if (maxRes>30)
+	{
+		DIGFREQ2FFT_IDX(sampling/30, volsize, aux_idx);
+		FFT_IDX2DIGFREQ(aux_idx, volsize, w);
+		FFT_IDX2DIGFREQ(aux_idx+1, volsize, wH); //Frequency chosen for a first estimation
+	}
+	else
+	{
+		FFT_IDX2DIGFREQ(3, volsize, w);
+		FFT_IDX2DIGFREQ(4, volsize, w);
+		aux_idx = 3;
+	}
+	std::cout << "Calling MonoRes core as a first estimation at " << sampling/w << "A." << std::endl;
+
 
 	double AvgNoise;
 	AvgNoise = firstMonoResEstimation(fftV, w, wH, amplitudeMS)/9.0;
@@ -1211,7 +1169,8 @@ void ProgResDir::run()
 
 		bool doNextIteration=true;
 
-		int fourier_idx = 5, last_fourier_idx = -1, iter = 0, fourier_idx_2;
+		int fourier_idx, last_fourier_idx = -1, iter = 0, fourier_idx_2;
+		fourier_idx = aux_idx;
 		int count_res = 0;
 		double rot = MAT_ELEM(angles, 0, dir);
 		double tilt = MAT_ELEM(angles, 1, dir);
@@ -1466,7 +1425,7 @@ void ProgResDir::run()
 				++maskPos;
 			}
 		}
-//		#endif
+		//#endif
 		#ifdef DEBUG_DIR
 		Image<double> saveImg;
 		saveImg = pResolutionVol;
@@ -1508,8 +1467,11 @@ void ProgResDir::run()
 	{
 		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
 		{
+
 			double a = MAT_ELEM(axis, 0, idx);
 			double c = MAT_ELEM(axis, 2, idx);
+			if (idx<100)
+				std::cout << c << " " << a << ";" << std::endl;
 //			std::cout << "a = " << a << std::endl;
 //			std::cout << "c = " << c << std::endl;
 			DIRECT_MULTIDIM_ELEM(pdoaVol, n) = (c)/(a);
@@ -1564,8 +1526,8 @@ void ProgResDir::run()
 
 					double sc;
 					sc = lambda_1/8.0;
-					std::cout << "a = " << lambda_3 << "  c= " << lambda_1 << std::endl;
-					std::cout << "sc = " << sc << "  c/sc= " << lambda_1/sc << std::endl;
+//					std::cout << "a = " << lambda_3 << "  c= " << lambda_1 << std::endl;
+//					std::cout << "sc = " << sc << "  c/sc= " << lambda_1/sc << std::endl;
 
 					//write md wwith values!
 					objId = md.addObject();
@@ -1576,7 +1538,7 @@ void ProgResDir::run()
 					md.setValue(MDL_ZCOOR, (int) k, objId);
 					md.setValue(MDL_MAX, 7.0, objId);
 					md.setValue(MDL_MIN, lambda_3/sc, objId);
-
+					md.setValue(MDL_INTSCALE, lambda_3/lambda_1, objId);
 				}
 				++idx;
 			}
