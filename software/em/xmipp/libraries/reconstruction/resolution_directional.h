@@ -65,7 +65,7 @@ public:
 	double N_freq, significance;
 
 	/** Analyze radial and azimuthal resolutoin */
-	bool analyze_res;
+	bool dontmeasure;
 
 public:
 
