@@ -80,9 +80,9 @@ public:
     		std::vector<double> &list, MultidimArray<double> &resolutionChimera,
     		double &cut_value, MultidimArray<int> &pMask);
 
-    double firstMonoResEstimation(MultidimArray< std::complex<double> > &myfftV,
+    void firstMonoResEstimation(MultidimArray< std::complex<double> > &myfftV,
     		double freq, double freqH, double freqL, MultidimArray<double> &amplitude,
-    		int count, FileName fnDebug);
+    		int count, FileName fnDebug, double &mean_Signal, double &mean_noise, double &thresholdFirstEstimation);
 
     void resolution2eval(int &count_res, double step,
     								double &resolution, double &last_resolution,

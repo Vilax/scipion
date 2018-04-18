@@ -219,6 +219,7 @@ void ProgMonogenicSignalRes::produceSideInfo()
 void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
 		double freq, double freqH, double freqL, MultidimArray<double> &amplitude, int count, FileName fnDebug)
 {
+	transformer_inv.setThreadsNumber(4);
 	fftVRiesz.initZeros(myfftV);
 	amplitude.resizeNoCopy(VRiesz);
 	fftVRiesz_aux.initZeros(myfftV);
@@ -229,6 +230,9 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	double iw=1.0/freq;
 	double ideltal=PI/(freq-freqH);
 
+//	std::complex<double> &ptrfftVRiesz=&DIRECT_MULTIDIM_ELEM(fftVRiesz, 0);
+//	std::complex<double> &ptrfftVRiesz_aux=&DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, 0);
+//	std::complex<double> aux1, aux2;
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(myfftV)
 	{
 		double iun=DIRECT_MULTIDIM_ELEM(iu,n);
@@ -248,7 +252,8 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 			DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
 			DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
 		}
-
+//		ptrfftVRiesz+=1;
+//		ptrfftVRiesz_aux+=1;
 	}
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
@@ -494,16 +499,23 @@ void ProgMonogenicSignalRes::resolution2eval(int &count_res, double step,
 
 }
 
-double ProgMonogenicSignalRes::firstMonoResEstimation(MultidimArray< std::complex<double> > &myfftV,
+void ProgMonogenicSignalRes::firstMonoResEstimation(MultidimArray< std::complex<double> > &myfftV,
 		double freq, double freqH, double freqL, MultidimArray<double> &amplitude,
-		int count, FileName fnDebug)
+		int count, FileName fnDebug, double &mean_Signal, double &mean_noise, double &thresholdFirstEstimation)
 {
 
 	amplitudeMonogenicSignal3D(myfftV, freq, freqH, freqL, amplitude, count, fnDebug);
 
+	Image<double> imgMask;
+	imgMask = amplitude;
+	imgMask.write("miamplitud.vol");
+
+	Image<int> imgMask2;
+	imgMask2 = mask;
+	imgMask2.write("mimascaa.vol");
+
 	double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
 	MultidimArray<int> &pMask = mask();
-	double mean_noise = sumN/NN;
 	std::vector<double> noiseValues;
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
@@ -512,23 +524,26 @@ double ProgMonogenicSignalRes::firstMonoResEstimation(MultidimArray< std::comple
 		if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 		{
 			sumS  += amplitudeValue;
-			sumS2 += amplitudeValue*amplitudeValue;
 			++NS;
 		}
 		else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
 		{
 			noiseValues.push_back(amplitudeValue);
 			sumN  += amplitudeValue;
-			sumN2 += amplitudeValue*amplitudeValue;
 			++NN;
 		}
 	}
 	std::sort(noiseValues.begin(),noiseValues.end());
-	double thresholdFirstEstimation;
+
+	mean_Signal = sumS/NS;
+	mean_noise = sumN/NN;
+
+	std::cout << "means_signal = " << mean_Signal << "mean_noise = " << mean_noise << std::endl;
 
 	thresholdFirstEstimation = noiseValues[size_t(noiseValues.size()*significance)];
 
-	return thresholdFirstEstimation;
+
+
 }
 
 void ProgMonogenicSignalRes::run()
@@ -580,23 +595,24 @@ void ProgMonogenicSignalRes::run()
 	FFT_IDX2DIGFREQ(3, ZSIZE(VRiesz), freqH);
 	FFT_IDX2DIGFREQ(7, ZSIZE(VRiesz), freqL);
 
-//	double thresholdFirstEstimation;
-//
-//	thresholdFirstEstimation = firstMonoResEstimation(fftV, freq, freqH, freqL, amplitudeMS, count_res, fnDebug);
-//
-//	std::cout << "aaaa" << std::endl;
-//
-//	NVoxelsOriginalMask = 0;
-//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
-//	{
-//		if (DIRECT_MULTIDIM_ELEM(pMask, n) >=1)
-//		{
-//			if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)<thresholdFirstEstimation)
-//				DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
-//			else
-//				++NVoxelsOriginalMask;
-//		}
-//	}
+	double mean_Signal, mean_noise, thresholdFirstEstimation;
+
+	firstMonoResEstimation(fftV, freq, freqH, freqL, amplitudeMS, count_res, fnDebug, mean_Signal, mean_noise, thresholdFirstEstimation);
+
+	std::cout << "mean_Signal = " << mean_Signal << std::endl;
+
+	NVoxelsOriginalMask = 0;
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
+	{
+		if (DIRECT_MULTIDIM_ELEM(pMask, n) >=1)
+		{
+			if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)<thresholdFirstEstimation)
+				DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
+			else
+				++NVoxelsOriginalMask;
+		}
+	}
+
 
 
 
@@ -670,6 +686,7 @@ void ProgMonogenicSignalRes::run()
 					double amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
 					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 					{
+//						std::cout << amplitudeValue << std::endl;
 						sumS  += amplitudeValue;
 						sumS2 += amplitudeValue*amplitudeValue;
 						++NS;
@@ -777,7 +794,6 @@ void ProgMonogenicSignalRes::run()
 		}
 		else
 		{
-
 			if (NS == 0)
 			{
 				std::cout << "There are no points to compute inside the mask" << std::endl;
@@ -791,56 +807,66 @@ void ProgMonogenicSignalRes::run()
 			double meanN=sumN/NN;
 			double sigma2N=sumN2/NN-meanN*meanN;
 
-			if (meanS>max_meanS)
-				max_meanS = meanS;
+			std::cout << "NS = " << NS << std::endl;
+			std::cout << "meanS = " << meanS << std::endl;
+			std::cout << "meanN = " << meanN << std::endl;
+			std::cout << "mean_Signal = " << mean_Signal << std::endl;
 
-			if (meanS<0.001*max_meanS)
+			double z=(meanS-meanN)/sqrt(sigma2S/NS+sigma2N/NN);
+			if (z<criticalZ)
 			{
-				std::cout << "Search of resolutions stopped due to too low signal" << std::endl;
-				break;
-			}
-
-			// Check local resolution
-			double thresholdNoise;
-			if (exactres)
-			{
-				std::sort(noiseValues.begin(),noiseValues.end());
-				thresholdNoise = noiseValues[size_t(noiseValues.size()*significance)];
+				std::cout << "z<criticalZ" <<std::endl;
 			}
 			else
-				thresholdNoise = meanN+criticalZ*sqrt(sigma2N);
+			{
+				std::cout << "z<criticalZ---->ENTRO" <<std::endl;
+	//			if (meanS<0.001*mean_Signal)
+	//			{
+	//				continue;
+	//			}
 
-			#ifdef DEBUG
-			  std::cout << "Iteration = " << iter << ",   Resolution= " << resolution <<
-					  ",   Signal = " << meanS << ",   Noise = " << meanN << ",  Threshold = "
-					  << thresholdNoise <<std::endl;
-			#endif
-			double NRES=0;
-			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
-			{
-				if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
-					if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)<thresholdNoise)
-					{
-						DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
-						DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution;//sampling/freq;
-						if (fnSpatial!="")
-							DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n)=DIRECT_MULTIDIM_ELEM(pVfiltered,n);
-					}
-					else{
-						++NRES;
-						DIRECT_MULTIDIM_ELEM(pMask, n) += 1;
-						if (DIRECT_MULTIDIM_ELEM(pMask, n) >2)
+				// Check local resolution
+				double thresholdNoise;
+				if (exactres)
+				{
+					std::sort(noiseValues.begin(),noiseValues.end());
+					thresholdNoise = noiseValues[size_t(noiseValues.size()*significance)];
+				}
+				else
+					thresholdNoise = meanN+criticalZ*sqrt(sigma2N);
+
+				#ifdef DEBUG
+				  std::cout << "Iteration = " << iter << ",   Resolution= " << resolution <<
+						  ",   Signal = " << meanS << ",   Noise = " << meanN << ",  Threshold = "
+						  << thresholdNoise <<std::endl;
+				#endif
+				double NRES=0;
+				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
+				{
+					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
+						if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)<thresholdNoise)
 						{
-							DIRECT_MULTIDIM_ELEM(pMask, n) = -1;
-							DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution_2;//maxRes - counter*R_;
+							DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
+							DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution;//sampling/freq;
+							if (fnSpatial!="")
+								DIRECT_MULTIDIM_ELEM(pVresolutionFiltered,n)=DIRECT_MULTIDIM_ELEM(pVfiltered,n);
 						}
-					}
-			}
-			std::cout << " NRES" << NRES << std::endl;
-			if ( ( NRES/((double)NVoxelsOriginalMask) ) > 0.8 )
-			{
-				std::cout << " entroooo" << std::endl;
-				mask.read(fnMask);
+						else{
+							++NRES;
+							DIRECT_MULTIDIM_ELEM(pMask, n) += 1;
+							if (DIRECT_MULTIDIM_ELEM(pMask, n) >2)
+							{
+								DIRECT_MULTIDIM_ELEM(pMask, n) = -1;
+								DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution_2;//maxRes - counter*R_;
+							}
+						}
+				}
+				std::cout << " NRES" << NRES << std::endl;
+				if ( ( NRES/((double)NVoxelsOriginalMask) ) > 0.8 )
+				{
+					std::cout << " entroooo" << std::endl;
+					mask.read(fnMask);
+				}
 			}
 			#ifdef DEBUG_MASK
 			FileName fnmask_debug;
