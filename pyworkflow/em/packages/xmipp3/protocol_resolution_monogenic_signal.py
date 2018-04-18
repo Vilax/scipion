@@ -103,7 +103,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       'for a description of the symmetry groups format,' 
                       'If no symmetry is present, give c1.')
 
-        line = group.addLine('Resolution Range (Å)',
+        line = group.addLine('Resolution Range (Å)', expertLevel=LEVEL_ADVANCED,
                             help="If the user knows the range of resolutions or"
                                 " only a range of frequency needs to be analysed")
         
@@ -153,8 +153,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       'the spherical premask. By default radius = -1 use the half'
                       'of the volume size as radius')
 
-        line.addParam('minRes', FloatParam, default=1, label='High')
-        line.addParam('maxRes', FloatParam, default=30, label='Low')
+        line.addParam('minRes', FloatParam, expertLevel=LEVEL_ADVANCED, default=1, label='High')
+        line.addParam('maxRes', FloatParam, expertLevel=LEVEL_ADVANCED, default=30, label='Low')
         line.addParam('stepSize', FloatParam, allowsNull=True,
                       expertLevel=LEVEL_ADVANCED, label='Step')
 
@@ -296,7 +296,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
     def createHistrogram(self):
 
         params = ' -i %s' % self._getFileName(OUTPUT_RESOLUTION_FILE)
-        params += ' --mask binary_file %s' % self._getFileName(OUTPUT_MASK_FILE)
+        params += ' --mask binary_file %s' % self._getFileName(BINARY_MASK)
         params += ' --steps %f' % 30
         params += ' --range %f %f' % (self.min_res_init, self.max_res_init)
         params += ' -o %s' % self._getFileName(FN_METADATA_HISTOGRAM)
