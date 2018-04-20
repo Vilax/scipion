@@ -950,7 +950,6 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		dimMatrix = 0;
 		for (int i = 0; i<xrows; ++i)
 		{
-//			resolution = MAT_ELEM(resolutionMat, i, k);
 			if (MAT_ELEM(resolutionMat, i, k) > 0)
 				++dimMatrix;
 		}
@@ -960,19 +959,9 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		for (int i = 0; i<xrows; ++i)
 		{
 			resolution = MAT_ELEM(resolutionMat, i, k);
-//			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
-//			tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
-
-//			if (k<100)
-//				std::cout << resolution << "  " << rot << "  " << tilt << ";" << std::endl;
 
 			if (resolution>0)
 			{
-//				rot = MAT_ELEM(anglesMat,0, i)*PI/180;
-//				tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
-
-
-
 				x = resolution*MAT_ELEM(trigProducts, 0, i);
 				y = resolution*MAT_ELEM(trigProducts, 1, i);
 				z = resolution*MAT_ELEM(trigProducts, 2, i);
@@ -1004,13 +993,8 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 
 		diagSymMatrix3x3(quadricMatrix, eigenvalues, eigenvectors);
 
-
 		if (VEC_ELEM(eigenvalues, 0)<0)
-			std::cout << "Rompo en componente 0 voxel k = " << k << std::endl;
-		if (VEC_ELEM(eigenvalues, 1)<0)
-			std::cout << "Rompo en componente 1 voxel k = " << k << std::endl;
-		if (VEC_ELEM(eigenvalues, 2)<0)
-			std::cout << "Rompo en componente 2 voxel k = " << k << std::endl;
+			VEC_ELEM(eigenvalues, 0) = VEC_ELEM(eigenvalues, 1);
 
 		a = 1/sqrt(VEC_ELEM(eigenvalues, 0));
 		b = 1/sqrt(VEC_ELEM(eigenvalues, 1));
@@ -1035,6 +1019,28 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		MAT_ELEM(axis,9, k) = MAT_ELEM(eigenvectors,0,2);
 		MAT_ELEM(axis,10, k) = MAT_ELEM(eigenvectors,1,2);
 		MAT_ELEM(axis,11, k) = MAT_ELEM(eigenvectors,2,2);
+
+		for (int i = 0; i<xrows; ++i){
+			for (float k =-c; c<c; c+=0.3)
+			{
+				resolution = MAT_ELEM(resolutionMat, i, k);
+
+				if (resolution>0)
+				{
+					double alpha = MAT_ELEM(trigProducts, 0, i);
+					double beta  = MAT_ELEM(trigProducts, 1, i);
+					double gamma = MAT_ELEM(trigProducts, 2, i);
+
+					double ellip;
+					ellip = VEC_ELEM(leastSquares, 0)*x*x +
+							VEC_ELEM(leastSquares, 1)*y*y +
+							VEC_ELEM(leastSquares, 2)*z*z +
+							VEC_ELEM(leastSquares, 3)*2*x*y +
+							VEC_ELEM(leastSquares, 4)*2*x*z +
+							VEC_ELEM(leastSquares, 5)*2*y*z;
+				}
+			}
+		}
 	}
 }
 
@@ -1234,9 +1240,9 @@ void ProgResDir::run()
 	int aux_idx;
 	double aux_freq;
 	aux_freq = sampling/50;
-	if (maxRes>30)
+	if (maxRes>15)
 	{
-		DIGFREQ2FFT_IDX(sampling/30, volsize, aux_idx);
+		DIGFREQ2FFT_IDX(sampling/15, volsize, aux_idx);
 		FFT_IDX2DIGFREQ(aux_idx, volsize, w);
 		FFT_IDX2DIGFREQ(aux_idx+1, volsize, wH); //Frequency chosen for a first estimation
 	}
