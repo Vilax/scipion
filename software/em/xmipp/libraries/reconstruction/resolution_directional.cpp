@@ -77,11 +77,14 @@ void ProgResDir::produceSideInfo()
 	generateGridProjectionMatching(fnVol, ang_sampling, angles);
 
 	FourierTransformer transformer;
+
 	MultidimArray<double> &inputVol = V();
 	VRiesz.resizeNoCopy(inputVol);
 	N_freq = ZSIZE(inputVol);
 	maxRes = ZSIZE(inputVol);
 	minRes = 2*sampling;
+
+	transformer_inv.setThreadsNumber(4);
 
 	transformer.FourierTransform(inputVol, fftV);
 	iu.initZeros(fftV);
@@ -145,7 +148,6 @@ void ProgResDir::produceSideInfo()
 	double radius = 0;
 	FOR_ALL_ELEMENTS_IN_ARRAY3D(pMask)
 	{
-
 		if (A3D_ELEM(pMask, k, i, j) == 1)
 		{
 			if ((k*k + i*i + j*j)>radius)
@@ -169,7 +171,6 @@ void ProgResDir::produceSideInfo()
 //	std::cout << "NVoxelsOriginalMask = " << NVoxelsOriginalMask << std::endl;
 
 	resolutionMatrix.initConstant(xrows, NVoxelsOriginalMask, maxRes);
-	inertiaMatrixVariable.initZeros(7, NVoxelsOriginalMask);
 
 
 	#ifdef DEBUG_MASK
@@ -370,92 +371,146 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 //	MultidimArray<double> coneVol;
 //	coneVol.initZeros(myfftV);
 	fftVRiesz_aux.initZeros(myfftV);
-	amplitude.resizeNoCopy(VRiesz);
 	std::complex<double> J(0,1);
 
 	// Filter the input volume and add it to amplitude
 	long n=0;
 	double ideltal=PI/(freq-freqH);
 
-	double uz, uy, ux;
-	n=0;
+
+	std::complex<double> *ptrfftVRiesz=&DIRECT_MULTIDIM_ELEM(fftVRiesz, 0);
+	std::complex<double> *ptrmyfftV=&DIRECT_MULTIDIM_ELEM(myfftV, 0);
+	std::complex<double> *ptrfftVRiesz_aux=&DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, 0);
+	double *ptriun=&DIRECT_MULTIDIM_ELEM(iu, 0);
+	std::complex<double> aux1;
+
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
 		for(size_t i=0; i<YSIZE(myfftV); ++i)
 		{
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
-				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
-
+//				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
+				double iun = *ptriun;
 				double un=1.0/iun;
+//				if (freqH<=un && un<=freq)
+//				{
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+////					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= DIRECT_MULTIDIM_ELEM(conefilter, n);
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-freq)*ideltal));//H;
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
+////					DIRECT_MULTIDIM_ELEM(coneVol, n) = DIRECT_MULTIDIM_ELEM(conefilter, n);
+//				} else if (un>freq)
+//				{
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
+////					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= DIRECT_MULTIDIM_ELEM(conefilter, n);
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
+//					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
+////					DIRECT_MULTIDIM_ELEM(coneVol, n) = DIRECT_MULTIDIM_ELEM(conefilter, n);
+//				}
+
 				if (freqH<=un && un<=freq)
 				{
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-//					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= DIRECT_MULTIDIM_ELEM(conefilter, n);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-freq)*ideltal));//H;
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
-//					DIRECT_MULTIDIM_ELEM(coneVol, n) = DIRECT_MULTIDIM_ELEM(conefilter, n);
+					aux1 = *ptrmyfftV;
+					aux1 *= 0.5*(1+cos((un-freq)*ideltal));
+					*ptrfftVRiesz *= aux1;
+					aux1 *= -J;
+					aux1 *= iun;
+					*ptrfftVRiesz_aux = aux1;
 				} else if (un>freq)
 				{
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-//					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= DIRECT_MULTIDIM_ELEM(conefilter, n);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
-//					DIRECT_MULTIDIM_ELEM(coneVol, n) = DIRECT_MULTIDIM_ELEM(conefilter, n);
+					*ptrfftVRiesz = *ptrmyfftV;
+					aux1 = -J;
+					aux1 *= iun;
+					aux1 *= *ptrmyfftV;
+					*ptrfftVRiesz_aux = aux1;
 				}
-				++n;
+				ptrfftVRiesz++;
+				ptrmyfftV++;
+				ptrfftVRiesz_aux++;
+				ptriun++;
+//				++n;
 			}
 		}
 	}
 
-//	#ifdef DEBUG_DIR
-////	if ( (count == 0) )
-////	{
-//		Image<double> direction;
-//		direction = coneVol;
-//		direction.write(formatString("cone_%i_%i.vol", dir+1, count));
-////	}
-//	#endif
+	#ifdef DEBUG_DIR
+//	if ( (count == 0) )
+//	{
+		Image<double> direction;
+		direction = coneVol;
+		direction.write(formatString("cone_%i_%i.vol", dir+1, count));
+//	}
+	#endif
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
-//	#ifdef DEBUG_DIR
-//	if (count == 0)
-//	{
-//		Image<double> filteredvolume;
-//		filteredvolume = VRiesz;
-//		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir+1,count));
-//	}
-//	#endif
+	#ifdef DEBUG_DIR
+	if (count == 0)
+	{
+		Image<double> filteredvolume;
+		filteredvolume = VRiesz;
+		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir+1,count));
+	}
+	#endif
 
 
+
+
+//	amplitude.initZeros(VRiesz);
+	amplitude.resizeNoCopy(VRiesz);
+	double *ptrVRiesz=&DIRECT_MULTIDIM_ELEM(VRiesz, 0);
+	double *ptramplitude=&DIRECT_MULTIDIM_ELEM(amplitude, 0);
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
-		DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+	{
+//		DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+		*ptramplitude++ = (*ptrVRiesz)*(*ptrVRiesz);
+		ptrVRiesz++;
+//		ptramplitude++;
+	}
 
 	// Calculate first component of Riesz vector
-	//fftVRiesz.initZeros(myfftV);
-	n=0;
+	double ux;
+//	n=0;
+	ptrfftVRiesz=&DIRECT_MULTIDIM_ELEM(fftVRiesz, 0);
+	ptrfftVRiesz_aux=&DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, 0);
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
 		for(size_t i=0; i<YSIZE(myfftV); ++i)
 		{
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
-				ux = VEC_ELEM(freq_fourier,j);
-				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = ux*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
-				++n;
+//				ux = VEC_ELEM(freq_fourier,j);
+//				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = ux*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+//				++n;
+				*ptrfftVRiesz = *ptrfftVRiesz_aux;
+				*ptrfftVRiesz++ *= VEC_ELEM(freq_fourier,j);
+//				ptrfftVRiesz++;
+				ptrfftVRiesz_aux++;
 			}
 		}
 	}
+
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
+
+	ptrVRiesz=&DIRECT_MULTIDIM_ELEM(VRiesz, 0);
+	ptramplitude=&DIRECT_MULTIDIM_ELEM(amplitude, 0);
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
-		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+	{
+//		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+		*ptramplitude++ += (*ptrVRiesz)*(*ptrVRiesz);
+		ptrVRiesz++;
+//		ptramplitude++;
+	}
 
 	// Calculate second and third component of Riesz vector
-	n=0;
+//	n=0;
+	ptrfftVRiesz=&DIRECT_MULTIDIM_ELEM(fftVRiesz, 0);
+	ptrfftVRiesz_aux=&DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, 0);
+	double uy, uz;
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
 		uz = VEC_ELEM(freq_fourier,k);
@@ -464,44 +519,69 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 			uy = VEC_ELEM(freq_fourier,i);
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
-				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = uz*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
-				DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = uy*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
-				++n;
+				*ptrfftVRiesz = uz;
+				*ptrfftVRiesz++ *= (*ptrfftVRiesz_aux);
+				*ptrfftVRiesz_aux++ *= uy;
+//				ptrfftVRiesz++;
+//				ptrfftVRiesz_aux++;
+//				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = uz*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+//				DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = uy*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+//				++n;
 			}
 		}
 	}
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
+	ptrVRiesz=&DIRECT_MULTIDIM_ELEM(VRiesz, 0);
+	ptramplitude=&DIRECT_MULTIDIM_ELEM(amplitude, 0);
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
-		DIRECT_MULTIDIM_ELEM(amplitude,n)+= DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+	{
+//		DIRECT_MULTIDIM_ELEM(amplitude,n)+= DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+		*ptramplitude++ += (*ptrVRiesz)*(*ptrVRiesz);
+		ptrVRiesz++;
+//		ptramplitude++;
+	}
 
 	transformer_inv.inverseFourierTransform(fftVRiesz_aux, VRiesz);
 
 	amplitude.setXmippOrigin();
 	int z_size = ZSIZE(amplitude);
-	int x_size = XSIZE(amplitude);
-	int y_size = YSIZE(amplitude);
+//	int x_size = XSIZE(amplitude);
+//	int y_size = YSIZE(amplitude);
+	int siz = z_size*0.5;
 
-	double limit_radius = (z_size*0.5-N_smoothing);
+	double limit_radius = (siz-N_smoothing);
 	n=0;
+	ptrVRiesz=&DIRECT_MULTIDIM_ELEM(VRiesz, 0);
+	ptramplitude=&DIRECT_MULTIDIM_ELEM(amplitude, 0);
 	for(int k=0; k<z_size; ++k)
 	{
-		uz = (k - z_size*0.5);
-		for(int i=0; i<y_size; ++i)
+		uz = (k - siz);
+		uz *= uz;
+		for(int i=0; i<z_size; ++i)
 		{
-			uy = (i - y_size*0.5);
-			for(int j=0; j<x_size; ++j)
+			uy = (i - siz);
+			uy *= uy;
+			for(int j=0; j<z_size; ++j)
 			{
-				ux = (j - x_size*0.5);
-				DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
-				DIRECT_MULTIDIM_ELEM(amplitude,n)=sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
-
-				double radius = sqrt(ux*ux + uy*uy + uz*uz);
-				if ((radius>=limit_radius) && (radius<=(z_size*0.5)))
-					DIRECT_MULTIDIM_ELEM(amplitude, n) *= 0.5*(1+cos(PI*(limit_radius-radius)/(N_smoothing)));
-				else if (radius>(0.5*z_size))
-					DIRECT_MULTIDIM_ELEM(amplitude, n) = 0;
-				++n;
+				ux = (j - siz);
+				ux *= ux;
+//				DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+//				DIRECT_MULTIDIM_ELEM(amplitude,n)=sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
+				*ptramplitude += (*ptrVRiesz)*(*ptrVRiesz);
+				*ptramplitude = sqrt(*ptramplitude);
+				double radius = sqrt(ux + uy + uz);
+//				if ((radius>=limit_radius) && (radius<=(z_size*0.5)))
+//					DIRECT_MULTIDIM_ELEM(amplitude, n) *= 0.5*(1+cos(PI*(limit_radius-radius)/(N_smoothing)));
+//				else if (radius>(0.5*z_size))
+//					DIRECT_MULTIDIM_ELEM(amplitude, n) = 0;
+				if ((radius>=limit_radius) && (radius<=(siz)))
+					*ptramplitude *= 0.5*(1+cos(PI*(limit_radius-radius)/(N_smoothing)));
+				else if (radius>(siz))
+					*ptramplitude = 0;
+//				++n;
+				ptrVRiesz++;
+				ptramplitude++;
 			}
 		}
 	}
@@ -522,16 +602,31 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 
 	transformer_inv.FourierTransform(amplitude, fftVRiesz, false);
 
-	 double raised_w = PI/(freqL-freq);
+	double raised_w = PI/(freqL-freq);
 
+	ptrfftVRiesz=&DIRECT_MULTIDIM_ELEM(fftVRiesz, 0);
+	ptriun=&DIRECT_MULTIDIM_ELEM(iu, 0);
+	n=0;
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fftVRiesz)
 	{
-			double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
-			if ((freqL)>=un && un>=freq)
-				DIRECT_MULTIDIM_ELEM(fftVRiesz,n) *= 0.5*(1 + cos(raised_w*(un-freq)));
-			else
-				if (un>(freqL))
-					DIRECT_MULTIDIM_ELEM(fftVRiesz,n) = 0;
+		double un = 1.0/(*ptriun);
+//		double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
+		if ((freqL)>=un && un>=freq)
+		{
+//			DIRECT_MULTIDIM_ELEM(fftVRiesz,n) *= 0.5*(1 + cos(raised_w*(un-freq)));
+			*ptrfftVRiesz *= 0.5*(1 + cos(raised_w*(un-freq)));
+		}
+		else
+		{
+			if (un>(freqL))
+			{
+//				DIRECT_MULTIDIM_ELEM(fftVRiesz,n) = 0;
+				*ptrfftVRiesz = 0;
+			}
+		}
+		ptriun++;
+		ptrfftVRiesz++;
+//		n++;
 	}
 	transformer_inv.inverseFourierTransform();
 
@@ -572,18 +667,21 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
 		uz = VEC_ELEM(freq_fourier,k);
+		uz *= z_dir;
 		for(size_t i=0; i<YSIZE(myfftV); ++i)
 		{
 			uy = VEC_ELEM(freq_fourier,i);
+			uy *= y_dir;
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
 				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 				ux = VEC_ELEM(freq_fourier,j);
+				ux *= x_dir;
 
 				//BE CAREFULL with the order
 				//double dotproduct = (uy*x_dir + ux*y_dir + uz*z_dir)*iun;
-				double dotproduct = (ux*x_dir + uy*y_dir + uz*z_dir)*iun;
-				double acosine = acos(fabs(dotproduct));
+				iun *= (ux + uy + uz);
+				double acosine = acos(fabs(iun));
 				//TODO: remove fabs
 
 				//4822.53 mean a smoothed cone angle of 20 degrees
@@ -700,39 +798,6 @@ void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 	++fourier_idx;
 }
 
-void ProgResDir::defineDirection(Matrix1D<double> &r0, Matrix1D<double> &rF,
-							double xcoor, double ycoor, double zcoor,
-							double &eigenvalue, double &eigenvalue_max,
-							int k, int i, int j)
-{
-//	std::cout << "direction = " << MAT_ELEM(direction,0,eigdir) <<
-//			" " << MAT_ELEM(direction,1,eigdir) << " " << MAT_ELEM(direction,2,eigdir) << std::endl;
-//	std::cout << "eigenvalue = " << eigenvalue << std::endl;
-
-	double aux = eigenvalue/eigenvalue_max;
-
-	VECTOR_R3(r0,j-5.0*aux*xcoor,
-				 i-5.0*aux*ycoor,
-				 k-5.0*aux*zcoor);
-
-	VECTOR_R3(rF,j+5.0*aux*xcoor,
-				 i+5.0*aux*ycoor,
-				 k+5.0*aux*zcoor);
-	std::cout << " " << std::endl;
-}
-
-void ProgResDir::defineSegment(Matrix1D<double> &r0, Matrix1D<double> &rF,
-							MultidimArray<int> &arrows, double &elongation, int siz)
-{
-	Matrix1D<double> r(3);
-	XX(r)=(1-elongation)*XX(r0)+elongation*XX(rF);
-	YY(r)=(1-elongation)*YY(r0)+elongation*YY(rF);
-	ZZ(r)=(1-elongation)*ZZ(r0)+elongation*ZZ(rF);
-
-	if ( ((int)round(ZZ(r))<siz) && ((int)round(YY(r))<siz) &&  ((int)round(XX(r))<siz))
-	DIRECT_A3D_ELEM(arrows,(int)round(ZZ(r)),(int)round(YY(r)),(int)round(XX(r)))=1;
-}
-
 void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &resolutionMat)
 {
 	double x1, y1, z1, x2, y2, z2, distance, resolution, sigma,
@@ -752,18 +817,16 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 		for (int i = 0; i<xrows; ++i)
 		{
 			resolution = MAT_ELEM(resolutionMat, i, k);
-			if (resolution <1)
-				std::cout << "RESOLUTIONNN" << std::endl;
-			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
-			tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
+//			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
+//			tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
 			x1 = resolution*MAT_ELEM(trigProducts, 0, i);
 			y1 = resolution*MAT_ELEM(trigProducts, 1, i);
 			z1 = resolution*MAT_ELEM(trigProducts, 2, i);
 			lastMinDistance = 1e38;
 			for (int j = 0; j<xrows; ++j)
 			{
-				rot = MAT_ELEM(anglesMat,0, j)*PI/180;
-				tilt = MAT_ELEM(anglesMat,1, j)*PI/180;
+//				rot = MAT_ELEM(anglesMat,0, j)*PI/180;
+//				tilt = MAT_ELEM(anglesMat,1, j)*PI/180;
 				resolution = MAT_ELEM(resolutionMat, j, k);
 				x2 = resolution*MAT_ELEM(trigProducts, 0, j);
 				y2 = resolution*MAT_ELEM(trigProducts, 1, j);
@@ -789,16 +852,16 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 		for (int i = 0; i<xrows; ++i)
 		{
 			resolution = MAT_ELEM(resolutionMat, i, k);
-			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
-			tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
+//			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
+//			tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
 			x1 = resolution*MAT_ELEM(trigProducts, 0, i);
 			y1 = resolution*MAT_ELEM(trigProducts, 1, i);
 			z1 = resolution*MAT_ELEM(trigProducts, 2, i);
 			lastMinDistance = 1e38;
 			for (int j = 0; j<xrows; ++j)
 			{
-				rot = MAT_ELEM(anglesMat,0, j)*PI/180;
-				tilt = MAT_ELEM(anglesMat,1, j)*PI/180;
+//				rot = MAT_ELEM(anglesMat,0, j)*PI/180;
+//				tilt = MAT_ELEM(anglesMat,1, j)*PI/180;
 				resolution = MAT_ELEM(resolutionMat, j, k);
 				x2 = resolution*MAT_ELEM(trigProducts, 0, j);
 				y2 = resolution*MAT_ELEM(trigProducts, 1, j);
@@ -816,8 +879,45 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 				MAT_ELEM(resolutionMat, i, k) = -1;
 			}
 		}
+
+
+		std::vector<double> xx(xrows), yy(xrows), zz(xrows);
+		for (int i = 0; i<xrows; ++i)
+		{
+			resolution = MAT_ELEM(resolutionMat, i, k);
+
+			if (resolution>0)
+			{
+				xx.push_back(fabs(resolution*MAT_ELEM(trigProducts, 0, i)));
+				yy.push_back(fabs(resolution*MAT_ELEM(trigProducts, 1, i)));
+				zz.push_back(fabs(resolution*MAT_ELEM(trigProducts, 2, i)));
+			}
+		}
+		std::sort(xx.begin(),xx.end());
+		std::sort(yy.begin(),yy.end());
+		std::sort(zz.begin(),zz.end());
+
+		double xh = xx[(int) floor(0.95*((double) xrows))];
+		double yh = yy[(int) floor(0.95*((double) xrows))];
+		double zh = zz[(int) floor(0.95*((double) xrows))];
+
+		for (int i = 0; i<xrows; ++i)
+		{
+			resolution = MAT_ELEM(resolutionMat, i, k);
+
+			if (resolution>0)
+			{
+				x1 = fabs(resolution*MAT_ELEM(trigProducts, 0, i));
+				y1 = fabs(resolution*MAT_ELEM(trigProducts, 1, i));
+				z1 = fabs(resolution*MAT_ELEM(trigProducts, 2, i));
+				if ((x1<xh) || (y1<yh) || (z1<zh))
+					MAT_ELEM(resolutionMat, i, k) = -1;
+			}
+		}
+
 	}
 }
+
 
 void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 									Matrix2D<double> &resolutionMat,
@@ -857,20 +957,20 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 
 		ellipMat.initZeros(dimMatrix, 6);
 		mycounter = 0; //It is required to store the matrix ellipMat
-		std::cout << "--------------NEW VOXEL--------------" << std::endl;
 		for (int i = 0; i<xrows; ++i)
 		{
 			resolution = MAT_ELEM(resolutionMat, i, k);
-			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
-			tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
+//			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
+//			tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
 
 //			if (k<100)
 //				std::cout << resolution << "  " << rot << "  " << tilt << ";" << std::endl;
 
 			if (resolution>0)
 			{
-				rot = MAT_ELEM(anglesMat,0, i)*PI/180;
-				tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
+//				rot = MAT_ELEM(anglesMat,0, i)*PI/180;
+//				tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
+
 
 
 				x = resolution*MAT_ELEM(trigProducts, 0, i);
@@ -904,6 +1004,13 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 
 		diagSymMatrix3x3(quadricMatrix, eigenvalues, eigenvectors);
 
+
+		if (VEC_ELEM(eigenvalues, 0)<0)
+			std::cout << "Rompo en componente 0 voxel k = " << k << std::endl;
+		if (VEC_ELEM(eigenvalues, 1)<0)
+			std::cout << "Rompo en componente 1 voxel k = " << k << std::endl;
+		if (VEC_ELEM(eigenvalues, 2)<0)
+			std::cout << "Rompo en componente 2 voxel k = " << k << std::endl;
 
 		a = 1/sqrt(VEC_ELEM(eigenvalues, 0));
 		b = 1/sqrt(VEC_ELEM(eigenvalues, 1));
@@ -1395,6 +1502,8 @@ void ProgResDir::run()
 			last_resolution = resolution;
 		}while(doNextIteration);
 
+
+
 //		amplitudeMN.clear();
 //		amplitudeMS.clear();
 //		fftVRiesz.clear();
@@ -1498,7 +1607,6 @@ void ProgResDir::run()
 	int maskPos=0;
 ///////////////////////
 
-	std::cout << "Antes del FOR ALL DIRECT ELEMENTS" << std::endl;
 	idx = 0;
 	int siz;
 	siz = XSIZE(arrows);

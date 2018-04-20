@@ -86,10 +86,6 @@ public:
     void diagSymMatrix3x3(Matrix2D<double> A,
 			Matrix1D<double> &eigenvalues, Matrix2D<double> &P);
 
-    void degreeOfAnisotropy(Matrix1D<double> eigenvalues, Matrix2D<double> eigenvectors,
-			double &doa, double &direction_x, double &direction_y, double &direction_z,
-			int &counter);
-
     void resolution2eval_(int &fourier_idx, double min_step,
 			double &resolution, double &last_resolution,
 			int &last_fourier_idx,
@@ -102,14 +98,6 @@ public:
     void generateGridProjectionMatching(FileName fnVol_, double smprt,
     		Matrix2D<double> &angles);
 
-    void defineDirection(Matrix1D<double> &r0, Matrix1D<double> &rF,
-			double xcoor, double ycoor, double zcoor,
-			double &eigenvalue, double &eigenvalue_max,
-			int k, int i, int j);
-
-    void defineSegment(Matrix1D<double> &r0, Matrix1D<double> &rF,
-			MultidimArray<int> &arrows, double &elongation, int siz);
-
     void removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &resolutionMat);
 
     void ellipsoidFitting(Matrix2D<double> &anglesMat,
@@ -120,14 +108,13 @@ public:
 
 public:
     Image<int> mask;
-    MultidimArray<double> iu, VRiesz, fftVRiesz_test; // Inverse of the frequency
+    MultidimArray<double> iu, VRiesz; // Inverse of the frequency
 	MultidimArray< std::complex<double> > fftV, *fftN, conefilter; // Fourier transform of the input volume
-	FourierTransformer transformer_inv, transformer_direct;
+	FourierTransformer transformer_inv;
 	MultidimArray< std::complex<double> > fftVRiesz, fftVRiesz_aux;
 	FourierFilter lowPassFilter, FilterBand;
 	int N_smoothing;
-	Sampling mysampling;
-	Matrix2D<double> angles, resolutionMatrix, inertiaMatrixVariable, maskMatrix, trigProducts;
+	Matrix2D<double> angles, resolutionMatrix, maskMatrix, trigProducts;
 	Matrix1D<double> freq_fourier;
 
 };
