@@ -1564,9 +1564,9 @@ void ProgResDir::run()
 	int aux_idx;
 	double aux_freq;
 	aux_freq = sampling/50;
-	if (maxRes>15)
+	if (maxRes>20)
 	{
-		DIGFREQ2FFT_IDX(sampling/15, volsize, aux_idx);
+		DIGFREQ2FFT_IDX(sampling/20, volsize, aux_idx);
 		FFT_IDX2DIGFREQ(aux_idx, volsize, w);
 		FFT_IDX2DIGFREQ(aux_idx+1, volsize, wH); //Frequency chosen for a first estimation
 	}
