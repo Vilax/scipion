@@ -44,6 +44,10 @@ void ProgResDir::readParams()
 	significance = getDoubleParam("--significance");
 	fnDoA = getParam("--doa_vol");
 	fnDirections = getParam("--directions");
+	fnradial =getParam("--radialRes");
+	fnazimuthal =getParam("--azimuthalRes");
+	fnMDradial =getParam("--radialAvg");
+	fnMDazimuthal =getParam("--azimuthalAvg");
 }
 
 
@@ -61,6 +65,10 @@ void ProgResDir::defineParams()
 	addParamsLine("  [--significance <s=0.95>]    : The level of confidence for the hypothesis test.");
 	addParamsLine("  [--doa_vol <vol_file=\"\">]  : Output filename with DoA volume");
 	addParamsLine("  [--directions <vol_file=\"\">]  : Output preffered directions");
+	addParamsLine("  [--radialRes <vol_file=\"\">]  : Output radial resolution map");
+	addParamsLine("  [--azimuthalRes <vol_file=\"\">]  : Output azimuthal resolution map");
+	addParamsLine("  [--radialAvg <vol_file=\"\">]  : Radial Average of the radial resolution map");
+	addParamsLine("  [--azimuthalAvg <vol_file=\"\">]  : Radial Average of the azimuthal resolution map");
 }
 
 void ProgResDir::produceSideInfo()
@@ -993,8 +1001,15 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 
 		diagSymMatrix3x3(quadricMatrix, eigenvalues, eigenvectors);
 
-		if (VEC_ELEM(eigenvalues, 0)<0)
+		if (VEC_ELEM(eigenvalues, 0)<0){//This is de the vectorial product
 			VEC_ELEM(eigenvalues, 0) = VEC_ELEM(eigenvalues, 1);
+			MAT_ELEM(axis,3, k) = MAT_ELEM(eigenvectors,0,1)*MAT_ELEM(eigenvectors,2,2)-
+									MAT_ELEM(eigenvectors,2,1)*MAT_ELEM(eigenvectors,1,2);
+			MAT_ELEM(axis,4, k) = MAT_ELEM(eigenvectors,2,1)*MAT_ELEM(eigenvectors,0,2)-
+									MAT_ELEM(eigenvectors,0,1)*MAT_ELEM(eigenvectors,2,2);
+			MAT_ELEM(axis,5, k) = MAT_ELEM(eigenvectors,0,1)*MAT_ELEM(eigenvectors,1,2)-
+									MAT_ELEM(eigenvectors,1,1)*MAT_ELEM(eigenvectors,0,2);
+		}
 
 		a = 1/sqrt(VEC_ELEM(eigenvalues, 0));
 		b = 1/sqrt(VEC_ELEM(eigenvalues, 1));
@@ -1020,28 +1035,151 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		MAT_ELEM(axis,10, k) = MAT_ELEM(eigenvectors,1,2);
 		MAT_ELEM(axis,11, k) = MAT_ELEM(eigenvectors,2,2);
 
-		for (int i = 0; i<xrows; ++i){
-			for (float k =-c; c<c; c+=0.3)
+//		for (int i = 0; i<xrows; ++i){
+//			for (float k =-c; c<c; c+=0.3)
+//			{
+//				resolution = MAT_ELEM(resolutionMat, i, k);
+
+//				if (resolution>0)
+//				{
+//					double alpha = MAT_ELEM(trigProducts, 0, i);
+//					double beta  = MAT_ELEM(trigProducts, 1, i);
+//					double gamma = MAT_ELEM(trigProducts, 2, i);
+//
+//					double ellip;
+//					ellip = VEC_ELEM(leastSquares, 0)*x*x +
+//							VEC_ELEM(leastSquares, 1)*y*y +
+//							VEC_ELEM(leastSquares, 2)*z*z +
+//							VEC_ELEM(leastSquares, 3)*2*x*y +
+//							VEC_ELEM(leastSquares, 4)*2*x*z +
+//							VEC_ELEM(leastSquares, 5)*2*y*z;
+//				}
+//			}
+//		}
+	}
+}
+
+void ProgResDir::radialAverageInMask(MultidimArray<int> &mask, MultidimArray<double> &inputVol, MetaData &md)
+{
+		double u_inf, u_sup, u;
+
+		MultidimArray<int> &pMask = mask;
+		int step = 1;
+
+		int N;
+		MultidimArray<double> radialAvg(XSIZE(inputVol)*0.5);
+		MultidimArray<double> test_ring;
+		test_ring.initZeros(inputVol);
+		//DIRECT_MULTIDIM_ELEM(radialAvg,0) = sqrt(real(conj(A3D_ELEM(fftV, 0,0,0))*A3D_ELEM(fftV, 0,0,0)));
+		std::cout << "XSIZE = " << XSIZE(inputVol) << std::endl;
+
+		int uk, uj, ui;
+
+		int siz = XSIZE(inputVol);
+		size_t objId;
+
+		for(size_t k=1; k<siz*0.5; ++k)
+		{
+			double cum_mean = 0;
+			N = 0;
+			u_sup = k + step;
+			u_inf = k - step;
+			for(size_t kk = 0; kk<ZSIZE(inputVol); ++kk)
 			{
-				resolution = MAT_ELEM(resolutionMat, i, k);
+				uk = (siz*0.5 - kk);
+				//std::cout << "uk = " << uk << std::endl;
+
+				for(size_t ii = 0; ii<YSIZE(inputVol); ++ii)
+				{
+					ui = (siz*0.5 - ii);
+
+					for(size_t jj = 0; jj<XSIZE(inputVol); ++jj)
+					{
+					    uj = (siz*0.5 - jj);
+
+					    if (A3D_ELEM(pMask, kk, ii, jj)>0)
+					    {
+					      //std::cout << "entro " << std::endl;
+						u = sqrt(ui*ui + uj*uj + uk*uk);
+						if ((u<u_sup) && (u>=u_inf))
+						{
+							//std::cout << "aqui " << std::endl;
+							cum_mean += A3D_ELEM(inputVol, kk, ii, jj);
+							++N;
+						}
+
+					     }
+					}
+				}
+			}
+			objId = md.addObject();
+			if (cum_mean==0)
+			{
+
+				md.setValue(MDL_AVG, 0.0, objId);
+			}
+			else
+			{
+				md.setValue(MDL_AVG, (cum_mean/((double) N)), objId);
+			}
+		}
+}
+
+void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
+		MultidimArray<int> &pmask,
+		MultidimArray<double> &radial,
+		MultidimArray<double> &azimuthal)
+{
+
+	radial.initZeros(pmask);
+	azimuthal.initZeros(pmask);
+	double azimuthal_angle = 15*PI/180;
+	double azimuthal_resolution = 0;
+	double radial_resolution = 0;
+	double radial_angle = 75*PI/180;
+	double resolution, dotproduct, x, y, z, u, arcos;
+	int xrows = angles.mdimx;
+	int idx;
+	idx = 0;
+	FOR_ALL_ELEMENTS_IN_ARRAY3D(pmask)
+	{
+		//i defines the direction and k the voxel
+		if (A3D_ELEM(pmask,k,i,j) > 0 )
+		{
+			u = sqrt(i*i + j*j + k*k);
+			for (int ii = 0; ii<xrows; ++ii)
+			{
+				resolution = MAT_ELEM(resolutionMat, ii, idx);
 
 				if (resolution>0)
 				{
-					double alpha = MAT_ELEM(trigProducts, 0, i);
-					double beta  = MAT_ELEM(trigProducts, 1, i);
-					double gamma = MAT_ELEM(trigProducts, 2, i);
+					x = MAT_ELEM(trigProducts, 0, ii);
+					y = MAT_ELEM(trigProducts, 1, ii);
+					z = MAT_ELEM(trigProducts, 2, ii);
 
-					double ellip;
-					ellip = VEC_ELEM(leastSquares, 0)*x*x +
-							VEC_ELEM(leastSquares, 1)*y*y +
-							VEC_ELEM(leastSquares, 2)*z*z +
-							VEC_ELEM(leastSquares, 3)*2*x*y +
-							VEC_ELEM(leastSquares, 4)*2*x*z +
-							VEC_ELEM(leastSquares, 5)*2*y*z;
+					dotproduct = (x*i + y*j + z*k)/u;
+					arcos = acos(fabs(dotproduct));
+					if (arcos<=azimuthal_angle)
+					{
+						azimuthal_resolution += resolution;
+					}
+					else
+					{if (arcos>=radial_angle)
+						radial_resolution += resolution;
+
+					}
 				}
 			}
+
+		++idx;
 		}
+		A3D_ELEM(radial,k,i,j) = radial_resolution;
+		A3D_ELEM(azimuthal,k,i,j) = azimuthal_resolution;
+		azimuthal_resolution = 0;
+		radial_resolution = 0;
 	}
+
+
 }
 
 double ProgResDir::firstMonoResEstimation(MultidimArray< std::complex<double> > &myfftV,
@@ -1206,6 +1344,192 @@ double ProgResDir::firstMonoResEstimation(MultidimArray< std::complex<double> > 
 
 }
 
+/*
+void ProgResDir::ellipsoidPlaneIntersection(double &A, double &B, double &C, double &D,
+											double &a, double &b, double &c,
+											double &Aye, double &Bye)
+{
+	//[Aye,Bye,q1,q2,q3]=EllipsoidPlaneIntersection(A,B,C,D,a,b,c)
+
+		double kx2, ky2, kxy, kx, ky, ksab, G, q1, q2, q3, quz;
+		double car=A*B*C*D;
+		Matrix1D<double> ParA;
+		ParA.initZeros(6);
+		if (car!=0)
+		{
+		kx2=1/(a*a) + (A^2)/(C^2*c^2);
+		ky2=1/(b*b) + (B^2)/(C^2*c^2);
+		kxy=(2*A*B)/(C^2*c^2);
+		kx=+ (2*A*D)/(C^2*c^2);
+		ky=+ (2*B*D)/(C^2*c^2) ;
+		ksab=D^2/(C^2*c^2)- 1;
+
+		VEC_ELEM(ParA,0) = kx2;
+		VEC_ELEM(ParA,1) = kxy;
+		VEC_ELEM(ParA,2) = ky2;
+		VEC_ELEM(ParA,3) = kx;
+		VEC_ELEM(ParA,4) = ky;
+		VEC_ELEM(ParA,5) = ksab;
+
+		G=AtoG(ParA);
+
+		q1=G(1);
+		q2=G(2);
+		q3=(A*q1+B*q2+D)/-C;
+		}
+
+		if ((C == 0) && (A!=0))
+		{
+			VEC_ELEM(ParA,0) = (1/b^2 + (B/A/a)^2);
+			VEC_ELEM(ParA,1) = 0;
+			VEC_ELEM(ParA,2) = 1/c^2;
+			VEC_ELEM(ParA,3) = (2*D*B/((A*a)*(A*a)));
+			VEC_ELEM(ParA,4) = 0;
+			VEC_ELEM(ParA,5) = (-1+((D/A)/a)*((D/A)/a));
+		    G=AtoG(ParA);
+
+		    q2=G(1);
+			q3=G(2);
+			q1=(D+B*q2+C*q3)/-A;
+		}
+
+		if (C==0 && B!=0)
+		{
+		VEC_ELEM(ParA,0) = (1/(a*a) + (A/B/b)*(A/B/b));
+		VEC_ELEM(ParA,1) = 0;
+		VEC_ELEM(ParA,2) = 1/(c*c);
+		VEC_ELEM(ParA,3) = (2*D*A/((B*b)*B*b));
+		VEC_ELEM(ParA,4) = 0;
+		VEC_ELEM(ParA,5) = (-1+(D/B/b)*(D/B/b));
+		G=AtoG(ParA);
+		q1=G(1);
+		q3=G(2);
+		q2=(D+A*q1+C*q3)/(-B);
+		}
+
+		if (A==0 && B==0)
+		{
+			q1=0;
+			q2=0;
+			q3=-D/C;
+		}
+		if (D==0)
+		{
+			q1=0;
+			q2=0;
+			q3=0;
+		}
+
+		quz=sqrt(q1^2+q2^2+q3^2);
+
+		double n1, n2, n3, kap, ak, bk, ck, kok, kok1, kok2;
+		n1=A/sqrt(A^2+B^2+C^2);
+		n2=B/sqrt(A^2+B^2+C^2);
+		n3=C/sqrt(A^2+B^2+C^2);
+		kap=(q1*A+B*q2+C*q3)/sqrt(A^2+B^2+C^2);
+		d= kap^2*(A^2+B^2+C^2)/(a^2*A^2+b^2*B^2+c^2*C^2);
+
+		ak=1;
+		bk=-(n1^2*(1/b^2+1/c^2)+n2^2*(1/c^2+1/a^2)+n3^2*(1/b^2+1/a^2));
+		ck=(n1/b/c)^2+(n2/a/c)^2+(n3/b/a)^2;
+		kok1 = 0.5*(-bk + sqrt(bk*bk -4*ak*ck))/(ak);
+		kok2 = 0.5*(-bk - sqrt(bk*bk -4*ak*ck))/(ak);
+		Bye=sqrt((1-d)/kok1);
+		Aye=sqrt((1-d)/kok2);
+}
+
+
+double ProgResDir::AtoG(Matrix1D<double> &ParA)
+{
+	/function [ParG,code] = AtoG(ParA)
+
+	double tolerance1 = 1.e-10;
+	double tolerance2 = 1.e-20;
+	double Angle;
+
+	//ParA = ParA/norm(ParA);
+	if (abs(ParA(1)-ParA(3)) > tolerance1)
+	    Angle = atan(ParA(2)/(ParA(1)-ParA(3)))/2;
+	else
+	    Angle = pi/4;
+
+	double c, Q, M, D, N, O, c, s;
+	c = cos(Angle);  s = sin(Angle);
+	Q = [c s; -s c];
+	M = [ParA(1)  ParA(2)/2;  ParA(2)/2  ParA(3)];
+
+	D = Q*M*Q';
+	N = Q*[ParA(4); ParA(5)];
+	O = ParA(6);
+
+	if ((D(1,1) < 0) && (D(2,2) < 0))
+	{
+	    D = -D;
+	    N = -N;
+	    O = -O;
+	}
+
+	UVcenter = [-N(1,1)/2/D(1,1); -N(2,1)/2/D(2,2)];
+
+	free = O - UVcenter(1,1)*UVcenter(1,1)*D(1,1) - UVcenter(2,1)*UVcenter(2,1)*D(2,2);
+
+	% if the determinant of [A B/2 D/2;B/2 C E/2;D/2 E/2 F]is zero
+	% and if K>0,then it is an empty set;
+	% otherwise the conic is degenerate
+
+	Deg =[ParA(1),ParA(2)/2,ParA(4)/2;...
+	     ParA(2)/2,ParA(3),ParA(5)/2;...
+	     ParA(4)/2,ParA(5)/2,ParA(6)];
+	K1=[ParA(1),ParA(4)/2;ParA(4)/2 ParA(6)];
+	K2=[ParA(3),ParA(5)/2;ParA(5)/2 ParA(6)];
+	K = det(K1)+ det(K2);
+
+	if (abs(det(Deg)) < tolerance2)
+	    if (abs(det(M))<tolerance2) &&(K > tolerance2)
+	        code = 4;  % empty set(imaginary parellel lines)
+	    else
+	        code = -1; % degenerate cases
+	    end
+	else
+	    if (D(1,1)*D(2,2) > tolerance1)
+	        if (free < 0)
+	            code = 1; % ellipse
+	        else
+	            code = 0; % empty set(imaginary ellipse)
+	        end
+	    elseif (D(1,1)*D(2,2) < - tolerance1)
+	        code = 2;  % hyperbola
+	    else
+	        code = 3;  % parabola
+	    end
+	end
+
+	XYcenter = Q'*UVcenter;
+	Axes = [sqrt(abs(free/D(1,1))); sqrt(abs(free/D(2,2)))];
+
+	if code == 1 && Axes(1)<Axes(2)
+	    AA = Axes(1); Axes(1) = Axes(2); Axes(2) = AA;
+	    Angle = Angle + pi/2;
+	end
+
+	if code == 2 && free*D(1,1)>0
+	    AA = Axes(1); Axes(1) = Axes(2); Axes(2) = AA;
+	    Angle = Angle + pi/2;
+	end
+
+	while Angle > pi
+	    Angle = Angle - pi;
+	end
+	while Angle < 0
+	    Angle = Angle + pi;
+	end
+
+	ParG = [XYcenter; Axes; Angle];
+
+	end
+}
+
+*/
 void ProgResDir::run()
 {
 	produceSideInfo();
@@ -1580,7 +1904,7 @@ void ProgResDir::run()
 	niquist = 2*sampling;
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pdoaVol)
 	{
-		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
+		if (DIRECT_MULTIDIM_ELEM(mask(), n) >0 ) //before ==1
 		{
 
 			double a = MAT_ELEM(axis, 0, idx);
@@ -1600,7 +1924,29 @@ void ProgResDir::run()
 	imgdoa = pdoaVol;
 	imgdoa.write(fnDoA);
 
+	MultidimArray<double> radial, azimuthal;
+	std::cout << "llego0" << std::endl;
+	radialAzimuthalResolution(resolutionMatrix, mask(), radial, azimuthal);
+
+	imgdoa = radial;
+	imgdoa.write(fnradial);
+	imgdoa = azimuthal;
+	imgdoa.write(fnazimuthal);
+
+	std::cout << "llego1" << std::endl;
+
+	MetaData mdRadial, mdAzimuthal;
+	radialAverageInMask(mask(), azimuthal, mdAzimuthal);
+	radialAverageInMask(mask(), radial, mdRadial);
+
+	std::cout << "llego2" << std::endl;
+
+	mdAzimuthal.write(fnMDazimuthal);
+	mdRadial.write(fnMDradial);
+
+
 ///////////////////////
+
 	double lambda_1, lambda_2, lambda_3, doa;
 	double direction_x, direction_y, direction_z;
 	int counter = 0;
@@ -1623,8 +1969,9 @@ void ProgResDir::run()
 
 	FOR_ALL_ELEMENTS_IN_ARRAY3D(arrows)
 	{
-			if (A3D_ELEM(mask(),k,i,j) == 1 )
+			if (A3D_ELEM(mask(),k,i,j) > 0 ) //before ==1
 			{
+
 				//lambda_3 is assumed as the least eigenvalue
 				if ( (i%gridStep==0) && (j%gridStep==0) && (k%gridStep==0) )
 				{
@@ -1635,15 +1982,19 @@ void ProgResDir::run()
 					ycoor = MAT_ELEM(axis, 4, idx);
 					zcoor = MAT_ELEM(axis, 5, idx);
 
-					rot = atan2(ycoor,xcoor)*180/PI;
+					rot = atan2(ycoor, xcoor)*180/PI;
 					tilt = acos(zcoor)*180/PI;
+
+
+//					rotation3DMatrix(double ang, const Matrix1D<double> &axis,
+//					                      Matrix2D<double> &result, bool homogeneous)
 
 					double sc;
 					sc = lambda_1/8.0;
 //					std::cout << "a = " << lambda_3 << "  c= " << lambda_1 << std::endl;
 //					std::cout << "sc = " << sc << "  c/sc= " << lambda_1/sc << std::endl;
 
-					//write md wwith values!
+					//write md with values!
 					objId = md.addObject();
 					md.setValue(MDL_ANGLE_ROT, rot, objId);
 					md.setValue(MDL_ANGLE_TILT, tilt, objId);

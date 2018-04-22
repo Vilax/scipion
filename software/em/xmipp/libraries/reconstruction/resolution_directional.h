@@ -53,7 +53,8 @@ class ProgResDir : public XmippProgram
 {
 public:
 	 /** Filenames */
-	FileName fnOut, fnVol, fnMask, fnSym, fnDoA, fnDirections;
+	FileName fnOut, fnVol, fnMask, fnSym, fnDoA, fnDirections, fnradial, fnazimuthal,
+	fnMDradial, fnMDazimuthal;
 
 	/** sampling rate, minimum resolution, and maximum resolution */
 	double sampling, minRes, maxRes, R, ang_sampling, N_points, N_directions, Rparticle;
@@ -103,6 +104,15 @@ public:
     void ellipsoidFitting(Matrix2D<double> &anglesMat,
 			Matrix2D<double> &resolutionMat,
 			Matrix2D<double> &axis);
+    void radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
+    		MultidimArray<int> &pmask,
+    		MultidimArray<double> &radial,
+    		MultidimArray<double> &azimuthal);
+
+    void radialAverageInMask(MultidimArray<int> &mask,
+    						MultidimArray<double> &inputVol, MetaData &md);
+
+    double AtoG(Matrix1D<double> &ParA);
 
     void run();
 

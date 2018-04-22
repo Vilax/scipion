@@ -54,6 +54,8 @@ OUTPUT_RESOLUTION_MIN_FILE = 'minResolution.vol'
 OUTPUT_VARIANCE_FILE = 'resolution_variance.vol'
 OUTPUT_DOA_FILE = 'local_anisotropy.vol'
 OUTPUT_SPH_FILE = 'sphericity.vol'
+OUTPUT_RADIAL_FILE = 'radial_resolution.vol'
+OUTPUT_AZIMUHTAL_FILE = 'azimuthal_resolution.vol'
 
 #TODO: prepare volumes for chimera
 OUTPUT_VARIANCE_FILE_CHIMERA = 'varResolution_Chimera.vol'

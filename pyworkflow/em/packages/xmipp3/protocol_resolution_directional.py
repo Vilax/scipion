@@ -48,8 +48,12 @@ METADATA_ANGLES_FILE = 'angles_md.xmd'
 OUTPUT_DOA_FILE = 'local_anisotropy.vol'
 OUTPUT_VARIANCE_FILE = 'resolution_variance.vol'
 OUTPUT_DIRECTIONS_FILE = 'ellipsoids.xmd'
+OUTPUT_MD_RADIAL_FILE = 'radial_resolution.xmd'
+OUTPUT_MD_AZIMUTHAL_FILE = 'azimuthal_resolution.xmd'
 OUTPUT_DESCR = 'ellipsoid.descr'
 OUTPUT_ELLIP = 'ellipsoid.vol'
+OUTPUT_RADIAL_FILE = 'radial_resolution.vol'
+OUTPUT_AZIMUTHAL_FILE = 'azimuthal_resolution.vol'
 
 
 class XmippProtMonoDir(ProtAnalysis3D):
@@ -156,6 +160,10 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params += ' --significance %f' % self.significance.get()
         params += ' --doa_vol %s' % self._getExtraPath(OUTPUT_DOA_FILE)
         params += ' --directions %s' % self._getExtraPath(OUTPUT_DIRECTIONS_FILE)
+        params += ' --radialRes %s' % self._getExtraPath(OUTPUT_RADIAL_FILE)
+        params += ' --azimuthalRes %s' % self._getExtraPath(OUTPUT_AZIMUTHAL_FILE)
+        params += ' --radialAvg %s' % self._getExtraPath(OUTPUT_MD_RADIAL_FILE)
+        params += ' --azimuthalAvg %s' % self._getExtraPath(OUTPUT_MD_AZIMUTHAL_FILE)
 
         self.runJob('xmipp_resolution_directional', params)
 
