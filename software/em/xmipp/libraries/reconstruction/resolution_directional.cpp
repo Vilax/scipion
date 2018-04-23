@@ -594,8 +594,6 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 		}
 	}
 	//TODO: change (k - z_size*0.5)
-	//TODO: Use the square of the monogenic amplitude
-
 
 //		#ifdef MONO_AMPLITUDE
 //		Image<double> saveImg2;
@@ -1100,13 +1098,13 @@ void ProgResDir::radialAverageInMask(MultidimArray<int> &mask, MultidimArray<dou
 					    if (A3D_ELEM(pMask, kk, ii, jj)>0)
 					    {
 					      //std::cout << "entro " << std::endl;
-						u = sqrt(ui*ui + uj*uj + uk*uk);
-						if ((u<u_sup) && (u>=u_inf))
-						{
-							//std::cout << "aqui " << std::endl;
-							cum_mean += A3D_ELEM(inputVol, kk, ii, jj);
-							++N;
-						}
+							u = sqrt(ui*ui + uj*uj + uk*uk);
+							if ((u<u_sup) && (u>=u_inf))
+							{
+								//std::cout << "aqui " << std::endl;
+								cum_mean += A3D_ELEM(inputVol, kk, ii, jj);
+								++N;
+							}
 
 					     }
 					}
@@ -1116,7 +1114,7 @@ void ProgResDir::radialAverageInMask(MultidimArray<int> &mask, MultidimArray<dou
 			if (cum_mean==0)
 			{
 
-				md.setValue(MDL_AVG, 0.0, objId);
+				md.setValue(MDL_AVG, cum_mean, objId);
 			}
 			else
 			{
@@ -1133,10 +1131,10 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 
 	radial.initZeros(pmask);
 	azimuthal.initZeros(pmask);
-	double azimuthal_angle = 15*PI/180;
+	double radial_angle = 15*PI/180;
 	double azimuthal_resolution = 0;
 	double radial_resolution = 0;
-	double radial_angle = 75*PI/180;
+	double azimuthal_angle = 75*PI/180;
 	double resolution, dotproduct, x, y, z, u, arcos;
 	int xrows = angles.mdimx;
 	int idx;

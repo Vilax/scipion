@@ -127,6 +127,13 @@ class XmippMonoDirViewer(ProtocolViewer):
         groupDoA.addParam('doShowChimera', LabelParam,
                        label="Show DoA map in Chimera")
         
+        groupRadAzim = form.addGroup('Radial and azimuthal information')
+        
+        groupRadAzim.addParam('doShowRadialColorSlices', LabelParam,
+               label="Show radial resolution colored slices")
+        
+        groupRadAzim.addParam('doShowAzimuthalColorSlices', LabelParam,
+               label="Show azimuthal resolution colored slices")
 
         group = form.addGroup('Choose a Color Map')
         group.addParam('colorMap', EnumParam, choices=COLOR_CHOICES.values(),
@@ -150,6 +157,8 @@ class XmippMonoDirViewer(ProtocolViewer):
         return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices,
                 'doShowDoASlices': self._showDoASlices,
                 'doShowDoAColorSlices': self._showDoAColorSlices,
+                'doShowRadialColorSlices': self._showRadialColorSlices,
+                'doShowAzimuthalColorSlices': self._showAzimuthalColorSlices,
                 'doShowChimera': self._showChimera,
                 'doShowDoAHistogram': self._plotHistogram,
                 }
@@ -159,7 +168,13 @@ class XmippMonoDirViewer(ProtocolViewer):
         return [cm]  
  
     def _showDoAColorSlices(self, param=None):
-        self._showColorSlices(OUTPUT_DOA_FILE)
+        self._showColorSlices(OUTPUT_DOA_FILE, True)
+        
+    def _showRadialColorSlices(self, param=None):
+        self._showColorSlices(OUTPUT_RADIAL_FILE, False)
+        
+    def _showAzimuthalColorSlices(self, param=None):
+        self._showColorSlices(OUTPUT_AZIMUHTAL_FILE, False)
         
     def _showOriginalVolumeSlices(self, param=None):
         if self.protocol.halfVolumes.get() is True:
@@ -170,17 +185,19 @@ class XmippMonoDirViewer(ProtocolViewer):
             cm = DataView(self.protocol.inputVolumes.get().getFileName())
             return [cm]
    
-    def _showColorSlices(self, fileName):
+    def _showColorSlices(self, fileName, zerone):
         imageFile = self.protocol._getExtraPath(fileName)
         img = ImageHandler().read(imageFile)
         imgData = img.getData()
-        max_Res = np.amax(imgData)
-
         imgData2 = np.ma.masked_where(imgData < 0.001, imgData, copy=True)
-        
-        min_Res = np.amin(imgData2)
-        fig, im = self._plotVolumeSlices('MonoDir slices', imgData2,
+        if zerone is True:
+            fig, im = self._plotVolumeSlices('MonoDir slices', imgData2,
                                          0, 1, self.getColorMap(), dataAxis=self._getAxis())
+        else:
+            max_Res = np.amax(imgData)
+            min_Res = np.amin(imgData2)
+            fig, im = self._plotVolumeSlices('MonoDir slices', imgData2,
+                                         min_Res, max_Res, self.getColorMap(), dataAxis=self._getAxis())
         cax = fig.add_axes([0.9, 0.1, 0.03, 0.8])
         cbar = fig.colorbar(im, cax=cax)
         cbar.ax.invert_yaxis()
