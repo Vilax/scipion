@@ -897,6 +897,10 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 				xx.push_back(fabs(resolution*MAT_ELEM(trigProducts, 0, i)));
 				yy.push_back(fabs(resolution*MAT_ELEM(trigProducts, 1, i)));
 				zz.push_back(fabs(resolution*MAT_ELEM(trigProducts, 2, i)));
+				if (k<50)
+				{
+					std::cout << k << " " << resolution << " " << MAT_ELEM(trigProducts, 0, i) << " " << MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << std::endl;
+				}
 			}
 		}
 		std::sort(xx.begin(),xx.end());
@@ -933,7 +937,7 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 	int xrows = angles.mdimx;
 	std::vector<double> list_distances;
 
-	std::cout << "xrows = " << xrows << std::endl;
+	//std::cout << "xrows = " << xrows << std::endl;
 
 	//MAT_ELEM(resolutionMat, direccion, resolucion)
 
@@ -1032,28 +1036,6 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		MAT_ELEM(axis,9, k) = MAT_ELEM(eigenvectors,0,2);
 		MAT_ELEM(axis,10, k) = MAT_ELEM(eigenvectors,1,2);
 		MAT_ELEM(axis,11, k) = MAT_ELEM(eigenvectors,2,2);
-
-//		for (int i = 0; i<xrows; ++i){
-//			for (float k =-c; c<c; c+=0.3)
-//			{
-//				resolution = MAT_ELEM(resolutionMat, i, k);
-
-//				if (resolution>0)
-//				{
-//					double alpha = MAT_ELEM(trigProducts, 0, i);
-//					double beta  = MAT_ELEM(trigProducts, 1, i);
-//					double gamma = MAT_ELEM(trigProducts, 2, i);
-//
-//					double ellip;
-//					ellip = VEC_ELEM(leastSquares, 0)*x*x +
-//							VEC_ELEM(leastSquares, 1)*y*y +
-//							VEC_ELEM(leastSquares, 2)*z*z +
-//							VEC_ELEM(leastSquares, 3)*2*x*y +
-//							VEC_ELEM(leastSquares, 4)*2*x*z +
-//							VEC_ELEM(leastSquares, 5)*2*y*z;
-//				}
-//			}
-//		}
 	}
 }
 
