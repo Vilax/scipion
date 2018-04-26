@@ -880,51 +880,53 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 						lastMinDistance = distance;
 				}
 			}
+			if (k<70)
+			{
+				std::cout << k << " " << MAT_ELEM(resolutionMat, i, k) << " " << MAT_ELEM(trigProducts, 0, i) << " " << MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << ";"<< std::endl;
+			}
 			if (lastMinDistance>=threshold)
 			{
 				MAT_ELEM(resolutionMat, i, k) = -1;
 			}
 		}
-
-
-		std::vector<double> xx(xrows), yy(xrows), zz(xrows);
-		for (int i = 0; i<xrows; ++i)
-		{
-			resolution = MAT_ELEM(resolutionMat, i, k);
-
-			if (resolution>0)
-			{
-				xx.push_back(fabs(resolution*MAT_ELEM(trigProducts, 0, i)));
-				yy.push_back(fabs(resolution*MAT_ELEM(trigProducts, 1, i)));
-				zz.push_back(fabs(resolution*MAT_ELEM(trigProducts, 2, i)));
-				if (k<50)
-				{
-					std::cout << k << " " << resolution << " " << MAT_ELEM(trigProducts, 0, i) << " " << MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << std::endl;
-				}
-			}
-		}
-		std::sort(xx.begin(),xx.end());
-		std::sort(yy.begin(),yy.end());
-		std::sort(zz.begin(),zz.end());
-
-		double xh = xx[(int) floor(0.95*((double) xrows))];
-		double yh = yy[(int) floor(0.95*((double) xrows))];
-		double zh = zz[(int) floor(0.95*((double) xrows))];
-
-		for (int i = 0; i<xrows; ++i)
-		{
-			resolution = MAT_ELEM(resolutionMat, i, k);
-
-			if (resolution>0)
-			{
-				x1 = fabs(resolution*MAT_ELEM(trigProducts, 0, i));
-				y1 = fabs(resolution*MAT_ELEM(trigProducts, 1, i));
-				z1 = fabs(resolution*MAT_ELEM(trigProducts, 2, i));
-				if ((x1<xh) || (y1<yh) || (z1<zh))
-					MAT_ELEM(resolutionMat, i, k) = -1;
-			}
-		}
-
+//		std::vector<double> xx(xrows), yy(xrows), zz(xrows);
+//		for (int i = 0; i<xrows; ++i)
+//		{
+//			resolution = MAT_ELEM(resolutionMat, i, k);
+//
+//			if (resolution>0)
+//			{
+//				if (k<50)
+//				{
+//					std::cout << k << " " << resolution << " " << MAT_ELEM(trigProducts, 0, i) << " " << MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << ";"<< std::endl;
+//				}
+//				xx.push_back(fabs(resolution*MAT_ELEM(trigProducts, 0, i)));
+//				yy.push_back(fabs(resolution*MAT_ELEM(trigProducts, 1, i)));
+//				zz.push_back(fabs(resolution*MAT_ELEM(trigProducts, 2, i)));
+//
+//			}
+//		}
+//		std::sort(xx.begin(),xx.end());
+//		std::sort(yy.begin(),yy.end());
+//		std::sort(zz.begin(),zz.end());
+//
+//		double xh = xx[(int) floor(0.95*((double) xrows))];
+//		double yh = yy[(int) floor(0.95*((double) xrows))];
+//		double zh = zz[(int) floor(0.95*((double) xrows))];
+//
+//		for (int i = 0; i<xrows; ++i)
+//		{
+//			resolution = MAT_ELEM(resolutionMat, i, k);
+//
+//			if (resolution>0)
+//			{
+//				x1 = fabs(resolution*MAT_ELEM(trigProducts, 0, i));
+//				y1 = fabs(resolution*MAT_ELEM(trigProducts, 1, i));
+//				z1 = fabs(resolution*MAT_ELEM(trigProducts, 2, i));
+//				if ((x1<xh) || (y1<yh) || (z1<zh))
+//					MAT_ELEM(resolutionMat, i, k) = -1;
+//			}
+//		}
 	}
 }
 
