@@ -1365,18 +1365,19 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 	double azimuthal_resolution = 0;
 	double radial_resolution = 0;
 	double azimuthal_angle = 75*PI/180;
-	double resolution, dotproduct, x, y, z, u, arcos;
+	double resolution, dotproduct, x, y, z, iu, arcos;
 	int xrows = angles.mdimx;
 	int idx;
 	idx = 0;
-	double count;
+	double count_radial, count_azimuthal;
 	FOR_ALL_ELEMENTS_IN_ARRAY3D(pmask)
 	{
 		//i defines the direction and k the voxel
 		if (A3D_ELEM(pmask,k,i,j) > 0 )
 		{
-			u = sqrt(i*i + j*j + k*k);
-			count = 0;
+			iu = 1/sqrt(i*i + j*j + k*k);
+			count_radial = 0;
+			count_azimuthal = 0;
 			for (int ii = 0; ii<xrows; ++ii)
 			{
 				resolution = MAT_ELEM(resolutionMat, ii, idx);
@@ -1388,17 +1389,17 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 					y = MAT_ELEM(trigProducts, 1, ii);
 					z = MAT_ELEM(trigProducts, 2, ii);
 
-					dotproduct = (x*i + y*j + z*k)/u;
+					dotproduct = (x*i + y*j + z*k)*iu;
 					arcos = acos(fabs(dotproduct));
 					if (arcos<=azimuthal_angle)
 					{
-						count = count + 1;
+						count_azimuthal = count_azimuthal + 1;
 						azimuthal_resolution += resolution;
 					}
 					else
 					{if (arcos>=radial_angle)
 						{
-						count = count + 1;
+						count_radial = count_radial + 1;
 						radial_resolution += resolution;
 						}
 					}
@@ -1407,8 +1408,8 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 
 		++idx;
 		}
-		A3D_ELEM(radial,k,i,j) = radial_resolution/count;
-		A3D_ELEM(azimuthal,k,i,j) = azimuthal_resolution/count;
+		A3D_ELEM(radial,k,i,j) = radial_resolution/count_radial;
+		A3D_ELEM(azimuthal,k,i,j) = azimuthal_resolution/count_azimuthal;
 		azimuthal_resolution = 0;
 		radial_resolution = 0;
 	}
