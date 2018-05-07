@@ -30,7 +30,7 @@
 //#define DEBUG_MASK
 //#define DEBUG_DIR
 //#define DEBUG_FILTER
-#define MONO_AMPLITUDE
+//#define MONO_AMPLITUDE
 //define DEBUG_SYMMETRY
 
 void ProgResDir::readParams()
@@ -571,8 +571,6 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 		saveImg2.write(fnDebug+iternumber);
 //	}
 	#endif // DEBUG
-
-		exit(0);
 }
 
 
