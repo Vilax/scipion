@@ -496,7 +496,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 	transformer_inv.inverseFourierTransform(fftVRiesz_aux, VRiesz);
 
 
-	amplitude.setXmippOrigin();
+//	amplitude.setXmippOrigin();
 	int z_size = ZSIZE(amplitude);
 	int siz = z_size*0.5;
 
