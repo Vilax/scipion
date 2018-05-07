@@ -540,7 +540,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 
 	transformer_inv.FourierTransform(amplitude, fftVRiesz, false);
 
-	double raised_w = PI/(freqL-freq);
+	double raised_w = PI/(freqH-freq);
 
 	n=0;
 	std::cout << "freqL = " << freqL << std::endl;
@@ -548,17 +548,15 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 	{
 		double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
 		std::cout << "un = " << un << "  freqL = " << freqL << " freq = " << freq << std::endl;
-		if ((freqL)>=un && un>=freq)
+		if ((freqH)>=un && un>=freq)
 		{
-			std::cout << "entroen 1" << std::endl;
 			DIRECT_MULTIDIM_ELEM(fftVRiesz,n) *= 0.5*(1 + cos(raised_w*(un-freq)));
 		}
 		else
 		{
-			if (un>(freqL))
+			if (un>(freqH))
 			{
 				DIRECT_MULTIDIM_ELEM(fftVRiesz,n) = 0;
-				std::cout << "entroen 2" << std::endl;
 			}
 		}
 	}
