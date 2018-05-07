@@ -28,9 +28,9 @@
 #include "resolution_directional.h"
 //#define DEBUG
 //#define DEBUG_MASK
-#define DEBUG_DIR
+//#define DEBUG_DIR
 //#define DEBUG_FILTER
-#define MONO_AMPLITUDE
+//#define MONO_AMPLITUDE
 //define DEBUG_SYMMETRY
 
 void ProgResDir::readParams()
