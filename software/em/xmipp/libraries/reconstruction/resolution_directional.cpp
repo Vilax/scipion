@@ -434,9 +434,6 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir+1,count));
 	#endif
 
-
-
-
 //	amplitude.initZeros(VRiesz);
 	amplitude.resizeNoCopy(VRiesz);
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
@@ -914,7 +911,7 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 	y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
 	z_dir = cos(tilt*PI/180);
 
-	double ang_con = 80*PI/180;
+	double ang_con = 20*PI/180;
 
 	double uz, uy, ux;
 	long n = 0;
