@@ -901,8 +901,8 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 	conefilter = myfftV;
 	// Filter the input volume and add it to amplitude
 
-//	MultidimArray<double> conetest;
-//	conetest.initZeros(myfftV);
+	MultidimArray<double> conetest;
+	conetest.initZeros(myfftV);
 //	#ifdef DEBUG_DIR
 //	MultidimArray<double> coneVol;
 //	coneVol.initZeros(iu);
@@ -913,6 +913,8 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 	x_dir = sin(tilt*PI/180)*cos(rot*PI/180);
 	y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
 	z_dir = cos(tilt*PI/180);
+
+	double ang_con = 80*PI/180;
 
 	double uz, uy, ux;
 	long n = 0;
@@ -934,20 +936,27 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 				//double dotproduct = (uy*x_dir + ux*y_dir + uz*z_dir)*iun;
 				iun *= (ux + uy + uz);
 				double acosine = acos(fabs(iun));
+				if (acosine<ang_con)
+				{
+					DIRECT_MULTIDIM_ELEM(conefilter, n) = 0;
+					DIRECT_MULTIDIM_ELEM(conetest, n) = 1;
+				}
 				//TODO: remove fabs
-
+/*
 				//4822.53 mean a smoothed cone angle of 20 degrees
 				double arg_exp = acosine*acosine*acosine*acosine*4822.53;
 				DIRECT_MULTIDIM_ELEM(conefilter, n) *= exp(-arg_exp);
 //				DIRECT_MULTIDIM_ELEM(conetest, n) = exp(-arg_exp);
+
+ */
 				++n;
 			}
 		}
 	}
 
-//	Image<double> saveImg2;
-//	saveImg2 = conetest;
-//	saveImg2.write("cono.vol");
+	Image<double> saveImg2;
+	saveImg2 = conetest;
+	saveImg2.write("cono.vol");
 
 }
 
@@ -1701,8 +1710,8 @@ void ProgResDir::run()
 
 			fnDebug = "Signal";
 
-			//amplitudeMonogenicSignal3D_fast(conefilter, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, rot, tilt);
-			amplitudeMonogenicSignal3D_fast(fftV, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, rot, tilt);
+			amplitudeMonogenicSignal3D_fast(conefilter, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, rot, tilt);
+			//amplitudeMonogenicSignal3D_fast(fftV, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, rot, tilt);
 
 			double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
 			noiseValues.clear();
