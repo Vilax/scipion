@@ -911,7 +911,7 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 	y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
 	z_dir = cos(tilt*PI/180);
 
-	double ang_con = 20*PI/180;
+	double ang_con = 45*PI/180;
 
 	double uz, uy, ux;
 	long n = 0;
