@@ -30,7 +30,7 @@
 //#define DEBUG_MASK
 //#define DEBUG_DIR
 //#define DEBUG_FILTER
-//#define MONO_AMPLITUDE
+#define MONO_AMPLITUDE
 //define DEBUG_SYMMETRY
 
 void ProgResDir::readParams()
@@ -543,7 +543,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 	double raised_w = PI/(freqL-freq);
 
 	n=0;
-	std::cout << "freqL = " << freqL << std::endl;
+//	std::cout << "freqL = " << freqL << std::endl;
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fftVRiesz)
 	{
 		double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
