@@ -30,7 +30,7 @@
 //#define DEBUG_MASK
 //#define DEBUG_DIR
 //#define DEBUG_FILTER
-//#define MONO_AMPLITUDE
+#define MONO_AMPLITUDE
 //define DEBUG_SYMMETRY
 
 void ProgResDir::readParams()
@@ -1183,7 +1183,6 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 	}
 }
 
-
 void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 									Matrix2D<double> &resolutionMat,
 									Matrix2D<double> &axis)
@@ -1396,17 +1395,18 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 						count_azimuthal = count_azimuthal + 1;
 						azimuthal_resolution += resolution;
 					}
-					else
-					{if (arcos>=radial_angle)
-						{
+					if (arcos>=radial_angle)
+					{
 						count_radial = count_radial + 1;
 						radial_resolution += resolution;
-						}
 					}
+
 				}
 			}
-
-		++idx;
+			std::cout << "count_radial = " << count_radial << std::endl;
+			std::cout << "count_azimuthal = " << count_azimuthal << std::endl;
+			std::cout << "  " << std::endl;
+			++idx;
 		}
 		A3D_ELEM(radial,k,i,j) = radial_resolution/count_radial;
 		A3D_ELEM(azimuthal,k,i,j) = azimuthal_resolution/count_azimuthal;
@@ -2067,3 +2067,4 @@ void ProgResDir::run()
 
 	md.write(fnDirections);
 }
+
