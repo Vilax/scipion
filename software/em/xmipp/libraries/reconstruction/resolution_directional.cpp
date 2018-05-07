@@ -28,7 +28,7 @@
 #include "resolution_directional.h"
 //#define DEBUG
 //#define DEBUG_MASK
-//#define DEBUG_DIR
+#define DEBUG_DIR
 //#define DEBUG_FILTER
 #define MONO_AMPLITUDE
 //define DEBUG_SYMMETRY
@@ -517,9 +517,9 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 				DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 				DIRECT_MULTIDIM_ELEM(amplitude,n)=sqrt(DIRECT_MULTIDIM_ELEM(amplitude,n));
 				double radius = sqrt(ux + uy + uz);
-				if ((radius>=limit_radius) && (radius<=(z_size*0.5)))
+				if ((radius>=limit_radius) && (radius<=siz))
 					DIRECT_MULTIDIM_ELEM(amplitude, n) *= 0.5*(1+cos(PI*(limit_radius-radius)/(N_smoothing)));
-				else if (radius>(0.5*z_size))
+				else if (radius>siz)
 					DIRECT_MULTIDIM_ELEM(amplitude, n) = 0;
 				++n;
 			}
@@ -543,7 +543,6 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 	double raised_w = PI/(freqL-freq);
 
 	n=0;
-//	std::cout << "freqL = " << freqL << std::endl;
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fftVRiesz)
 	{
 		double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
@@ -554,7 +553,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 		}
 		else
 		{
-			if (un>(freqL))
+			if (un>freqL)
 			{
 				DIRECT_MULTIDIM_ELEM(fftVRiesz,n) = 0;
 			}
