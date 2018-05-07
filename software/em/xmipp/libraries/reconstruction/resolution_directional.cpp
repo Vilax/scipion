@@ -561,8 +561,6 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 				std::cout << "entroen 2" << std::endl;
 			}
 		}
-
-		++n;
 	}
 	transformer_inv.inverseFourierTransform();
 
