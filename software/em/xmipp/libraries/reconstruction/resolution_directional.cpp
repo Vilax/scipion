@@ -936,10 +936,9 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 				//double dotproduct = (uy*x_dir + ux*y_dir + uz*z_dir)*iun;
 				iun *= (ux + uy + uz);
 				double acosine = acos(fabs(iun));
-				if (acosine<ang_con)
+				if (acosine>ang_con)
 				{
 					DIRECT_MULTIDIM_ELEM(conefilter, n) = 0;
-					DIRECT_MULTIDIM_ELEM(conetest, n) = 1;
 				}
 				//TODO: remove fabs
 /*
