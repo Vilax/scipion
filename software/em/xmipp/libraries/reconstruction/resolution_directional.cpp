@@ -911,7 +911,7 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 	y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
 	z_dir = cos(tilt*PI/180);
 
-	double ang_con = 45*PI/180;
+	double ang_con = 10*PI/180;
 
 	double uz, uy, ux;
 	long n = 0;
@@ -933,9 +933,11 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 				//double dotproduct = (uy*x_dir + ux*y_dir + uz*z_dir)*iun;
 				iun *= (ux + uy + uz);
 				double acosine = acos(fabs(iun));
+				DIRECT_MULTIDIM_ELEM(conetest, n) = real(conj(DIRECT_MULTIDIM_ELEM(myfftV, n))*DIRECT_MULTIDIM_ELEM(myfftV, n));
 				if (acosine>ang_con)
 				{
 					DIRECT_MULTIDIM_ELEM(conefilter, n) = 0;
+					DIRECT_MULTIDIM_ELEM(conetest, n) = 0;
 				}
 				//TODO: remove fabs
 /*
@@ -1615,12 +1617,14 @@ void ProgResDir::run()
 	//Checking with MonoRes at 50A;
 	int aux_idx;
 	double aux_freq;
-	aux_freq = sampling/50;
+	aux_freq = sampling/30;
 	if (maxRes>30)
 	{
 		DIGFREQ2FFT_IDX(sampling/30, volsize, aux_idx);
+
 		FFT_IDX2DIGFREQ(aux_idx, volsize, w);
 		FFT_IDX2DIGFREQ(aux_idx+1, volsize, wH); //Frequency chosen for a first estimation
+
 	}
 	else
 	{
@@ -1628,6 +1632,7 @@ void ProgResDir::run()
 		FFT_IDX2DIGFREQ(4, volsize, w);
 		aux_idx = 3;
 	}
+	std::cout << "fourier idx = " << aux_idx << std::endl;
 	std::cout << "Calling MonoRes core as a first estimation at " << sampling/w << "A." << std::endl;
 
 
