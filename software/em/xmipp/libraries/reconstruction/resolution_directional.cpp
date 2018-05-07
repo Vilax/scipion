@@ -550,7 +550,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 		std::cout << "un = " << un << "  freqL = " << freqL << " freq = " << freq << std::endl;
 		if ((freqL)>=un && un>=freq)
 		{
-
+			std::cout << "entroen 1" << std::endl;
 			DIRECT_MULTIDIM_ELEM(fftVRiesz,n) *= 0.5*(1 + cos(raised_w*(un-freq)));
 		}
 		else
@@ -558,6 +558,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 			if (un>(freqL))
 			{
 				DIRECT_MULTIDIM_ELEM(fftVRiesz,n) = 0;
+				std::cout << "entroen 2" << std::endl;
 			}
 		}
 
