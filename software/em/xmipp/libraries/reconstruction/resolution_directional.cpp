@@ -1701,7 +1701,8 @@ void ProgResDir::run()
 
 			fnDebug = "Signal";
 
-			amplitudeMonogenicSignal3D_fast(conefilter, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, rot, tilt);
+			//amplitudeMonogenicSignal3D_fast(conefilter, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, rot, tilt);
+			amplitudeMonogenicSignal3D_fast(fftV, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, rot, tilt);
 
 			double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
 			noiseValues.clear();
