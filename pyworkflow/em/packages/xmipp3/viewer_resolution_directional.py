@@ -194,7 +194,7 @@ class XmippMonoDirViewer(ProtocolViewer):
             fig, im = self._plotVolumeSlices('MonoDir slices', imgData2,
                                          0, 1, self.getColorMap(), dataAxis=self._getAxis())
         else:
-            max_Res = np.amax(imgData)
+            max_Res = np.amax(imgData2)
             min_Res = np.amin(imgData2)
             fig, im = self._plotVolumeSlices('MonoDir slices', imgData2,
                                          min_Res, max_Res, self.getColorMap(), dataAxis=self._getAxis())
