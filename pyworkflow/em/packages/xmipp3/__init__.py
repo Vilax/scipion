@@ -51,6 +51,7 @@ from viewer_movie_alignment import XmippMovieAlignViewer
 from viewer_normalize_strain import XmippNormalizeStrainViewer
 from viewer_resolution3d import XmippResolution3DViewer
 from viewer_resolution_monogenic_signal import XmippMonoResViewer
+from viewer_monores_automatic import XmippMonoResAutoViewer
 from viewer_validate_nontilt import XmippValidateNonTiltViewer
 from viewer_split_volume import XmippViewerSplitVolume
 from viewer_validate_overfitting import XmippValidateOverfittingViewer
@@ -97,6 +98,7 @@ from protocol_kerdensom import XmippProtKerdensom
 from protocol_ml2d import XmippProtML2D
 from protocol_movie_gain import XmippProtMovieGain
 from protocol_mltomo import XmippProtMLTomo
+from protocol_monores_automatic import XmippProtMonoResAuto
 from protocol_movie_average import XmippProtMovieAverage
 from protocol_movie_correlation import XmippProtMovieCorr
 from protocol_movie_opticalflow import XmippProtOFAlignment, ProtMovieAlignment
