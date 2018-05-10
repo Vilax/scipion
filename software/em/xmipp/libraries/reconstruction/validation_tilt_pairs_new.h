@@ -53,6 +53,8 @@ public:
 
     double smprt, maxshift;
 
+    int Nbest
+
 public:
     /// Define parameters in the command line
     void defineParams();

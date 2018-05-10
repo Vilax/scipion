@@ -40,6 +40,7 @@ void ProgValidationTiltPairs::defineParams()
     addParamsLine("  [--angular_sampling <s=5>]   : Angular sampling rate in degrees. This sampling "
 		    "represents the accuracy for assigning directions");
     addParamsLine("  [--maxshift <s=10>]   : Maximum shift for aligning images (in pixels)");
+    addParamsLine("  [--nbest <s=4>]   : Number of best correlations to be considered in the alignment");
 }
 
 void ProgValidationTiltPairs::readParams()
@@ -50,6 +51,7 @@ void ProgValidationTiltPairs::readParams()
     fnVol = getParam("--vol");
     smprt = getDoubleParam("--angular_sampling");
     maxshift = getIntParam("--maxshift");
+    Nbest = getIntParam("--nbest")
 }
 
 void ProgValidationTiltPairs::generateProjections(const FileName &fnVol, double smprt)
@@ -120,8 +122,6 @@ void ProgValidationTiltPairs::assignParticle(Image<double> ImgUn_exp,
 			++count;
 		}
 	}
-
-	std::cout << "llego " << std::endl;
 
 	outAssignment.initZeros(Nbest, 6);
 
@@ -219,8 +219,7 @@ void ProgValidationTiltPairs::run()
 	ImgUntilted() = avgTilted;;
 	ImgUntilted.write("avgTilted.xmp");
 
-	std::cout << "Untilt MetaData read" << std::endl;
-
+	std::cout << "Class average computed" << std::endl;
 
 
 	FOR_ALL_OBJECTS_IN_METADATA(mdtilt_exp)
@@ -276,11 +275,13 @@ void ProgValidationTiltPairs::run()
 	assignParticle(ImgUn_exp, angles_rot_tilt, allGalleryProjection,
 					outAssignment_untilted, Nbest);
 
+/*
 	ImgTilted_exp.read(fnAvgTilted);	//Reading image
 	ImgTilted_exp().setXmippOrigin();
 	std::cout << "particle untilted" << std::endl;
 	assignParticle(ImgTilted_exp, angles_rot_tilt, allGalleryProjection,
 					outAssignment_tilted, Nbest);
+*/
 
 	MetaData md_outAssignment_untilted, md_outAssignment_tilted;
 	size_t objId;
@@ -293,19 +294,20 @@ void ProgValidationTiltPairs::run()
 		md_outAssignment_untilted.setValue(MDL_ANGLE_PSI, MAT_ELEM(outAssignment_untilted, k, 2), objId);
 		md_outAssignment_untilted.setValue(MDL_SHIFT_X, MAT_ELEM(outAssignment_untilted, k, 3), objId);
 		md_outAssignment_untilted.setValue(MDL_SHIFT_Y, MAT_ELEM(outAssignment_untilted, k, 4), objId);
-
+/*
 		md_outAssignment_tilted.setValue(MDL_IMAGE, fnAvgTilted, objId);
 		md_outAssignment_tilted.setValue(MDL_ANGLE_ROT, MAT_ELEM(outAssignment_tilted, k, 0), objId);
 		md_outAssignment_tilted.setValue(MDL_ANGLE_TILT, MAT_ELEM(outAssignment_tilted, k, 1), objId);
 		md_outAssignment_tilted.setValue(MDL_ANGLE_PSI, MAT_ELEM(outAssignment_tilted, k, 2), objId);
 		md_outAssignment_tilted.setValue(MDL_SHIFT_X, MAT_ELEM(outAssignment_tilted, k, 3), objId);
 		md_outAssignment_tilted.setValue(MDL_SHIFT_Y, MAT_ELEM(outAssignment_tilted, k, 4), objId);
+*/
 	}
 
 	md_outAssignment_untilted.write((String)"myuntiled_direction.xmd" );
 	md_outAssignment_tilted.write((String)"mytiled_direction.xmd" );
 
-	exit(0);
+
 
 
 	for (int i = 0; i<len_t; ++i)
