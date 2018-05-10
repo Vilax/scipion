@@ -1,0 +1,260 @@
+# -*- coding: utf-8 -*-
+# **************************************************************************
+# *
+# * Authors:     Jose Luis Vilas (jlvilas@cnb.csic.es)
+# *
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'scipion@cnb.csic.es'
+# *
+# **************************************************************************
+from pyworkflow import VERSION_1_1
+from pyworkflow.protocol.params import (PointerParam, StringParam, 
+                                        BooleanParam, FloatParam, LEVEL_ADVANCED)
+from pyworkflow.em.protocol.protocol_3d import ProtAnalysis3D
+from pyworkflow.object import Float
+from pyworkflow.em import ImageHandler
+from pyworkflow.utils import getExt
+from pyworkflow.em.data import Volume
+import numpy as np
+import pyworkflow.em.metadata as md
+import xmipp, xmipp3
+
+CHIMERA_RESOLUTION_VOL = 'MG_Chimera_resolution.vol'
+
+MONORES_METHOD_URL = 'http://github.com/I2PC/scipion/wiki/XmippProtMonoRes'
+
+OUTPUT_RESOLUTION_FILE = 'resolutionMap'
+FN_FILTERED_MAP = 'filteredMap'
+OUTPUT_RESOLUTION_FILE_CHIMERA = 'outputChimera'
+OUTPUT_MASK_FILE = 'outputmask'
+NOISY_MAP = 'noisyMap'
+METADATA_MASK_FILE = 'metadataresolutions'
+FN_METADATA_HISTOGRAM = 'mdhist'
+BINARY_MASK = 'binarymask'
+FILTERED_MAP = 'filteredFSC'
+FN_METADATA_STATISTICS = 'mdstatistics'
+
+
+class XmippProtMonoResAuto(ProtAnalysis3D):
+    """    
+    Given a map the protocol assigns local resolutions to each voxel of the map.
+    """
+    _label = 'local MonoResAuto'
+    _lastUpdateVersion = VERSION_1_1
+    
+    def __init__(self, **args):
+        ProtAnalysis3D.__init__(self, **args)
+        self.min_res_init = Float() 
+        self.max_res_init = Float()
+       
+    
+    # --------------------------- DEFINE param functions ----------------------
+    def _defineParams(self, form):
+        form.addSection(label='Input')
+
+        form.addParam('inputVolume', PointerParam, pointerClass='Volume',
+                      label="Input Volume", important=True,
+                      help='Select a volume for determining its '
+                      'local resolution.')
+
+        form.addParam('FSC', FloatParam, 
+                      label="FSC Resolution", important=True,
+                      help='Introduce the resolution of your map')
+
+        group = form.addGroup('Extra parameters')
+        group.addParam('symmetry', StringParam, default='c1',
+                      label="Symmetry",
+                      help='Symmetry group. By default = c1.'
+                      'See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]'
+                      'for a description of the symmetry groups format,' 
+                      'If no symmetry is present, give c1.')
+       
+        group.addParam('significance', FloatParam, default=0.95, 
+                       expertLevel=LEVEL_ADVANCED,
+                      label="Significance",
+                      help='Relution is computed using hipothesis tests, '
+                      'this value determines the significance of that test')
+    
+    # --------------------------- INSERT steps functions --------------------------------------------
+
+    def _createFilenameTemplates(self):
+        """ Centralize how files are called """
+        myDict = {
+                 NOISY_MAP: self._getExtraPath('noisy_map.vol'),
+                 OUTPUT_MASK_FILE: self._getExtraPath("output_Mask.vol"),
+                 OUTPUT_RESOLUTION_FILE_CHIMERA: self._getExtraPath(CHIMERA_RESOLUTION_VOL),
+                 FN_FILTERED_MAP: self._getExtraPath('filteredMap.vol'),
+                 OUTPUT_RESOLUTION_FILE: self._getExtraPath('mgresolution.vol'),
+                 METADATA_MASK_FILE: self._getExtraPath('mask_data.xmd'),
+                 FN_METADATA_HISTOGRAM: self._getExtraPath('hist.xmd'),
+                 FN_METADATA_STATISTICS: self._getExtraPath('statistics.xmd'),
+                 FILTERED_MAP: self._getTmpPath('filtered_FSC_map.vol'),
+                 BINARY_MASK: self._getExtraPath('binarized_mask.vol')
+                 }
+        self._updateFilenamesDict(myDict)
+
+    def _insertAllSteps(self):
+            # Convert input into xmipp Metadata format
+        self._createFilenameTemplates() 
+        self._insertFunctionStep('convertInputStep')
+        self._insertFunctionStep('createMaskStep')
+        self._insertFunctionStep('addingNoiseStep')
+        self._insertFunctionStep('resolutionMonogenicSignalStep')
+        self._insertFunctionStep('createOutputStep')
+        self._insertFunctionStep("createHistrogram")
+
+
+    def convertInputStep(self):
+        """ Read the input volume.
+        """
+        self.vol0Fn = self.inputVolume.get().getFileName()
+        
+        extVol0 = getExt(self.vol0Fn)
+        if (extVol0 == '.mrc') or (extVol0 == '.map'):
+            self.vol0Fn = self.vol0Fn + ':mrc'
+
+    def createMaskStep(self):
+        
+        params = ' -i %s' % self.vol0Fn
+        params += ' -o %s' % self._getFileName(BINARY_MASK)
+        params += ' --select above  %f' % 0.001
+        params += ' --substitute value %f' % 1
+        
+        self.runJob('xmipp_transform_threshold', params)
+        
+    def addingNoiseStep(self):
+        
+        params = ' -i %s' % self.vol0Fn
+        params += ' -o %s' % self._getFileName(FILTERED_MAP)
+        params += ' --fourier high_pass %f' % self.FSC.get()
+        params += ' --sampling %f' % self.inputVolume.get().getSamplingRate()
+        self.runJob('xmipp_transform_filter', params)
+        
+        
+        params = ' -i %s' % self._getFileName(FILTERED_MAP)
+        params += ' -o %s' % self._getFileName(FN_METADATA_STATISTICS)
+        params += ' --mask binary_file %s' % self._getFileName(BINARY_MASK)
+        self.runJob('xmipp_image_statistics', params)
+        
+        mdata = md.MetaData(self._getFileName(FN_METADATA_STATISTICS))
+
+        std_value = mdata.getValue(xmipp.MDL_STDDEV, 1)
+        
+        params = ' -i %s' % self.vol0Fn
+        params += ' -o %s' % self._getFileName(NOISY_MAP)
+        params += ' --type gaussian %f 0.0' % std_value
+        self.runJob('xmipp_transform_add_noise', params)     
+
+    def resolutionMonogenicSignalStep(self):
+
+        # Number of frequencies
+        Nfreqs = 50
+        
+        if (self.FSC.get()<5):
+            minRes = 1
+            maxRes = 2*self.FSC.get()
+        else:
+            minRes = self.FSC.get()-1
+            maxRes = 2*self.FSC.get()
+  
+        xdim, _ydim, _zdim = self.inputVolume.get().getDim()
+        xdim = xdim*0.5
+
+        params = ' --vol %s' % self._getFileName(NOISY_MAP)
+        params += ' --mask %s' % self._getFileName(BINARY_MASK)
+        params += ' --mask_out %s' % self._getFileName(OUTPUT_MASK_FILE)
+        params += ' -o %s' % self._getFileName(OUTPUT_RESOLUTION_FILE)
+        params += ' --sampling_rate %f' % self.inputVolume.get().getSamplingRate()
+        params += ' --number_frequencies %f' % Nfreqs
+        params += ' --minRes %f' % minRes
+        params += ' --maxRes %f' % maxRes
+        params += ' --volumeRadius %f' % xdim
+        params += ' --exact'
+        params += ' --chimera_volume %s' % self._getFileName(
+                                                    OUTPUT_RESOLUTION_FILE_CHIMERA)
+        params += ' --sym %s' % self.symmetry.get()
+        params += ' --significance %f' % self.significance.get()
+        params += ' --md_outputdata %s' % self._getFileName(METADATA_MASK_FILE)  
+
+        self.runJob('xmipp_resolution_monogenic_signal', params)
+
+
+    def createHistrogram(self):
+
+        params = ' -i %s' % self._getFileName(OUTPUT_RESOLUTION_FILE)
+        params += ' --mask binary_file %s' % self._getFileName(OUTPUT_MASK_FILE)
+        params += ' --steps %f' % 30
+        params += ' --range %f %f' % (self.min_res_init, self.max_res_init)
+        params += ' -o %s' % self._getFileName(FN_METADATA_HISTOGRAM)
+
+        self.runJob('xmipp_image_histogram', params)
+        
+        
+    def readMetaDataOutput(self):
+        mData = md.MetaData(self._getFileName(METADATA_MASK_FILE))
+        NvoxelsOriginalMask = float(mData.getValue(md.MDL_COUNT, mData.firstObject()))
+        NvoxelsOutputMask = float(mData.getValue(md.MDL_COUNT2, mData.firstObject()))
+        nvox = int(round(
+                ((NvoxelsOriginalMask-NvoxelsOutputMask)/NvoxelsOriginalMask)*100))
+        return nvox
+
+    def getMinMax(self, imageFile):
+        img = ImageHandler().read(imageFile)
+        imgData = img.getData()
+        min_res = round(np.amin(imgData) * 100) / 100
+        max_res = round(np.amax(imgData) * 100) / 100
+        return min_res, max_res
+
+    def createOutputStep(self):
+        volume=Volume()
+        volume.setFileName(self._getFileName(OUTPUT_RESOLUTION_FILE))
+        volume.setSamplingRate(self.inputVolume.get().getSamplingRate())
+#        
+        self._defineOutputs(resolution_Volume=volume)
+        self._defineSourceRelation(self.inputVolume, volume)
+            
+        #Setting the min max for the summary
+        imageFile = self._getFileName(OUTPUT_RESOLUTION_FILE_CHIMERA)
+        min_, max_ = self.getMinMax(imageFile)
+        self.min_res_init.set(round(min_*100)/100)
+        self.max_res_init.set(round(max_*100)/100)
+        self._store(self.min_res_init)
+        self._store(self.max_res_init)
+
+
+    # --------------------------- INFO functions ------------------------------
+
+    def _methods(self):
+        messages = []
+        if hasattr(self, 'resolution_Volume'):
+            messages.append(
+                'Information about the method/article in ' + MONORES_METHOD_URL)
+        return messages
+    
+    def _summary(self):
+        summary = []
+        summary.append("Highest resolution %.2f Å,   "
+                       "Lowest resolution %.2f Å. \n" % (self.min_res_init,
+                                                         self.max_res_init))
+        return summary
+
+    def _citations(self):
+        return ['Vilas2018']
+
