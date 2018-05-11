@@ -105,7 +105,7 @@ void ProgMonogenicSignalRes::produceSideInfo()
 	V().setXmippOrigin();
 
 
-//	transformer_inv.setThreadsNumber(4);
+	transformer_inv.setThreadsNumber(4);
 
 	FourierTransformer transformer;
 	MultidimArray<double> &inputVol = V();
@@ -214,7 +214,6 @@ void ProgMonogenicSignalRes::produceSideInfo()
 		FFT_IDX2DIGFREQ(k,size, u);
 		VEC_ELEM(freq_fourier,k) = u;
 	}
-
 }
 
 
@@ -297,39 +296,29 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 
-	// Calculate second component of Riesz vector
-	n=0;
-	for(size_t k=0; k<ZSIZE(myfftV); ++k)
-	{
-		for(size_t i=0; i<YSIZE(myfftV); ++i)
-		{
-			uy = VEC_ELEM(freq_fourier,i);
-			for(size_t j=0; j<XSIZE(myfftV); ++j)
-			{
-				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = uy*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
-				++n;
-			}
-		}
-	}
-	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
-		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
-
-	// Calculate third component of Riesz vector
+	// Calculate second and third components of Riesz vector
 	n=0;
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
 		uz = VEC_ELEM(freq_fourier,k);
 		for(size_t i=0; i<YSIZE(myfftV); ++i)
 		{
+			uy = VEC_ELEM(freq_fourier,i);
 			for(size_t j=0; j<XSIZE(myfftV); ++j)
 			{
-				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = uz*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = uy*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+				DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = uz*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
 				++n;
 			}
 		}
 	}
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
+
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
+		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+
+	transformer_inv.inverseFourierTransform(fftVRiesz_aux, VRiesz);
+
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 	{
 		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
@@ -801,12 +790,12 @@ void ProgMonogenicSignalRes::run()
 
 		// Is the mean inside the signal significantly different from the noise?
 		double z=(meanS-meanN)/sqrt(sigma2S/NS+sigma2N/NN);
-//		#ifdef DEBUG
+		#ifdef DEBUG
 			std::cout << "thresholdNoise = " << thresholdNoise << std::endl;
 			std::cout << "  meanS= " << meanS << " sigma2S= " << sigma2S << " NS= " << NS << std::endl;
 			std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
 			std::cout << "  z=" << z << " (" << criticalZ << ")" << std::endl;
-//		#endif
+		#endif
 		if (z<criticalZ)
 		{
 			criticalW = freq;
