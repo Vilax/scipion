@@ -47,6 +47,7 @@ FN_MEAN_VOL = 'meanvol'
 METADATA_MASK_FILE = 'metadataresolutions'
 FN_METADATA_HISTOGRAM = 'mdhist'
 BINARY_MASK = 'binarymask'
+FN_GAUSSIAN_MAP = 'gaussianfilter'
 
 
 class XmippProtMonoRes(ProtAnalysis3D):
@@ -91,7 +92,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
 
         form.addParam('Mask', PointerParam, pointerClass='VolumeMask', 
                       condition='(halfVolumes) or (not halfVolumes)',
-                      label="Binary Mask", important=True,
+                      allowsNull=True,
+                      label="Binary Mask", 
                       help='The mask determines which points are specimen'
                       ' and which are not')
 
@@ -175,7 +177,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
                  OUTPUT_RESOLUTION_FILE: self._getExtraPath('mgresolution.vol'),
                  METADATA_MASK_FILE: self._getExtraPath('mask_data.xmd'),
                  FN_METADATA_HISTOGRAM: self._getExtraPath('hist.xmd'),
-                 BINARY_MASK: self._getExtraPath('binarized_mask.vol')
+                 BINARY_MASK: self._getExtraPath('binarized_mask.vol'),
+                 FN_GAUSSIAN_MAP: self._getExtraPath('gaussianfilted.vol')
                  }
         self._updateFilenamesDict(myDict)
 
@@ -190,44 +193,78 @@ class XmippProtMonoRes(ProtAnalysis3D):
     def convertInputStep(self):
         """ Read the input volume.
         """
+        
         self.micsFn = self._getPath()
 
         if self.halfVolumes:
             self.vol1Fn = self.inputVolume.get().getFileName()
             self.vol2Fn = self.inputVolume2.get().getFileName()
-            self.maskFn = self.Mask.get().getFileName()
-
-            self.inputVolumes.set(None)
-        else:
-            self.vol0Fn = self.inputVolumes.get().getFileName()
-            self.maskFn = self.Mask.get().getFileName()
-            self.inputVolume.set(None)
-            self.inputVolume2.set(None)
-        
-        if (self.halfVolumes.get() is False):
-            extVol0 = getExt(self.vol0Fn)
-            if (extVol0 == '.mrc') or (extVol0 == '.map'):
-                self.vol0Fn = self.vol0Fn + ':mrc'
-
-        if self.halfVolumes.get() is True:
             extVol1 = getExt(self.vol1Fn)
             extVol2 = getExt(self.vol2Fn)
             if (extVol1 == '.mrc') or (extVol1 == '.map'):
                 self.vol1Fn = self.vol1Fn + ':mrc'
             if (extVol2 == '.mrc') or (extVol2 == '.map'):
                 self.vol2Fn = self.vol2Fn + ':mrc'
+                
+            if not self.Mask.hasValue():
+                self.ifNomask(self.vol1Fn)
+            else:
+                self.maskFn = self.Mask.get().getFileName()
+
+            self.inputVolumes.set(None)
+        else:
+            self.vol0Fn = self.inputVolumes.get().getFileName()
+            extVol0 = getExt(self.vol0Fn)
+            if (extVol0 == '.mrc') or (extVol0 == '.map'):
+                self.vol0Fn = self.vol0Fn + ':mrc'
+                
+            if not self.Mask.hasValue():
+                self.ifNomask(self.vol0Fn)
+            else:
+                self.maskFn = self.Mask.get().getFileName()
+            
+            print self.maskFn
+            
+            self.inputVolume.set(None)
+            self.inputVolume2.set(None)
+
 
         extMask = getExt(self.maskFn)
         if (extMask == '.mrc') or (extMask == '.map'):
             self.maskFn = self.maskFn + ':mrc'
             
-       
-        params = ' -i %s' % self.maskFn
-        params += ' -o %s' % self._getFileName(BINARY_MASK)
-        params += ' --select below %f' % self.maskthreshold.get()
+        if self.Mask.hasValue():
+            params = ' -i %s' % self.maskFn
+            params += ' -o %s' % self._getFileName(BINARY_MASK)
+            params += ' --select below %f' % self.maskthreshold.get()
+            params += ' --substitute binarize'
+             
+            self.runJob('xmipp_transform_threshold', params)
+
+    def ifNomask(self, fnVol):
+        if self.halfVolumes:
+            xdim, _ydim, _zdim = self.inputVolume.get().getDim()
+            params = ' -i %s' % fnVol
+        else:
+            xdim, _ydim, _zdim = self.inputVolumes.get().getDim()
+            params = ' -i %s' % fnVol
+        params += ' -o %s' % self._getFileName(FN_GAUSSIAN_MAP)
+        setsize = 0.02*xdim
+        params += ' --fourier real_gaussian %f' % (setsize)
+     
+        self.runJob('xmipp_transform_filter', params)
+        img = ImageHandler().read(self._getFileName(FN_GAUSSIAN_MAP))
+        imgData = img.getData()
+        max_val = np.amax(imgData)*0.05
+         
+        params = ' -i %s' % self._getFileName(FN_GAUSSIAN_MAP)
+        params += ' --select below %f' % max_val
         params += ' --substitute binarize'
-        
+        params += ' -o %s' % self._getFileName(BINARY_MASK)
+     
         self.runJob('xmipp_transform_threshold', params)
+        
+        self.maskFn = self._getFileName(BINARY_MASK)
 
     def resolutionMonogenicSignalStep(self):
 
