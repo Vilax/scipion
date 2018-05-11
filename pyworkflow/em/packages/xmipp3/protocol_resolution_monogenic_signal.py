@@ -270,10 +270,9 @@ class XmippProtMonoRes(ProtAnalysis3D):
 
         # Number of frequencies
         if self.stepSize.hasValue():
-            Nfreqs = round(
-                    (self.maxRes.get() - self.minRes.get())/self.stepSize.get())
+            freq_step = self.stepSize.get()
         else:
-            Nfreqs = 50
+            freq_step = 0.25
   
         if self.halfVolumes:
             if self.isPremasked:
@@ -312,7 +311,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
                 params += ' --noiseonlyinhalves'
         else:
             params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
-        params += ' --number_frequencies %f' % Nfreqs
+        params += ' --step %f' % freq_step
         params += ' --minRes %f' % self.minRes.get()
         params += ' --maxRes %f' % self.maxRes.get()
         params += ' --volumeRadius %f' % xdim

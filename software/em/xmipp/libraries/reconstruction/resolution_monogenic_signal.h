@@ -60,7 +60,7 @@ public:
 	int NVoxelsOriginalMask, Nvoxels;
 
 	/** Step in digital frequency */
-	double N_freq, trimBound, significance;
+	double freq_step, trimBound, significance;
 
 	/** The search for resolutions is linear or inverse**/
 	bool exactres, noiseOnlyInHalves;
@@ -74,7 +74,7 @@ public:
     /* Mogonogenid amplitud of a volume, given an input volume,
      * the monogenic amplitud is calculated and low pass filtered at frequency w1*/
     void amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
-    		double w1, double w1l, MultidimArray<double> &amplitude,
+    		double freq, double freqH, double freqL, MultidimArray<double> &amplitude,
     		int count, FileName fnDebug);
     void postProcessingLocalResolutions(MultidimArray<double> &resolutionVol,
     		std::vector<double> &list, MultidimArray<double> &resolutionChimera,

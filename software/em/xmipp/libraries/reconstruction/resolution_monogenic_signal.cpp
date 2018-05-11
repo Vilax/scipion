@@ -42,7 +42,7 @@ void ProgMonogenicSignalRes::readParams()
 	minRes = getDoubleParam("--minRes");
 	maxRes = getDoubleParam("--maxRes");
 	fnSym = getParam("--sym");
-	N_freq = getDoubleParam("--number_frequencies");
+	freq_step = getDoubleParam("--step");
 	trimBound = getDoubleParam("--trimmed");
 	exactres = checkParam("--exact");
 	noiseOnlyInHalves = checkParam("--noiseonlyinhalves");
@@ -69,7 +69,7 @@ void ProgMonogenicSignalRes::defineParams()
 	addParamsLine("  [--sampling_rate <s=1>]   : Sampling rate (A/px)");
 	addParamsLine("                            : Use -1 to disable this option");
 	addParamsLine("  [--volumeRadius <s=100>]   : This parameter determines the radius of a sphere where the volume is");
-	addParamsLine("  [--number_frequencies <w=50>]       : The resolution is computed at a number of frequencies between mininum and");
+	addParamsLine("  [--step <s=0.25>]       : The resolution is computed at a number of frequencies between mininum and");
 	addParamsLine("                            : maximum resolution px/A. This parameter determines that number");
 	addParamsLine("  [--minRes <s=30>]         : Minimum resolution (A)");
 	addParamsLine("  [--maxRes <s=1>]          : Maximum resolution (A)");
@@ -104,6 +104,8 @@ void ProgMonogenicSignalRes::produceSideInfo()
 	}
 	V().setXmippOrigin();
 
+
+//	transformer_inv.setThreadsNumber(4);
 
 	FourierTransformer transformer;
 	MultidimArray<double> &inputVol = V();
@@ -170,7 +172,7 @@ void ProgMonogenicSignalRes::produceSideInfo()
 	FOR_ALL_ELEMENTS_IN_ARRAY3D(pMask)
 	{
 		if (A3D_ELEM(pMask, k, i, j) == 1)
-			NVoxelsOriginalMask++;
+			++NVoxelsOriginalMask;
 		if (i*i+j*j+k*k > R*R)
 			A3D_ELEM(pMask, k, i, j) = -1;
 	}
@@ -217,39 +219,35 @@ void ProgMonogenicSignalRes::produceSideInfo()
 
 
 void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
-		double w1, double w1l, MultidimArray<double> &amplitude, int count, FileName fnDebug)
+		double freq, double freqH, double freqL, MultidimArray<double> &amplitude, int count, FileName fnDebug)
 {
 	fftVRiesz.initZeros(myfftV);
-	amplitude.resizeNoCopy(VRiesz);
 	fftVRiesz_aux.initZeros(myfftV);
 	std::complex<double> J(0,1);
 
 	// Filter the input volume and add it to amplitude
 	long n=0;
-	double iw=1.0/w1;
-	double iwl=1.0/w1l;
-	double ideltal=PI/(w1-w1l);
+	double ideltal=PI/(freq-freqH);
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(myfftV)
 	{
 		double iun=DIRECT_MULTIDIM_ELEM(iu,n);
 		double un=1.0/iun;
-		if (w1l<=un && un<=w1)
+		if (freqH<=un && un<=freq)
 		{
 			//double H=0.5*(1+cos((un-w1)*ideltal));
 			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-w1)*ideltal));//H;
+			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-freq)*ideltal));//H;
 			DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
 			DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
 			DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
-		} else if (un>w1)
+		} else if (un>freq)
 		{
 			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
 			DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
 			DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
 			DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
 		}
-
 	}
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
@@ -275,15 +273,14 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	saveImg2.clear(); 
 	#endif
 
+	amplitude.resizeNoCopy(VRiesz);
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 		DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 
 	// Calculate first component of Riesz vector
-	fftVRiesz.initZeros(myfftV);
 	double uz, uy, ux;
 	n=0;
-
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
 		for(size_t i=0; i<YSIZE(myfftV); ++i)
@@ -301,9 +298,7 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 
 	// Calculate second component of Riesz vector
-	fftVRiesz.initZeros(myfftV);
 	n=0;
-
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
 		for(size_t i=0; i<YSIZE(myfftV); ++i)
@@ -318,10 +313,9 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	}
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
-	DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 
 	// Calculate third component of Riesz vector
-	fftVRiesz.initZeros(myfftV);
 	n=0;
 	for(size_t k=0; k<ZSIZE(myfftV); ++k)
 	{
@@ -353,9 +347,29 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	#endif // DEBUG
 //
 	// Low pass filter the monogenic amplitude
-	lowPassFilter.w1 = w1;
-	amplitude.setXmippOrigin();
-	lowPassFilter.applyMaskSpace(amplitude);
+	transformer_inv.FourierTransform(amplitude, fftVRiesz, false);
+	double raised_w = PI/(freqL-freq);
+
+	n=0;
+
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fftVRiesz)
+	{
+		double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
+//		std::cout << "un = " << un << "  freqL = " << freqL << " freq = " << freq << std::endl;
+		if ((freqL)>=un && un>=freq)
+		{
+			DIRECT_MULTIDIM_ELEM(fftVRiesz,n) *= 0.5*(1 + cos(raised_w*(un-freq)));
+		}
+		else
+		{
+			if (un>freqL)
+			{
+				DIRECT_MULTIDIM_ELEM(fftVRiesz,n) = 0;
+			}
+		}
+	}
+	transformer_inv.inverseFourierTransform();
+
 
 	#ifdef DEBUG
 	saveImg2 = amplitude;
@@ -488,7 +502,6 @@ void ProgMonogenicSignalRes::resolution2eval(int &count_res, double step,
 	int fourier_idx_2;
 
 	DIGFREQ2FFT_IDX(freqL, ZSIZE(VRiesz), fourier_idx_2);
-	double caca, caca2;
 
 	if (fourier_idx_2 == fourier_idx)
 	{
@@ -527,7 +540,7 @@ void ProgMonogenicSignalRes::run()
 
 	double range = maxRes-minRes;
 
-	double R_ = range/N_freq;
+	double R_ = freq_step;
 
 	if (R_<0.1)
 		R_=0.1;
@@ -553,7 +566,7 @@ void ProgMonogenicSignalRes::run()
 
 		resolution2eval(count_res, R_,
 						resolution, last_resolution,
-						freq, freqL,
+						freq, freqH,
 						last_fourier_idx, continueIter, breakIter, doNextIteration);
 
 		if (continueIter)
@@ -574,11 +587,15 @@ void ProgMonogenicSignalRes::run()
 
 		fnDebug = "Signal";
 
-		amplitudeMonogenicSignal3D(fftV, freq, freqL, amplitudeMS, iter, fnDebug);
+		freqL = freq + 0.01;
+//		if (freqL>=0.5)
+//			freqL = 0.5;
+
+		amplitudeMonogenicSignal3D(fftV, freq, freqH, freqL, amplitudeMS, iter, fnDebug);
 		if (halfMapsGiven)
 		{
 			fnDebug = "Noise";
-			amplitudeMonogenicSignal3D(*fftN, freq, freqL, amplitudeMN, iter, fnDebug);
+			amplitudeMonogenicSignal3D(*fftN, freq, freqH, freqL, amplitudeMN, iter, fnDebug);
 		}
 
 
