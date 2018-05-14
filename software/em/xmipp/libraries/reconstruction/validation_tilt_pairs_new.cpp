@@ -51,7 +51,7 @@ void ProgValidationTiltPairs::readParams()
     fnVol = getParam("--vol");
     smprt = getDoubleParam("--angular_sampling");
     maxshift = getIntParam("--maxshift");
-    Nbest = getIntParam("--nbest")
+    Nbest = getIntParam("--nbest");
 }
 
 void ProgValidationTiltPairs::generateProjections(const FileName &fnVol, double smprt)

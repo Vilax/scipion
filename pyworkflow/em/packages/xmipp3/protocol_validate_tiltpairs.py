@@ -88,7 +88,7 @@ class XmippProtValidateTiltPairs(ProtAnalysis3D):
     
     #--------------------------- STEPS functions ---------------------------------------------------
     def convertInputStep(self, classes, untilt, tilt):
-        classesFn = self._getExtraPath('input_classes.xmd')
+        classesFn = self._getTmpPath('input_classes.xmd')
         untiltFn = self._getExtraPath('images_untilted.xmd')
         tiltFn = self._getExtraPath('images_tilted.xmd')
         
@@ -101,6 +101,8 @@ class XmippProtValidateTiltPairs(ProtAnalysis3D):
         
 
     def classes2metadata(self, classesFn, tiltFn):
+        #It is compared always with tilt due to the input is untilted classes
+        #The output is a metadata with correspondence untilted particles
         mdClasses = MetaData()
         mdOneBlock = MetaData()
         
@@ -108,26 +110,33 @@ class XmippProtValidateTiltPairs(ProtAnalysis3D):
         mdBlocks = getBlocksInMetaDataFile(classesFn)
 
         for mdBlock in mdBlocks:
+            if mdBlock =='classes':
+                continue
+            print mdBlock
             mdOneBlock.read(mdBlock + "@" + classesFn)
-            fnblock = self._getExtraPath(mdBlock+".xmd")
+            fnblock = self._getExtraPath(mdBlock+"_untilted.xmd")
             mdOneBlock.write(fnblock)
             params =  ' -i %s' % (tiltFn)
             params += ' --set intersection %s '"'itemId'"' '"'itemId'"' ' % (fnblock)
-            params += ' -o %s' % (self._getExtraPath(mdBlock+"_untilt.xmd"))
+            params += ' -o %s' % (self._getExtraPath(mdBlock+"_tilted.xmd"))
             
             self.runJob('xmipp_metadata_utilities', params)
+            print ' '
 
 
     def validationStep(self):
-        classesFn = self._getExtraPath('input_classes.xmd')
+        classesFn = self._getTmpPath('input_classes.xmd')
         mdClasses = MetaData()
         mdClasses.read(classesFn)
 
         mdBlocks = getBlocksInMetaDataFile(classesFn)
         
         for mdBlock in mdBlocks:
-            params =  ' --untilt %s' %(self._getExtraPath(mdBlock+".xmd"))
-            params += ' --tilt %s' %( self._getExtraPath(mdBlock+"_untilt.xmd") )
+            if mdBlock == 'classes':
+                continue
+            
+            params =  ' --untilt %s' %(self._getExtraPath(mdBlock+"_untilted.xmd"))
+            params += ' --tilt %s' %(self._getExtraPath(mdBlock+"_tilted.xmd"))
             params += ' --vol %s' %(self.inputVolume.get().getFileName())
             params += ' --angular_sampling %f' %self.angularSampling.get()
 #             params += ' --sym %s' %(self.sym.get())

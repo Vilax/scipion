@@ -53,7 +53,7 @@ public:
 
     double smprt, maxshift;
 
-    int Nbest
+    int Nbest;
 
 public:
     /// Define parameters in the command line
