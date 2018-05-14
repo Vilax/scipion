@@ -1043,7 +1043,7 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 
 	radial.initZeros(pmask);
 	azimuthal.initZeros(pmask);
-	double radial_angle = 15*PI/180;
+	double radial_angle = 20*PI/180;
 	double azimuthal_resolution = 0;
 	double radial_resolution = 0;
 	double azimuthal_angle = 75*PI/180;
@@ -1073,12 +1073,12 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 
 					dotproduct = (x*i + y*j + z*k)*iu;
 					arcos = acos(fabs(dotproduct));
-					if (arcos<=azimuthal_angle)
+					if (arcos>=azimuthal_angle)
 					{
 						count_azimuthal = count_azimuthal + 1;
 						azimuthal_resolution += resolution;
 					}
-					if (arcos>=radial_angle)
+					if (arcos<=radial_angle)
 					{
 						count_radial = count_radial + 1;
 						radial_resolution += resolution;
