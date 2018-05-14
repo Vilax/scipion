@@ -63,7 +63,7 @@ public:
 	double freq_step, trimBound, significance;
 
 	/** The search for resolutions is linear or inverse**/
-	bool exactres, noiseOnlyInHalves;
+	bool exactres, noiseOnlyInHalves, automaticMode;
 
 public:
 
@@ -76,6 +76,10 @@ public:
     void amplitudeMonogenicSignal3D(MultidimArray< std::complex<double> > &myfftV,
     		double freq, double freqH, double freqL, MultidimArray<double> &amplitude,
     		int count, FileName fnDebug);
+    void firstMonoResEstimation(MultidimArray< std::complex<double> > &myfftV,
+    		double freq, double freqH, double freqL, MultidimArray<double> &amplitude,
+    		int count, FileName fnDebug, double &mean_Signal,
+			double &mean_noise, double &thresholdFirstEstimation);
     void postProcessingLocalResolutions(MultidimArray<double> &resolutionVol,
     		std::vector<double> &list, MultidimArray<double> &resolutionChimera,
     		double &cut_value, MultidimArray<int> &pMask);

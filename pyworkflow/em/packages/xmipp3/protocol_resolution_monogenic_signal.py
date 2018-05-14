@@ -155,8 +155,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       'the spherical premask. By default radius = -1 use the half'
                       'of the volume size as radius')
 
-        line.addParam('minRes', FloatParam, default=1, label='High')
-        line.addParam('maxRes', FloatParam, default=30, label='Low')
+        line.addParam('minRes', FloatParam, default=0, label='High')
+        line.addParam('maxRes', FloatParam, default=0, label='Low')
         line.addParam('stepSize', FloatParam, allowsNull=True,
                       expertLevel=LEVEL_ADVANCED, label='Step')
 
@@ -294,6 +294,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
             else:
                 xdim, _ydim, _zdim = self.inputVolumes.get().getDim()
                 xdim = xdim*0.5
+
+
                 
         if self.halfVolumes.get() is False:
             params = ' --vol %s' % self.vol0Fn
@@ -311,9 +313,12 @@ class XmippProtMonoRes(ProtAnalysis3D):
                 params += ' --noiseonlyinhalves'
         else:
             params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
+        if (self.maxRes.get()==0):
+            params += ' --automatic '
+        else:
+            params += ' --minRes %f' % self.minRes.get()
+            params += ' --maxRes %f' % self.maxRes.get()
         params += ' --step %f' % freq_step
-        params += ' --minRes %f' % self.minRes.get()
-        params += ' --maxRes %f' % self.maxRes.get()
         params += ' --volumeRadius %f' % xdim
         params += ' --exact'
         params += ' --chimera_volume %s' % self._getFileName(
@@ -331,9 +336,13 @@ class XmippProtMonoRes(ProtAnalysis3D):
 
     def createHistrogram(self):
 
+        M = float(self.max_res_init)
+        m = float(self.min_res_init)
+        range_res = round((M - m)*4.0)
+
         params = ' -i %s' % self._getFileName(OUTPUT_RESOLUTION_FILE)
         params += ' --mask binary_file %s' % self._getFileName(OUTPUT_MASK_FILE)
-        params += ' --steps %f' % 30
+        params += ' --steps %f' % (range_res)
         params += ' --range %f %f' % (self.min_res_init, self.max_res_init)
         params += ' -o %s' % self._getFileName(FN_METADATA_HISTOGRAM)
 
