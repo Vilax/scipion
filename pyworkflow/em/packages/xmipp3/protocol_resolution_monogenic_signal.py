@@ -266,16 +266,9 @@ class XmippProtMonoRes(ProtAnalysis3D):
         
         self.maskFn = self._getFileName(BINARY_MASK)
 
-    def resolutionMonogenicSignalStep(self):
-
-        # Number of frequencies
-        if self.stepSize.hasValue():
-            freq_step = self.stepSize.get()
-        else:
-            freq_step = 0.25
-  
-        if self.halfVolumes:
-            if self.isPremasked:
+    def maskRadius(self, halfmaps, premaskedmap):
+        if halfmaps:
+            if premaskedmap:
                 if self.volumeRadiusHalf == -1:
                     xdim, _ydim, _zdim = self.inputVolume.get().getDim()
                     xdim = xdim*0.5
@@ -285,7 +278,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
                 xdim, _ydim, _zdim = self.inputVolume.get().getDim()
                 xdim = xdim*0.5
         else:
-            if self.isPremasked:
+            if premaskedmap:
                 if self.volumeRadius == -1:
                     xdim, _ydim, _zdim = self.inputVolumes.get().getDim()
                     xdim = xdim*0.5
@@ -294,31 +287,96 @@ class XmippProtMonoRes(ProtAnalysis3D):
             else:
                 xdim, _ydim, _zdim = self.inputVolumes.get().getDim()
                 xdim = xdim*0.5
+        return xdim
+    
+    def resolutionMonogenicAuto(self):
+        freq_step = 1
 
+        xdim = self.maskRadius(self.halfVolumes, self.isPremasked)
+#         
+#         if self.halfVolumes:
+#             if self.isPremasked:
+#                 if self.volumeRadiusHalf == -1:
+#                     xdim, _ydim, _zdim = self.inputVolume.get().getDim()
+#                     xdim = xdim*0.5
+#                 else:
+#                     xdim = self.volumeRadiusHalf.get()
+#             else:
+#                 xdim, _ydim, _zdim = self.inputVolume.get().getDim()
+#                 xdim = xdim*0.5
+#         else:
+#             if self.isPremasked:
+#                 if self.volumeRadius == -1:
+#                     xdim, _ydim, _zdim = self.inputVolumes.get().getDim()
+#                     xdim = xdim*0.5
+#                 else:
+#                     xdim = self.volumeRadius.get()
+#             else:
+#                 xdim, _ydim, _zdim = self.inputVolumes.get().getDim()
+#                 xdim = xdim*0.5
 
-                
-        if self.halfVolumes.get() is False:
-            params = ' --vol %s' % self.vol0Fn
-            params += ' --mask %s' % self._getFileName(BINARY_MASK)
-        else:
+        if self.halfVolumes:
             params = ' --vol %s' % self.vol1Fn
             params += ' --vol2 %s' % self.vol2Fn
             params += ' --meanVol %s' % self._getFileName(FN_MEAN_VOL)
             params += ' --mask %s' % self._getFileName(BINARY_MASK)
-        params += ' --mask_out %s' % self._getFileName(OUTPUT_MASK_FILE)
-        params += ' -o %s' % self._getFileName(OUTPUT_RESOLUTION_FILE)
-        if (self.halfVolumes):
             params += ' --sampling_rate %f' % self.inputVolume.get().getSamplingRate()
             if (self.noiseonlyinhalves is False):
                 params += ' --noiseonlyinhalves'
         else:
+            params = ' --vol %s' % self.vol0Fn
+            params += ' --mask %s' % self._getFileName(BINARY_MASK)
             params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
-        if (self.maxRes.get()==0):
-            params += ' --automatic '
-        else:
-            params += ' --minRes %f' % self.minRes.get()
-            params += ' --maxRes %f' % self.maxRes.get()
+
+        params += ' --automatic '
         params += ' --step %f' % freq_step
+        params += ' --mask_out %s' % self._getFileName(OUTPUT_MASK_FILE)
+        params += ' -o %s' % self._getFileName(OUTPUT_RESOLUTION_FILE)
+        params += ' --volumeRadius %f' % xdim
+        params += ' --chimera_volume %s' % self._getFileName(
+                                                    OUTPUT_RESOLUTION_FILE_CHIMERA)
+        params += ' --sym %s' % self.symmetry.get()
+        params += ' --significance %f' % self.significance.get()
+        params += ' --md_outputdata %s' % self._getFileName(METADATA_MASK_FILE)  
+        params += ' --filtered_volume %s' % ''
+
+        self.runJob('xmipp_resolution_monogenic_signal', params)
+
+    def resolutionMonogenicSignalStep(self):
+        # Number of frequencies
+        if (self.maxRes.get()==0):
+            self.resolutionMonogenicAuto()
+            imageFile = self._getFileName(OUTPUT_RESOLUTION_FILE)
+            min_, max_ = self.getMinMax(imageFile)
+        else:    
+            max_ = self.maxRes.get()
+
+        if self.stepSize.hasValue():
+            freq_step = self.stepSize.get()
+        else:
+            freq_step = 0.25
+  
+        xdim = self.maskRadius(self.halfVolumes, self.isPremasked)
+
+        if self.halfVolumes:
+            params = ' --vol %s' % self.vol1Fn
+            params += ' --vol2 %s' % self.vol2Fn
+            params += ' --meanVol %s' % self._getFileName(FN_MEAN_VOL)
+            params += ' --mask %s' % self._getFileName(BINARY_MASK)
+            params += ' --sampling_rate %f' % self.inputVolume.get().getSamplingRate()
+            if (self.noiseonlyinhalves is False):
+                params += ' --noiseonlyinhalves'
+        else:
+            params = ' --vol %s' % self.vol0Fn
+            params += ' --mask %s' % self._getFileName(BINARY_MASK)
+            params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
+
+        params += ' --minRes %f' % self.minRes.get()
+        params += ' --maxRes %f' % max_
+            
+        params += ' --step %f' % freq_step
+        params += ' --mask_out %s' % self._getFileName(OUTPUT_MASK_FILE)
+        params += ' -o %s' % self._getFileName(OUTPUT_RESOLUTION_FILE)
         params += ' --volumeRadius %f' % xdim
         params += ' --exact'
         params += ' --chimera_volume %s' % self._getFileName(
@@ -332,6 +390,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
             params += ' --filtered_volume %s' % ''
 
         self.runJob('xmipp_resolution_monogenic_signal', params)
+
 
 
     def createHistrogram(self):
@@ -369,14 +428,13 @@ class XmippProtMonoRes(ProtAnalysis3D):
         volume.setFileName(self._getFileName(OUTPUT_RESOLUTION_FILE))
         if (self.halfVolumes):
             volume.setSamplingRate(self.inputVolume.get().getSamplingRate())
-        else:
-            volume.setSamplingRate(self.inputVolumes.get().getSamplingRate())
-#         readSetOfVolumes(volume_path, self.volumesSet)
-        self._defineOutputs(resolution_Volume=volume)
-        if (self.halfVolumes):
+            self._defineOutputs(resolution_Volume=volume)
             self._defineSourceRelation(self.inputVolume, volume)
         else:
+            volume.setSamplingRate(self.inputVolumes.get().getSamplingRate())
+            self._defineOutputs(resolution_Volume=volume)
             self._defineSourceRelation(self.inputVolumes, volume)
+            
             
         #Setting the min max for the summary
         imageFile = self._getFileName(OUTPUT_RESOLUTION_FILE_CHIMERA)
@@ -391,13 +449,15 @@ class XmippProtMonoRes(ProtAnalysis3D):
             volume.setFileName(self._getFileName(FN_FILTERED_MAP))
             if (self.halfVolumes):
                 volume.setSamplingRate(self.inputVolume.get().getSamplingRate())
-            else:
-                volume.setSamplingRate(self.inputVolumes.get().getSamplingRate())
-            self._defineOutputs(outputVolume_Filtered=volume)
-            if (self.halfVolumes):
+                self._defineOutputs(outputVolume_Filtered=volume)
                 self._defineSourceRelation(self.inputVolume, volume)
             else:
+                volume.setSamplingRate(self.inputVolumes.get().getSamplingRate())
+                self._defineOutputs(outputVolume_Filtered=volume)
                 self._defineSourceRelation(self.inputVolumes, volume)
+            
+
+                
 
     # --------------------------- INFO functions ------------------------------
 

@@ -79,6 +79,10 @@ class XmippMonoResViewer(LocalResolutionViewer):
         form.addParam('doShowVolumeSlices', LabelParam,
                       label="Show resolution slices")
         
+        form.addParam('doShowFilteredVolume', LabelParam, 
+                      condition=self.protocol.filterInput,
+                      label="Show local filtered volume slices")
+        
         form.addParam('doShowOriginalVolumeSlices', LabelParam,
                       label="Show original volume slices")
 
@@ -119,6 +123,7 @@ class XmippMonoResViewer(LocalResolutionViewer):
     def _getVisualizeDict(self):
         self.protocol._createFilenameTemplates()
         return {'doShowOriginalVolumeSlices': self._showOriginalVolumeSlices,
+                'doShowFilteredVolume': self._showFilteredVolumeSlices,
                 'doShowVolumeSlices': self._showVolumeSlices,
                 'doShowVolumeColorSlices': self._showVolumeColorSlices,
                 'doShowOneColorslice': self._showOneColorslice,
@@ -128,6 +133,11 @@ class XmippMonoResViewer(LocalResolutionViewer):
        
     def _showVolumeSlices(self, param=None):
         cm = DataView(self.protocol.resolution_Volume.getFileName())
+        
+        return [cm]
+    
+    def _showFilteredVolumeSlices(self, param=None):
+        cm = DataView(self.protocol.outputVolume_Filtered.getFileName())
         
         return [cm]
     
