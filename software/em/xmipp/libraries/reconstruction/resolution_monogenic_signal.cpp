@@ -50,6 +50,7 @@ void ProgMonogenicSignalRes::readParams()
 	significance = getDoubleParam("--significance");
 	fnMd = getParam("--md_outputdata");
 	automaticMode = checkParam("--automatic");
+	nthrs = getIntParam("--threads");
 }
 
 
@@ -85,7 +86,9 @@ void ProgMonogenicSignalRes::defineParams()
 	addParamsLine("                                  : SNR. Thus, a new mask is created. This metadata file, shows, the number of");
 	addParamsLine("                                  : voxels of the original mask, and the created mask");
 	addParamsLine("  [--automatic]                   : Resolution range is not neccesary provided");
+	addParamsLine("  [--threads <s=4>]               : Number of threads");
 }
+
 
 void ProgMonogenicSignalRes::produceSideInfo()
 {
@@ -107,7 +110,7 @@ void ProgMonogenicSignalRes::produceSideInfo()
 	V().setXmippOrigin();
 
 
-	transformer_inv.setThreadsNumber(4);
+	transformer_inv.setThreadsNumber(nthrs);
 
 	FourierTransformer transformer;
 	MultidimArray<double> &inputVol = V();

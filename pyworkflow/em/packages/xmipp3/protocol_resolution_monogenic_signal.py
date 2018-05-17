@@ -98,12 +98,12 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       ' and which are not')
 
         group = form.addGroup('Extra parameters')
-        group.addParam('symmetry', StringParam, default='c1',
-                      label="Symmetry",
-                      help='Symmetry group. By default = c1.'
-                      'See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]'
-                      'for a description of the symmetry groups format,' 
-                      'If no symmetry is present, give c1.')
+#         group.addParam('symmetry', StringParam, default='c1',
+#                       label="Symmetry",
+#                       help='Symmetry group. By default = c1.'
+#                       'See [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Symmetry][Symmetry]]'
+#                       'for a description of the symmetry groups format,' 
+#                       'If no symmetry is present, give c1.')
 
         line = group.addLine('Resolution Range (Å)',
                             help="If the user knows the range of resolutions or"
@@ -164,6 +164,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       label="Filter input volume with local resolution?",
                       help='The input map is locally filtered at'
                       'the local resolution map.')
+        
+        form.addParallelSection(threads = 4, mpi = 0)
 
     # --------------------------- INSERT steps functions --------------------------------------------
 
@@ -335,7 +337,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
         params += ' --volumeRadius %f' % xdim
         params += ' --chimera_volume %s' % self._getFileName(
                                                     OUTPUT_RESOLUTION_FILE_CHIMERA)
-        params += ' --sym %s' % self.symmetry.get()
+        params += ' --sym %s' % 'c1'#self.symmetry.get()
         params += ' --significance %f' % self.significance.get()
         params += ' --md_outputdata %s' % self._getFileName(METADATA_MASK_FILE)  
         params += ' --filtered_volume %s' % ''
@@ -381,7 +383,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
         params += ' --exact'
         params += ' --chimera_volume %s' % self._getFileName(
                                                     OUTPUT_RESOLUTION_FILE_CHIMERA)
-        params += ' --sym %s' % self.symmetry.get()
+        params += ' --sym %s' % 'c1'#self.symmetry.get()
         params += ' --significance %f' % self.significance.get()
         params += ' --md_outputdata %s' % self._getFileName(METADATA_MASK_FILE)  
         if self.filterInput.get():
