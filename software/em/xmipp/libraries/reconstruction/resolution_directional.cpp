@@ -1046,7 +1046,7 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 	double radial_angle = 20*PI/180;
 	double azimuthal_resolution = 0;
 	double radial_resolution = 0;
-	double azimuthal_angle = 75*PI/180;
+	double azimuthal_angle = 70*PI/180;
 	double resolution, dotproduct, x, y, z, iu, arcos;
 	int xrows = angles.mdimx;
 	int idx;
