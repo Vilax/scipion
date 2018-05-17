@@ -48,6 +48,7 @@ void ProgResDir::readParams()
 	fnazimuthal =getParam("--azimuthalRes");
 	fnMDradial =getParam("--radialAvg");
 	fnMDazimuthal =getParam("--azimuthalAvg");
+	Nthr = getIntParam("--threads");
 }
 
 
@@ -69,6 +70,7 @@ void ProgResDir::defineParams()
 	addParamsLine("  [--azimuthalRes <vol_file=\"\">]  : Output azimuthal resolution map");
 	addParamsLine("  [--radialAvg <vol_file=\"\">]  : Radial Average of the radial resolution map");
 	addParamsLine("  [--azimuthalAvg <vol_file=\"\">]  : Radial Average of the azimuthal resolution map");
+	addParamsLine("  [--threads <s=4>]          : Number of threads");
 }
 
 void ProgResDir::produceSideInfo()
@@ -92,7 +94,7 @@ void ProgResDir::produceSideInfo()
 	maxRes = ZSIZE(inputVol);
 	minRes = 2*sampling;
 
-	transformer_inv.setThreadsNumber(4);
+	transformer_inv.setThreadsNumber(Nthr);
 
 	transformer.FourierTransform(inputVol, fftV);
 	iu.initZeros(fftV);

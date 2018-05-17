@@ -102,6 +102,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
                       'box. The radius value, determines the radius of the spherical premask. By default'
                       'radius = -1 use the half of the volume size as radius')
 
+        form.addParallelSection(threads=4, mpi=0)
 
     # --------------------------- INSERT steps functions --------------------------------------------
 
@@ -115,7 +116,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
         # Convert input into xmipp Metadata format
         convertId = self._insertFunctionStep('convertInputStep', )
         
-        MS = self._insertFunctionStep('resolutionMonogenicSignalStep',
+        MS = self._insertFunctionStep('directionalResolutionStep',
                                       prerequisites=[convertId])
 
         self._insertFunctionStep('createOutputStep', prerequisites=[MS])
@@ -136,7 +137,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
             self.maskFn = self.maskFn + ':mrc'
 
 
-    def resolutionMonogenicSignalStep(self):
+    def directionalResolutionStep(self):
 
         if self.isPremasked:
             if self.volumeRadius == -1:
@@ -164,6 +165,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params += ' --azimuthalRes %s' % self._getExtraPath(OUTPUT_AZIMUTHAL_FILE)
         params += ' --radialAvg %s' % self._getExtraPath(OUTPUT_MD_RADIAL_FILE)
         params += ' --azimuthalAvg %s' % self._getExtraPath(OUTPUT_MD_AZIMUTHAL_FILE)
+        params += ' --threads %i' % self.numberOfThreads.get()
 
         self.runJob('xmipp_resolution_directional', params)
 

@@ -60,7 +60,7 @@ public:
 	double sampling, minRes, maxRes, R, ang_sampling, N_points, N_directions, Rparticle;
 
 	/** Is the volume previously masked?*/
-	int NVoxelsOriginalMask, Nvoxels;
+	int NVoxelsOriginalMask, Nvoxels, Nthr;
 
 	/** Step in digital frequency */
 	double N_freq, significance;
