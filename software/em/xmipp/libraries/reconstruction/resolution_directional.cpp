@@ -1634,6 +1634,7 @@ void ProgResDir::run()
 				++maskPos;
 			}
 		}
+		std::cout << " " << std::endl;
 
 	}
 
