@@ -146,12 +146,12 @@ void ProgResDir::produceSideInfo()
 		exit(0);
 	}
 
-	//use the mask for preparing resolution volumes
-	Image<double> AvgResoltion;
-	AvgResoltion().resizeNoCopy(inputVol);
-	AvgResoltion().initZeros();
-	AvgResoltion.write(fnOut);
-	AvgResoltion.clear();
+//	//use the mask for preparing resolution volumes
+//	Image<double> AvgResoltion;
+//	AvgResoltion().resizeNoCopy(inputVol);
+//	AvgResoltion().initZeros();
+//	AvgResoltion.write(fnOut);
+//	AvgResoltion.clear();
 
 	N_smoothing = 7;
 	NVoxelsOriginalMask = 0;
@@ -180,7 +180,13 @@ void ProgResDir::produceSideInfo()
 //	std::cout << aaa << std::endl;
 //	std::cout << "NVoxelsOriginalMask = " << NVoxelsOriginalMask << std::endl;
 
+	std::cout << "sus muertos...  " << maxRes << std::endl;
+
 	resolutionMatrix.initConstant(xrows, NVoxelsOriginalMask, maxRes);
+
+
+	std::cout << MAT_ELEM(resolutionMatrix, 1, 2) << std::endl;
+
 
 
 	#ifdef DEBUG_MASK
@@ -489,7 +495,6 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 	{
 		DIRECT_MULTIDIM_ELEM(amplitude,n)+= DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
-
 	}
 
 	transformer_inv.inverseFourierTransform(fftVRiesz_aux, VRiesz);
@@ -620,7 +625,6 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 					DIRECT_MULTIDIM_ELEM(conefilter, n) = 0;
 //					DIRECT_MULTIDIM_ELEM(conetest, n) = 0;
 				}
-				//TODO: remove fabs
 /*
 				//4822.53 mean a smoothed cone angle of 20 degrees
 				double arg_exp = acosine*acosine*acosine*acosine*4822.53;
@@ -665,7 +669,6 @@ void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 //	std::cout << "res = " << resolution << std::endl;
 //	std::cout << "min_step = " << min_step << std::endl;
 
-	//TODO: I am sure that the abs can be removed
 	if ( fabs(resolution - last_resolution)<min_step )
 	{
 		freq = sampling/(last_resolution-min_step);
@@ -747,7 +750,7 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 	double x1, y1, z1, x2, y2, z2, distance, resolution, sigma,
 				rot, tilt, threshold, sigma2, lastMinDistance;
 	double meandistance = 0, distance_2 = 0;
-	int xrows = angles.mdimx, N=0;
+	int numberdirections = angles.mdimx, N=0;
 
 //	std::cout << "xrows = " << xrows << std::endl;
 
@@ -758,7 +761,7 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 		meandistance = 0;
 		distance_2 = 0;
 
-		for (int i = 0; i<xrows; ++i)
+		for (int i = 0; i<numberdirections; ++i)
 		{
 			resolution = MAT_ELEM(resolutionMat, i, k);
 //			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
@@ -767,7 +770,7 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 			y1 = resolution*MAT_ELEM(trigProducts, 1, i);
 			z1 = resolution*MAT_ELEM(trigProducts, 2, i);
 			lastMinDistance = 1e38;
-			for (int j = 0; j<xrows; ++j)
+			for (int j = 0; j<numberdirections; ++j)
 			{
 //				rot = MAT_ELEM(anglesMat,0, j)*PI/180;
 //				tilt = MAT_ELEM(anglesMat,1, j)*PI/180;
@@ -788,12 +791,12 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 			distance_2 += lastMinDistance*lastMinDistance;
 		}
 
-		meandistance = (meandistance)/((double) xrows);
-		sigma2 = distance_2/((double) xrows) - meandistance*meandistance;
+		meandistance = (meandistance)/((double) numberdirections);
+		sigma2 = distance_2/((double) numberdirections) - meandistance*meandistance;
 
 		threshold = meandistance + criticalZ*sqrt(sigma2);
 
-		for (int i = 0; i<xrows; ++i)
+		for (int i = 0; i<numberdirections; ++i)
 		{
 			resolution = MAT_ELEM(resolutionMat, i, k);
 //			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
@@ -802,7 +805,7 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 			y1 = resolution*MAT_ELEM(trigProducts, 1, i);
 			z1 = resolution*MAT_ELEM(trigProducts, 2, i);
 			lastMinDistance = 1e38;
-			for (int j = 0; j<xrows; ++j)
+			for (int j = 0; j<numberdirections; ++j)
 			{
 //				rot = MAT_ELEM(anglesMat,0, j)*PI/180;
 //				tilt = MAT_ELEM(anglesMat,1, j)*PI/180;
@@ -873,7 +876,7 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 									Matrix2D<double> &axis)
 {
 	double x, y, z, a, b, c, resolution, rot, tilt;
-	int xrows = angles.mdimx;
+	int numberdirections = angles.mdimx;
 	std::vector<double> list_distances;
 
 	//std::cout << "xrows = " << xrows << std::endl;
@@ -897,7 +900,7 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 	for (int k = 0; k<NVoxelsOriginalMask; ++k)
 	{
 		dimMatrix = 0;
-		for (int i = 0; i<xrows; ++i)
+		for (int i = 0; i<numberdirections; ++i)
 		{
 			if (MAT_ELEM(resolutionMat, i, k) > 0)
 				++dimMatrix;
@@ -905,7 +908,7 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 
 		ellipMat.initZeros(dimMatrix, 6);
 		mycounter = 0; //It is required to store the matrix ellipMat
-		for (int i = 0; i<xrows; ++i)
+		for (int i = 0; i<numberdirections; ++i)
 		{
 			resolution = MAT_ELEM(resolutionMat, i, k);
 
@@ -990,7 +993,7 @@ void ProgResDir::radialAverageInMask(MultidimArray<int> &mask, MultidimArray<dou
 		MultidimArray<double> test_ring;
 		test_ring.initZeros(inputVol);
 		//DIRECT_MULTIDIM_ELEM(radialAvg,0) = sqrt(real(conj(A3D_ELEM(fftV, 0,0,0))*A3D_ELEM(fftV, 0,0,0)));
-		std::cout << "XSIZE = " << XSIZE(inputVol) << std::endl;
+//		std::cout << "XSIZE = " << XSIZE(inputVol) << std::endl;
 
 		int uk, uj, ui;
 
@@ -1088,9 +1091,9 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 
 				}
 			}
-			std::cout << "count_radial = " << count_radial << std::endl;
-			std::cout << "count_azimuthal = " << count_azimuthal << std::endl;
-			std::cout << "  " << std::endl;
+//			std::cout << "count_radial = " << count_radial << std::endl;
+//			std::cout << "count_azimuthal = " << count_azimuthal << std::endl;
+//			std::cout << "  " << std::endl;
 			++idx;
 		}
 		A3D_ELEM(radial,k,i,j) = radial_resolution/count_radial;
@@ -1286,8 +1289,6 @@ void ProgResDir::run()
 	std::cout << "step = " << step << std::endl;
 	std::cout << "criticalZ = " << criticalZ << std::endl;
 
-	Image<double> outputResolution;
-	MultidimArray<double> amplitudeMS;
 
 	double w, wH;
 	int volsize = ZSIZE(VRiesz);
@@ -1315,7 +1316,7 @@ void ProgResDir::run()
 	std::cout << "fourier idx = " << aux_idx << std::endl;
 	std::cout << "Calling MonoRes core as a first estimation at " << sampling/w << "A." << std::endl;
 
-
+	MultidimArray<double> amplitudeMS;
 	double AvgNoise;
 	AvgNoise = firstMonoResEstimation(fftV, w, wH, amplitudeMS)/9.0;
 
@@ -1327,6 +1328,8 @@ void ProgResDir::run()
 	cone_angle = PI*cone_angle/180;
 
 	trigProducts.initZeros(3, N_directions);
+
+	Image<double> outputResolution;
 
 	for (size_t dir=0; dir<N_directions; dir++)
 	{
@@ -1429,7 +1432,6 @@ void ProgResDir::run()
 						else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
 						{
 							uz = (k - z_size*0.5);
-//							std::cout << " uz = " << uz  <<std::endl;
 							ux = (j - x_size*0.5);
 							uy = (i - y_size*0.5);
 
@@ -1441,11 +1443,10 @@ void ProgResDir::run()
 
 							double acosine = acos(dotproduct);
 
-							//TODO: change efficienty the if condition by means of fabs(cos(angle))
+							//TODO: change efficiency the if condition by means of fabs(cos(angle))
 							if (((acosine<(cone_angle)) || (acosine>(PI-cone_angle)) )
 									&& (rad>Rparticle))
 							{
-
 //								DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
 								amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
 								sumN  += amplitudeValue;
@@ -1549,12 +1550,6 @@ void ProgResDir::run()
 						}
 					}
 
-//					#ifdef DEBUG_MASK
-//					FileName fnmask_debug;
-//					fnmask_debug = formatString("maske_%i.vol", iter);
-//					mask.write(fnmask_debug);
-//					#endif
-
 					//#ifdef DEBUG
 //						std::cout << "thresholdNoise = " << thresholdNoise << std::endl;
 //						std::cout << "  meanS= " << meanS << " NS= " << NS << std::endl;
@@ -1608,19 +1603,40 @@ void ProgResDir::run()
 	}
 
 	////////////////////////////////////////////
+
+	int maskPos = 0;
+//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mask())
+//	{
+//		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
+//		{
+//			for (size_t dires=0; dires<N_directions; ++dires)
+//			{
+//				double myres = MAT_ELEM(resolutionMatrix, dires, maskPos);
+//				if (maskPos<500)
+//					std::cout << dires << " " << myres << std::endl;
+//			}
+//			++maskPos;
+//		}
+//	}
+
+
+
 	for (size_t dires=0; dires<N_directions; ++dires)
 	{
-		int maskPos = 0;
+		maskPos = 0;
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mask())
 		{
 			if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
 			{
 				double myres = MAT_ELEM(resolutionMatrix, dires, maskPos);
-				std::cout << dires << " " << myres << std::endl;
+				if (dires==0)
+					std::cout << dires << " " << myres << std::endl;
 				++maskPos;
 			}
 		}
+
 	}
+
 	////////////////////////////////////////////
 
 	//Remove outliers
@@ -1656,8 +1672,6 @@ void ProgResDir::run()
 			double c = MAT_ELEM(axis, 2, idx);
 //			if (idx<100)
 //				std::cout << c << " " << a << ";" << std::endl;
-//			std::cout << "a = " << a << std::endl;
-//			std::cout << "c = " << c << std::endl;
 			DIRECT_MULTIDIM_ELEM(pdoaVol, n) = (c)/(a);
 			++idx;
 		}
@@ -1707,7 +1721,7 @@ void ProgResDir::run()
 	arrows.initZeros(mask());
 	const int gridStep=10;
 	size_t n=0;
-	int maskPos=0;
+	maskPos=0;
 ///////////////////////
 
 	idx = 0;
