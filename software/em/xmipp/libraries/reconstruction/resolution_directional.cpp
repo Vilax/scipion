@@ -1607,6 +1607,22 @@ void ProgResDir::run()
 		std::cout << "----------------direction-finished----------------" << std::endl;
 	}
 
+	////////////////////////////////////////////
+	for (size_t dires=0; dires<N_directions; ++dires)
+	{
+		int maskPos = 0;
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mask())
+		{
+			if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
+			{
+				double myres = MAT_ELEM(resolutionMatrix, dires, maskPos);
+				std::cout << dires << " " << myres << std::endl;
+				++maskPos;
+			}
+		}
+	}
+	////////////////////////////////////////////
+
 	//Remove outliers
 	removeOutliers(trigProducts, resolutionMatrix);
 //	removeOutliers(angles, resolutionMatrix);
