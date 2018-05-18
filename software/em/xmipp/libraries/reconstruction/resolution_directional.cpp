@@ -1287,7 +1287,7 @@ void ProgResDir::run()
 	std::cout << "criticalZ = " << criticalZ << std::endl;
 
 	Image<double> outputResolution;
-	MultidimArray<double> amplitudeMS, amplitudeMN;
+	MultidimArray<double> amplitudeMS;
 
 	double w, wH;
 	int volsize = ZSIZE(VRiesz);
@@ -1570,18 +1570,9 @@ void ProgResDir::run()
 			last_resolution = resolution;
 		}while(doNextIteration);
 
-
-
-//		amplitudeMN.clear();
 //		amplitudeMS.clear();
 //		fftVRiesz.clear();
-		
-		int NVoxelsOriginalMask_bis = 0;
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mask())
-		{
-			if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
-				++NVoxelsOriginalMask_bis;
-		}
+
 		//////////////////
 		//INERTIA MOMENT//
 		//////////////////
