@@ -134,6 +134,12 @@ class XmippMonoDirViewer(ProtocolViewer):
         
         groupRadAzim.addParam('doShowAzimuthalColorSlices', LabelParam,
                label="Show azimuthal resolution colored slices")
+        
+        groupRadAzim.addParam('doShowRadialHistogram', LabelParam,
+               label="Show radial resolution histogram")
+        
+        groupRadAzim.addParam('doShowAzimuthalHistogram', LabelParam,
+               label="Show azimuthal resolution histogram")
 
         group = form.addGroup('Choose a Color Map')
         group.addParam('colorMap', EnumParam, choices=COLOR_CHOICES.values(),
@@ -160,7 +166,9 @@ class XmippMonoDirViewer(ProtocolViewer):
                 'doShowRadialColorSlices': self._showRadialColorSlices,
                 'doShowAzimuthalColorSlices': self._showAzimuthalColorSlices,
                 'doShowChimera': self._showChimera,
-                'doShowDoAHistogram': self._plotHistogram,
+                'doShowDoAHistogram': self._plotHistogramDoA,
+                'doShowRadialHistogram': self._plotHistogramRadial,
+                'doShowAzimuthalHistogram': self._plotHistogramAzimuthal,
                 }
 
     def _showDoASlices(self, param=None):
@@ -204,10 +212,18 @@ class XmippMonoDirViewer(ProtocolViewer):
 
         return plt.show(fig)
 
+    def _plotHistogramDoA(self):
+        self._plotHistogram('hist_DoA.xmd', 'DoA', 'DoA')
+        
+    def _plotHistogramRadial(self):
+        self._plotHistogram('hist_radial.xmd', 'Azimuthal Resolution', 'Resolution')
+        
+    def _plotHistogramAzimuthal(self):
+        self._plotHistogram('hist_azimuthal.xmd', 'Azimuthal Resolution', 'Resolution')
 
-    def _plotHistogram(self, param=None):
+    def _plotHistogram(self, fnhist, titlename, xname, param=None):
         md = MetaData()
-        md.read(self.protocol._getPath('extra/hist_DoA.xmd'))
+        md.read(self.protocol._getPath('extra/'+fnhist))
         x_axis = []
         y_axis = []
 
@@ -226,8 +242,8 @@ class XmippMonoDirViewer(ProtocolViewer):
         delta = x1-x0
         plt.figure()
         plt.bar(x_axis, y_axis, width = delta)
-        plt.title("DoA Histogram")
-        plt.xlabel("DoA (a.u.)")
+        plt.title(titlename+"Histogram")
+        plt.xlabel(xname+"(a.u.)")
         plt.ylabel("Counts")
         
         return plt.show()

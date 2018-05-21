@@ -122,7 +122,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
         self._insertFunctionStep('createOutputStep', prerequisites=[MS])
 
         self._insertFunctionStep("createEllipsoid")
-        self._insertFunctionStep("createHistrogram")
+        self._insertFunctionStep("createHistrogramStep")
         
         
     def convertInputStep(self):
@@ -199,16 +199,21 @@ class XmippProtMonoDir(ProtAnalysis3D):
         self.runJob('xmipp_phantom_create', params)
 
 
-    def createHistrogram(self):
+    def createHistrogram(self, fnVol, fnOut):
 
-        params = ' -i %s' % self._getExtraPath(OUTPUT_DOA_FILE)
+        params = ' -i %s' % fnVol
         params += ' --mask binary_file %s' % self.maskFn
         params += ' --steps %f' % 30
-        params += ' -o %s' % self._getExtraPath('hist_DoA.xmd')
+        params += ' -o %s' % fnOut
         params += ' --range %f %f' % (0, 1)#(self.minRes.get(), self.maxRes.get())
         
         self.runJob('xmipp_image_histogram', params)
         
+    
+    def createHistrogramStep(self):
+        self.createHistrogram(self._getExtraPath(OUTPUT_DOA_FILE), self._getExtraPath('hist_DoA.xmd'))
+        self.createHistrogram(self._getExtraPath(OUTPUT_RADIAL_FILE), self._getExtraPath('hist_radial.xmd'))
+        self.createHistrogram(self._getExtraPath(OUTPUT_AZIMUTHAL_FILE), self._getExtraPath('hist_azimuthal.xmd'))
         
     def createOutputStep(self):
         
