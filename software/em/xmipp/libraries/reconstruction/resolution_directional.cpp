@@ -1627,8 +1627,8 @@ void ProgResDir::run()
 			if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
 			{
 				double myres = MAT_ELEM(resolutionMatrix, dires, maskPos);
-				if (dires==0)
-					std::cout << dires << " " << myres << std::endl;
+				if (dires<2)
+					std::cout << dires << " " << myres << ";" <<std::endl;
 				++maskPos;
 			}
 		}
