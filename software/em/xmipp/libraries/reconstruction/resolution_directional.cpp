@@ -597,8 +597,8 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 	y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
 	z_dir = cos(tilt*PI/180);
 
-	double ang_con = 10*PI/180;
-//	double ang_con = 20*PI/180;
+//	double ang_con = 10*PI/180;
+	double ang_con = 15*PI/180;
 
 	double uz, uy, ux;
 	long n = 0;
@@ -1619,22 +1619,22 @@ void ProgResDir::run()
 //	}
 
 
-	for (size_t dires=0; dires<N_directions; ++dires)
-	{
-		maskPos = 0;
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mask())
-		{
-			if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
-			{
-				double myres = MAT_ELEM(resolutionMatrix, dires, maskPos);
-				if (dires<2)
-					std::cout << dires << " " << myres << ";" <<std::endl;
-				++maskPos;
-			}
-		}
-		std::cout << " " << std::endl;
-
-	}
+//	for (size_t dires=0; dires<N_directions; ++dires)
+//	{
+//		maskPos = 0;
+//		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mask())
+//		{
+//			if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
+//			{
+//				double myres = MAT_ELEM(resolutionMatrix, dires, maskPos);
+//				if (dires<2)
+//					std::cout << dires << " " << myres << ";" <<std::endl;
+//				++maskPos;
+//			}
+//		}
+//		std::cout << " " << std::endl;
+//
+//	}
 
 	////////////////////////////////////////////
 
