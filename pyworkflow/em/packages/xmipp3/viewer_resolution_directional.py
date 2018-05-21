@@ -212,13 +212,13 @@ class XmippMonoDirViewer(ProtocolViewer):
 
         return plt.show(fig)
 
-    def _plotHistogramDoA(self):
+    def _plotHistogramDoA(self, param=None):
         self._plotHistogram('hist_DoA.xmd', 'DoA', 'DoA')
         
-    def _plotHistogramRadial(self):
+    def _plotHistogramRadial(self, param=None):
         self._plotHistogram('hist_radial.xmd', 'Azimuthal Resolution', 'Resolution')
         
-    def _plotHistogramAzimuthal(self):
+    def _plotHistogramAzimuthal(self, param=None):
         self._plotHistogram('hist_azimuthal.xmd', 'Azimuthal Resolution', 'Resolution')
 
     def _plotHistogram(self, fnhist, titlename, xname):
