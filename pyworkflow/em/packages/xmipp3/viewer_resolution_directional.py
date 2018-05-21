@@ -151,7 +151,7 @@ class XmippMonoDirViewer(ProtocolViewer):
         group.addParam('otherColorMap', StringParam, default='jet',
                       condition = binaryCondition,
                       label='Customized Color map',
-                      help='Name of a color map to apply to tbe applied. Valid names can be found at '
+                      help='Name of a color map to apply to be applied. Valid names can be found at '
                             'http://matplotlib.org/1.3.0/examples/color/colormaps_reference.html')
         group.addParam('sliceAxis', EnumParam, default=AX_Z,
                        choices=['x', 'y', 'z'],
@@ -221,7 +221,7 @@ class XmippMonoDirViewer(ProtocolViewer):
     def _plotHistogramAzimuthal(self):
         self._plotHistogram('hist_azimuthal.xmd', 'Azimuthal Resolution', 'Resolution')
 
-    def _plotHistogram(self, fnhist, titlename, xname, param=None):
+    def _plotHistogram(self, fnhist, titlename, xname):
         md = MetaData()
         md.read(self.protocol._getPath('extra/'+fnhist))
         x_axis = []
