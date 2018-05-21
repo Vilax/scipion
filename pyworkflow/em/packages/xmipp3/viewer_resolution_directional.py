@@ -168,7 +168,7 @@ class XmippMonoDirViewer(ProtocolViewer):
                 'doShowChimera': self._showChimera,
                 'doShowDoAHistogram': self._plotHistogramDoA,
                 'doShowRadialHistogram': self._plotHistogramRadial,
-                'doShowAzimuthalHistogram': self._plotHistogramAzimuthal,
+                'doShowAzimuthalHistogram': self._plotHistogramAzimuthal
                 }
 
     def _showDoASlices(self, param=None):
