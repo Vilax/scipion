@@ -598,6 +598,7 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 	z_dir = cos(tilt*PI/180);
 
 	double ang_con = 10*PI/180;
+//	double ang_con = 20*PI/180;
 
 	double uz, uy, ux;
 	long n = 0;
@@ -751,8 +752,6 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 				rot, tilt, threshold, sigma2, lastMinDistance;
 	double meandistance = 0, distance_2 = 0;
 	int numberdirections = angles.mdimx, N=0;
-
-//	std::cout << "xrows = " << xrows << std::endl;
 
 	double criticalZ = icdf_gauss(significance);
 
@@ -1618,7 +1617,6 @@ void ProgResDir::run()
 //			++maskPos;
 //		}
 //	}
-
 
 
 	for (size_t dires=0; dires<N_directions; ++dires)

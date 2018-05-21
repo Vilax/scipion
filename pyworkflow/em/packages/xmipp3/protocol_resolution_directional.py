@@ -27,7 +27,7 @@
 from pyworkflow import VERSION_1_1
 from pyworkflow.protocol.params import (PointerParam, BooleanParam, FloatParam, LEVEL_ADVANCED)
 from pyworkflow.em.protocol.protocol_3d import ProtAnalysis3D
-from convert import readSetOfVolumes
+from convert import Volume
 from pyworkflow.object import Float
 from pyworkflow.em import ImageHandler
 from pyworkflow.utils import getExt
@@ -211,16 +211,22 @@ class XmippProtMonoDir(ProtAnalysis3D):
         
         
     def createOutputStep(self):
-        volume_path_doa = self._getExtraPath(OUTPUT_DOA_FILE)
         
-        self.volumesSet_doa = self._createSetOfVolumes('doaVol')
+        volume=Volume()
+        volume.setFileName(self._getExtraPath(OUTPUT_DOA_FILE))
+        volume.setSamplingRate(self.inputVolumes.get().getSamplingRate())
+        self._defineOutputs(outputVolume_doa=volume)
+        self._defineSourceRelation(self.inputVolumes, volume)
         
-        self.volumesSet_doa.setSamplingRate(self.inputVolumes.get().getSamplingRate())
+        volume.setFileName(self._getExtraPath(OUTPUT_AZIMUTHAL_FILE))
+        volume.setSamplingRate(self.inputVolumes.get().getSamplingRate())
+        self._defineOutputs(azimuthalVolume=volume)
+        self._defineSourceRelation(self.inputVolumes, volume)
 
-        readSetOfVolumes(volume_path_doa, self.volumesSet_doa)
-        self._defineOutputs(outputVolume_doa=self.volumesSet_doa)
-        
-        self._defineSourceRelation(self.inputVolumes, self.volumesSet_doa)
+        volume.setFileName(self._getExtraPath(OUTPUT_RADIAL_FILE))
+        volume.setSamplingRate(self.inputVolumes.get().getSamplingRate())
+        self._defineOutputs(radialVolume=volume)
+        self._defineSourceRelation(self.inputVolumes, volume)        
 
     # --------------------------- INFO functions ------------------------------
 
