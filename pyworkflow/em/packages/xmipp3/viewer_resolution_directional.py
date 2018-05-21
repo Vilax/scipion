@@ -242,7 +242,6 @@ class XmippMonoDirViewer(ProtocolViewer):
         delta = x1-x0
         plt.figure()
         plt.bar(x_axis, y_axis, width = delta)
-        plt.Axes.set_aspect('equal')
         plt.title(titlename+"Histogram")
         plt.xlabel(xname+"(a.u.)")
         plt.ylabel("Counts")
