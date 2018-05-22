@@ -1448,6 +1448,7 @@ void ProgResDir::run()
 							{
 //								DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;
 								amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
+								noiseValues.push_back(amplitudeValue);
 								sumN  += amplitudeValue;
 								sumN2 += amplitudeValue*amplitudeValue;
 								++NN;
@@ -1515,7 +1516,12 @@ void ProgResDir::run()
 				{
 					// Check local resolution
 					double thresholdNoise;
-					thresholdNoise = meanN+criticalZ*sqrt(sigma2N);
+					//thresholdNoise = meanN+criticalZ*sqrt(sigma2N);
+
+					std::sort(noiseValues.begin(),noiseValues.end());
+					thresholdNoise = noiseValues[size_t(noiseValues.size()*significance)];
+
+					noiseValues.clear();
 
 					#ifdef DEBUG
 					  std::cout << "Iteration = " << iter << ",   Resolution= " << resolution << ",   Signal = " << meanS << ",   Noise = " << meanN << ",  Threshold = " << thresholdNoise <<std::endl;
