@@ -1651,7 +1651,7 @@ void ProgResDir::run()
 //	}
 
 	////////////////////////////////////////////
-
+/*
 	Image<double> saveImg;
 	saveImg.read("resolution_dir_1.vol");
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(saveImg())
@@ -1664,7 +1664,7 @@ void ProgResDir::run()
 
 		std::cout << "res=" << DIRECT_MULTIDIM_ELEM(saveImg(),n) << " n=" << n << "  k=" << k << "  i=" << i << "  j=" << j << std::endl;
 	}
-
+*/
 
 	//Remove outliers
 	removeOutliers(trigProducts, resolutionMatrix);
