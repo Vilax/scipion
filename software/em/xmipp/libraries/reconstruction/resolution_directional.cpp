@@ -1333,7 +1333,7 @@ void ProgResDir::run()
 
 	Image<double> outputResolution;
 
-	for (size_t dir=0; dir<N_directions; dir++)
+	for (size_t dir=0; dir<1; dir++)//N_directions; dir++)
 	{
 		outputResolution().initZeros(VRiesz);
 //		MultidimArray<double> &pOutputResolution = outputResolution();
