@@ -550,6 +550,10 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fftVRiesz)
 	{
 		double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
+//		size_t j=n%XSIZE(fftVRiesz);
+//		size_t ki=n/XSIZE(fftVRiesz);
+//		size_t i=ki%YSIZE(fftVRiesz);
+//		size_t k=ki/YSIZE(fftVRiesz);
 //		std::cout << "un = " << un << "  freqL = " << freqL << " freq = " << freq << std::endl;
 		if ((freqL)>=un && un>=freq)
 		{
@@ -1643,6 +1647,20 @@ void ProgResDir::run()
 //	}
 
 	////////////////////////////////////////////
+	Image<double> saveImg;
+	saveImg.read("resolution_dir_1.vol");
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(saveImg())
+	{
+		size_t j=n%XSIZE(saveImg());
+		size_t ki=n/XSIZE(saveImg());
+		size_t i=ki%YSIZE(saveImg());
+		size_t k=ki/YSIZE(saveImg());
+
+
+		std::cout << "res=" << DIRECT_MULTIDIM_ELEM(saveImg(),n) << " n=" << n << "  k=" << k << "  i=" << i << "  j=" << j << std::endl;
+	}
+
+	exit(0);
 
 	//Remove outliers
 	removeOutliers(trigProducts, resolutionMatrix);
