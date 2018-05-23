@@ -824,7 +824,7 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 						lastMinDistance = distance;
 				}
 			}
-			if (k<70)
+			if (k==70) //n=14621798
 			{
 				std::cout << k << " " << MAT_ELEM(resolutionMat, i, k) << " " << MAT_ELEM(trigProducts, 0, i) << " " << MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << ";"<< std::endl;
 			}
@@ -1300,7 +1300,9 @@ void ProgResDir::run()
 	//Checking with MonoRes at 50A;
 	int aux_idx;
 	double aux_freq;
+
 	aux_freq = sampling/30;
+
 	if (maxRes>30)
 	{
 		DIGFREQ2FFT_IDX(sampling/30, volsize, aux_idx);
@@ -1333,7 +1335,7 @@ void ProgResDir::run()
 
 	Image<double> outputResolution;
 
-	for (size_t dir=0; dir<1; dir++)//N_directions; dir++)
+	for (size_t dir=0; dir<N_directions; dir++)
 	{
 		outputResolution().initZeros(VRiesz);
 //		MultidimArray<double> &pOutputResolution = outputResolution();
@@ -1590,10 +1592,13 @@ void ProgResDir::run()
 		pResolutionVol.initZeros(amplitudeMS);
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pResolutionVol)
 		{
+
 			if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
 			{
 				double myres = MAT_ELEM(resolutionMatrix, dir, maskPos);
 				DIRECT_MULTIDIM_ELEM(pResolutionVol, n) = myres;
+				if (n == 14621798)
+					std::cout << maskPos << std::endl;
 				++maskPos;
 			}
 		}
@@ -1647,6 +1652,7 @@ void ProgResDir::run()
 //	}
 
 	////////////////////////////////////////////
+
 	Image<double> saveImg;
 	saveImg.read("resolution_dir_1.vol");
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(saveImg())
@@ -1660,7 +1666,6 @@ void ProgResDir::run()
 		std::cout << "res=" << DIRECT_MULTIDIM_ELEM(saveImg(),n) << " n=" << n << "  k=" << k << "  i=" << i << "  j=" << j << std::endl;
 	}
 
-	exit(0);
 
 	//Remove outliers
 	removeOutliers(trigProducts, resolutionMatrix);
