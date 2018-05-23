@@ -824,7 +824,7 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 						lastMinDistance = distance;
 				}
 			}
-			if (k==70) //n=14621798
+			if (k==365855) //n=14621798
 			{
 				std::cout << k << " " << MAT_ELEM(resolutionMat, i, k) << " " << MAT_ELEM(trigProducts, 0, i) << " " << MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << ";"<< std::endl;
 			}
@@ -1592,7 +1592,6 @@ void ProgResDir::run()
 		pResolutionVol.initZeros(amplitudeMS);
 		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pResolutionVol)
 		{
-
 			if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
 			{
 				double myres = MAT_ELEM(resolutionMatrix, dir, maskPos);
