@@ -1654,6 +1654,7 @@ void ProgResDir::run()
 
 	Image<double> saveImg;
 	saveImg.read("resolution_dir_1.vol");
+	int count_n = 0;
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(saveImg())
 	{
 		size_t j=n%XSIZE(saveImg());
@@ -1662,7 +1663,8 @@ void ProgResDir::run()
 		size_t k=ki/YSIZE(saveImg());
 
 		if(DIRECT_MULTIDIM_ELEM(saveImg(),n)>0)
-			std::cout << "res=" << DIRECT_MULTIDIM_ELEM(saveImg(),n) << " n=" << n << "  k=" << k << "  i=" << i << "  j=" << j << std::endl;
+			std::cout << "res=" << DIRECT_MULTIDIM_ELEM(saveImg(),n) << " n=" << count_n << "  k=" << k << "  i=" << i << "  j=" << j << std::endl;
+		count_n++;
 	}
 
 
