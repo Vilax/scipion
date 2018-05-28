@@ -750,7 +750,9 @@ void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 	++fourier_idx;
 }
 
-void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &resolutionMat)
+
+
+void ProgResDir::removeOutliersGood(Matrix2D<double> &anglesMat, Matrix2D<double> &resolutionMat)
 {
 	double x1, y1, z1, x2, y2, z2, distance, resolution, sigma,
 				rot, tilt, threshold, sigma2, lastMinDistance;
@@ -833,45 +835,89 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat, Matrix2D<double> &r
 				MAT_ELEM(resolutionMat, i, k) = -1;
 			}
 		}
-//		std::vector<double> xx(xrows), yy(xrows), zz(xrows);
-//		for (int i = 0; i<xrows; ++i)
-//		{
-//			resolution = MAT_ELEM(resolutionMat, i, k);
-//
-//			if (resolution>0)
-//			{
-//				if (k<50)
-//				{
-//					std::cout << k << " " << resolution << " " << MAT_ELEM(trigProducts, 0, i) << " " << MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << ";"<< std::endl;
-//				}
-//				xx.push_back(fabs(resolution*MAT_ELEM(trigProducts, 0, i)));
-//				yy.push_back(fabs(resolution*MAT_ELEM(trigProducts, 1, i)));
-//				zz.push_back(fabs(resolution*MAT_ELEM(trigProducts, 2, i)));
-//
-//			}
-//		}
-//		std::sort(xx.begin(),xx.end());
-//		std::sort(yy.begin(),yy.end());
-//		std::sort(zz.begin(),zz.end());
-//
-//		double xh = xx[(int) floor(0.95*((double) xrows))];
-//		double yh = yy[(int) floor(0.95*((double) xrows))];
-//		double zh = zz[(int) floor(0.95*((double) xrows))];
-//
-//		for (int i = 0; i<xrows; ++i)
-//		{
-//			resolution = MAT_ELEM(resolutionMat, i, k);
-//
-//			if (resolution>0)
-//			{
-//				x1 = fabs(resolution*MAT_ELEM(trigProducts, 0, i));
-//				y1 = fabs(resolution*MAT_ELEM(trigProducts, 1, i));
-//				z1 = fabs(resolution*MAT_ELEM(trigProducts, 2, i));
-//				if ((x1<xh) || (y1<yh) || (z1<zh))
-//					MAT_ELEM(resolutionMat, i, k) = -1;
-//			}
-//		}
 	}
+}
+
+
+
+void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
+		Matrix2D<double> &resolutionMat)
+{
+	double x1, y1, z1, x2, y2, z2, distance, resolution, sigma,
+				rot, tilt, threshold, sigma2, lastMinDistance;
+	double meandistance = 0, distance_2 = 0;
+	int numberdirections = angles.mdimx, N=0, count = 0;
+
+	double ang = 20.0;
+
+	double criticalZ = icdf_gauss(significance);
+
+	Matrix2D<double> neigbour_dir;
+	neigbour_dir.initZeros(numberdirections, 2);
+
+
+	for (int k = 0; k<NVoxelsOriginalMask; ++k)
+	{
+		meandistance = 0;
+		distance_2 = 0;
+
+		std::vector<double> neighbours;
+
+		//Computing closest neighbours and its mean distance
+		for (int i = 0; i<numberdirections; ++i)
+		{
+			x1 = MAT_ELEM(trigProducts, 0, i);
+			y1 = MAT_ELEM(trigProducts, 1, i);
+			z1 = MAT_ELEM(trigProducts, 2, i);
+
+			for (int j = 0; j<numberdirections; ++j)
+			{
+				x2 = MAT_ELEM(trigProducts, 0, j);
+				y2 = MAT_ELEM(trigProducts, 1, j);
+				z2 = MAT_ELEM(trigProducts, 2, j);
+
+				if (i != j)
+				{
+					distance = (180/PI)*acos(x1*x2 + y1*y2 + z1*z2);
+					if (distance < ang)
+					{
+						double resi = MAT_ELEM(resolutionMat, i, k);
+						double resj = MAT_ELEM(resolutionMat, j, k);
+						x1 *= resi;
+						y1 *= resi;
+						z1 *= resi;
+						x2 *= resj;
+						y2 *= resj;
+						z2 *= resj;
+						distance = sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2) );
+						MAT_ELEM(neigbour_dir, i, 0) += distance;
+						MAT_ELEM(neigbour_dir, i, 1) += 1;
+						neighbours.push_back(distance);
+
+					}
+				}
+			}
+		}
+
+		double thresholdDirection;
+
+		std::sort(neighbours.begin(), neighbours.end());
+		thresholdDirection = neighbours[size_t(neighbours.size()*significance)];
+
+		neighbours.clear();
+
+		//A direction is an outlier if is significantive higher than overal distibution
+		for (int i = 0; i<numberdirections; ++i)
+		{
+			double meandistance = MAT_ELEM(neigbour_dir, i, 0)/MAT_ELEM(neigbour_dir, i, 1);
+			if (meandistance>thresholdDirection)
+				MAT_ELEM(resolutionMat, i, k)=-1;
+		}
+	}
+
+
+
+
 }
 
 void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
@@ -1335,7 +1381,7 @@ void ProgResDir::run()
 
 	Image<double> outputResolution;
 
-	for (size_t dir=0; dir<N_directions; dir++)
+	for (size_t dir=0; dir<1;dir++)//N_directions; dir++)
 	{
 		outputResolution().initZeros(VRiesz);
 //		MultidimArray<double> &pOutputResolution = outputResolution();
@@ -1655,6 +1701,9 @@ void ProgResDir::run()
 	Image<double> saveImg;
 	saveImg.read("resolution_dir_1.vol");
 	int count_n = 0;
+	int indi = 0;
+	double myres;
+
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(saveImg())
 	{
 		size_t j=n%XSIZE(saveImg());
@@ -1662,8 +1711,13 @@ void ProgResDir::run()
 		size_t i=ki%YSIZE(saveImg());
 		size_t k=ki/YSIZE(saveImg());
 
+		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
+		{
+			myres = MAT_ELEM(resolutionMatrix, 0, maskPos);
+			++maskPos;
+		}
 		if(DIRECT_MULTIDIM_ELEM(saveImg(),n)>0)
-			std::cout << "res=" << DIRECT_MULTIDIM_ELEM(saveImg(),n) << " n=" << count_n << "  k=" << k << "  i=" << i << "  j=" << j << std::endl;
+			std::cout << "res=" << myres << " res=" << DIRECT_MULTIDIM_ELEM(saveImg(),n) << " maskPos= "<< maskPos-1 << " n=" << count_n << "  k=" << k << "  i=" << i << "  j=" << j << std::endl;
 		count_n++;
 	}
 

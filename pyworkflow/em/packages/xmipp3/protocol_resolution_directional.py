@@ -199,21 +199,23 @@ class XmippProtMonoDir(ProtAnalysis3D):
         self.runJob('xmipp_phantom_create', params)
 
 
-    def createHistrogram(self, fnVol, fnOut):
+    def createHistrogram(self, fnVol, fnOut, doa):
 
         params = ' -i %s' % fnVol
         params += ' --mask binary_file %s' % self.maskFn
         params += ' --steps %f' % 30
         params += ' -o %s' % fnOut
-        params += ' --range %f %f' % (0, 1)#(self.minRes.get(), self.maxRes.get())
-        
+        if doa is True:
+            params += ' --range %f %f' % (0, 1)#(self.minRes.get(), self.maxRes.get())
+        else:
+            params += ' --range %f %f' % (0, 30)
         self.runJob('xmipp_image_histogram', params)
         
     
     def createHistrogramStep(self):
-        self.createHistrogram(self._getExtraPath(OUTPUT_DOA_FILE), self._getExtraPath('hist_DoA.xmd'))
-        self.createHistrogram(self._getExtraPath(OUTPUT_RADIAL_FILE), self._getExtraPath('hist_radial.xmd'))
-        self.createHistrogram(self._getExtraPath(OUTPUT_AZIMUTHAL_FILE), self._getExtraPath('hist_azimuthal.xmd'))
+        self.createHistrogram(self._getExtraPath(OUTPUT_DOA_FILE), self._getExtraPath('hist_DoA.xmd'), True)
+        self.createHistrogram(self._getExtraPath(OUTPUT_RADIAL_FILE), self._getExtraPath('hist_radial.xmd'), False)
+        self.createHistrogram(self._getExtraPath(OUTPUT_AZIMUTHAL_FILE), self._getExtraPath('hist_azimuthal.xmd'), False)
         
     def createOutputStep(self):
         
