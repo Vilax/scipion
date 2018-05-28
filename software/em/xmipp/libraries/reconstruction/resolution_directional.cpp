@@ -906,12 +906,25 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 
 		neighbours.clear();
 
+		if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
+		{
+
+		}
+
 		//A direction is an outlier if is significantive higher than overal distibution
 		for (int i = 0; i<numberdirections; ++i)
 		{
 			double meandistance = MAT_ELEM(neigbour_dir, i, 0)/MAT_ELEM(neigbour_dir, i, 1);
+			if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
+			{
+				std::cout << MAT_ELEM(resolutionMat, i, k) << " " << MAT_ELEM(trigProducts, 0, i) << "  " <<
+						MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << ";" << std::endl;
+			}
 			if (meandistance>thresholdDirection)
+			{
 				MAT_ELEM(resolutionMat, i, k)=-1;
+				std::cout << "outlier in i=" << i << std::endl;
+			}
 		}
 	}
 
@@ -1381,7 +1394,7 @@ void ProgResDir::run()
 
 	Image<double> outputResolution;
 
-	for (size_t dir=0; dir<1;dir++)//N_directions; dir++)
+	for (size_t dir=0; dir<N_directions; dir++)
 	{
 		outputResolution().initZeros(VRiesz);
 //		MultidimArray<double> &pOutputResolution = outputResolution();
@@ -1697,7 +1710,7 @@ void ProgResDir::run()
 //	}
 
 	////////////////////////////////////////////
-
+/*
 	Image<double> saveImg;
 	saveImg.read("resolution_dir_1.vol");
 	int count_n = 0;
@@ -1720,7 +1733,7 @@ void ProgResDir::run()
 			std::cout << "res=" << myres << " res=" << DIRECT_MULTIDIM_ELEM(saveImg(),n) << " maskPos= "<< maskPos-1 << " n=" << count_n << "  k=" << k << "  i=" << i << "  j=" << j << std::endl;
 		count_n++;
 	}
-
+*/
 
 	//Remove outliers
 	removeOutliers(trigProducts, resolutionMatrix);
