@@ -602,7 +602,7 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 	z_dir = cos(tilt*PI/180);
 
 //	double ang_con = 10*PI/180;
-	double ang_con = 20*PI/180;
+	double ang_con = 15*PI/180;
 
 	double uz, uy, ux;
 	long n = 0;
@@ -917,15 +917,18 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 			double meandistance = MAT_ELEM(neigbour_dir, i, 0)/MAT_ELEM(neigbour_dir, i, 1);
 			if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
 			{
-				std::cout << MAT_ELEM(resolutionMat, i, k) << " " << MAT_ELEM(trigProducts, 0, i) << "  " <<
+				std::cout << k << " " <<MAT_ELEM(resolutionMat, i, k) << " " << MAT_ELEM(trigProducts, 0, i) << "  " <<
 						MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << ";" << std::endl;
 			}
 			if (meandistance>thresholdDirection)
 			{
 				MAT_ELEM(resolutionMat, i, k)=-1;
-				std::cout << "outlier in i=" << i << std::endl;
+				if (((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512)))
+					std::cout << "outlier in i=" << i << std::endl;
 			}
 		}
+
+		std::cout << "-----------" << std::endl;
 	}
 
 
@@ -1638,12 +1641,6 @@ void ProgResDir::run()
 //		amplitudeMS.clear();
 //		fftVRiesz.clear();
 
-		//////////////////
-		//INERTIA MOMENT//
-		//////////////////
-//		inertiaMatrixNew(resolutionMatrix, inertiaMatrixVariable, rot, tilt, dir);
-//		#ifdef DEBUG_DIR
-
 		size_t maskPos=0;
 		Image<double> ResolutionVol;
 		MultidimArray<double> &pResolutionVol = ResolutionVol();
@@ -1677,37 +1674,6 @@ void ProgResDir::run()
 	////////////////////////////////////////////
 
 	int maskPos = 0;
-//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mask())
-//	{
-//		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
-//		{
-//			for (size_t dires=0; dires<N_directions; ++dires)
-//			{
-//				double myres = MAT_ELEM(resolutionMatrix, dires, maskPos);
-//				if (maskPos<500)
-//					std::cout << dires << " " << myres << std::endl;
-//			}
-//			++maskPos;
-//		}
-//	}
-
-
-//	for (size_t dires=0; dires<N_directions; ++dires)
-//	{
-//		maskPos = 0;
-//		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mask())
-//		{
-//			if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
-//			{
-//				double myres = MAT_ELEM(resolutionMatrix, dires, maskPos);
-//				if (dires<2)
-//					std::cout << dires << " " << myres << ";" <<std::endl;
-//				++maskPos;
-//			}
-//		}
-//		std::cout << " " << std::endl;
-//
-//	}
 
 	////////////////////////////////////////////
 /*
