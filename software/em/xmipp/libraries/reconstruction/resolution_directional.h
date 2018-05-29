@@ -66,7 +66,7 @@ public:
 	double N_freq, significance;
 
 	/** Analyze radial and azimuthal resolutoin */
-	bool dontmeasure;
+	bool dontmeasure, checkellipsoids;
 
 public:
 

@@ -49,6 +49,7 @@ void ProgResDir::readParams()
 	fnMDradial =getParam("--radialAvg");
 	fnMDazimuthal =getParam("--azimuthalAvg");
 	Nthr = getIntParam("--threads");
+	checkellipsoids = checkParam("--checkellipsoids");
 }
 
 
@@ -71,10 +72,12 @@ void ProgResDir::defineParams()
 	addParamsLine("  [--radialAvg <vol_file=\"\">]  : Radial Average of the radial resolution map");
 	addParamsLine("  [--azimuthalAvg <vol_file=\"\">]  : Radial Average of the azimuthal resolution map");
 	addParamsLine("  [--threads <s=4>]          : Number of threads");
+	addParamsLine("  [--checkellipsoids]          : only for debug");
 }
 
 void ProgResDir::produceSideInfo()
 {
+
 	std::cout << "Starting..." << std::endl;
 
 	Image<double> V;
@@ -171,14 +174,8 @@ void ProgResDir::produceSideInfo()
 			A3D_ELEM(pMask, k, i, j) = -1;
 	}
 	Rparticle = round(sqrt(radius));
-	std::cout << "particle radiues = " << Rparticle << std::endl;
+	std::cout << "particle radius = " << Rparticle << std::endl;
 	size_t xrows = angles.mdimx;
-//	Matrix2D<double> aaa;
-//
-//	aaa.initConstant(3, 4, 5);
-//	MAT_ELEM(aaa, 1, 2) = 0;
-//	std::cout << aaa << std::endl;
-//	std::cout << "NVoxelsOriginalMask = " << NVoxelsOriginalMask << std::endl;
 
 	std::cout << "sus muertos...  " << maxRes << std::endl;
 
@@ -906,11 +903,6 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 
 		neighbours.clear();
 
-		if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
-		{
-
-		}
-
 		//A direction is an outlier if is significantive higher than overal distibution
 		for (int i = 0; i<numberdirections; ++i)
 		{
@@ -1010,7 +1002,8 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 
 		diagSymMatrix3x3(quadricMatrix, eigenvalues, eigenvectors);
 
-		if (VEC_ELEM(eigenvalues, 0)<0){//This is de the vectorial product
+		if (VEC_ELEM(eigenvalues, 0)<0)
+		{//This is de the vectorial product
 			VEC_ELEM(eigenvalues, 0) = VEC_ELEM(eigenvalues, 1);
 			MAT_ELEM(axis,3, k) = MAT_ELEM(eigenvectors,0,1)*MAT_ELEM(eigenvectors,2,2)-
 									MAT_ELEM(eigenvectors,2,1)*MAT_ELEM(eigenvectors,1,2);
@@ -1333,8 +1326,11 @@ double ProgResDir::firstMonoResEstimation(MultidimArray< std::complex<double> > 
 
 void ProgResDir::run()
 {
-	produceSideInfo();
 
+
+	produceSideInfo();
+	if (checkellipsoids == false)
+	{
 	bool continueIter = false, breakIter = false;
 	double criticalZ=icdf_gauss(significance);
 
@@ -1701,6 +1697,32 @@ void ProgResDir::run()
 	}
 */
 
+	}
+	else
+	{
+		for (size_t dir=0; dir<N_directions; dir++)
+		{
+			double rot = MAT_ELEM(angles, 0, dir);
+			double tilt = MAT_ELEM(angles, 1, dir);
+			MAT_ELEM(trigProducts, 0, dir) = sin(tilt*PI/180)*cos(rot*PI/180);
+			MAT_ELEM(trigProducts, 1, dir) = sin(tilt*PI/180)*sin(rot*PI/180);
+			MAT_ELEM(trigProducts, 2, dir) = cos(tilt*PI/180);
+			Image<double> img;
+			FileName fnres = formatString("resolution_dir_%i.vol", dir+1);
+			img.read(fnres);
+
+			int maskPos = 0;
+
+			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img())
+			{
+				if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
+				{
+					double myres = MAT_ELEM(resolutionMatrix, dir, maskPos);
+					++maskPos;
+				}
+			}
+		}
+
 	//Remove outliers
 	removeOutliers(trigProducts, resolutionMatrix);
 //	removeOutliers(angles, resolutionMatrix);
@@ -1709,7 +1731,8 @@ void ProgResDir::run()
 	Matrix2D<double> axis;
 	ellipsoidFitting(trigProducts, resolutionMatrix, axis);
 //	ellipsoidFitting(angles, resolutionMatrix, axis);
-
+	}
+/*
 	Image<double> doaVol;
 	MultidimArray<double> &pdoaVol = doaVol();
 
@@ -1838,5 +1861,6 @@ void ProgResDir::run()
 	}
 
 	md.write(fnDirections);
+	*/
 }
 
