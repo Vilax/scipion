@@ -905,20 +905,26 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 		neighbours.clear();
 
 		//A direction is an outlier if is significative higher than overal distibution
+
 		for (int i = 0; i<numberdirections; ++i)
 		{
-			double meandistance = MAT_ELEM(neigbour_dir, i, 0)/MAT_ELEM(neigbour_dir, i, 1);
+			double meandistance;
+			if (MAT_ELEM(neigbour_dir, i, 0)>0)
+			{
+				meandistance = MAT_ELEM(neigbour_dir, i, 0)/MAT_ELEM(neigbour_dir, i, 1);
+
+				if (meandistance>thresholdDirection)
+				{
+					MAT_ELEM(resolutionMat, i, k)=-1;
+					if (((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512)))
+						std::cout << "outlier in i=" << i << std::endl;
+				}
+
+			}
 			if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
 			{
-				std::cout << k << " " <<MAT_ELEM(resolutionMat, i, k) << " " << MAT_ELEM(trigProducts, 0, i) << "  " <<
+				std::cout << k << " " << MAT_ELEM(resolutionMat, i, k) << " " << MAT_ELEM(trigProducts, 0, i) << "  " <<
 						MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << ";" << std::endl;
-			}
-
-			if (meandistance>thresholdDirection)
-			{
-				MAT_ELEM(resolutionMat, i, k)=-1;
-				if (((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512)))
-					std::cout << "outlier in i=" << i << std::endl;
 			}
 		}
 
@@ -1731,6 +1737,7 @@ void ProgResDir::run()
 
 	//Remove outliers
 	removeOutliers(trigProducts, resolutionMatrix);
+	//Second step of cleaning
 	removeOutliers(trigProducts, resolutionMatrix);
 //	removeOutliers(angles, resolutionMatrix);
 
