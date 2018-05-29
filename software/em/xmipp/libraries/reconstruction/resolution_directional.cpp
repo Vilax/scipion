@@ -850,7 +850,7 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 	double criticalZ = icdf_gauss(significance);
 
 	Matrix2D<double> neigbour_dir;
-	neigbour_dir.initZeros(numberdirections, 2);
+
 
 
 	for (int k = 0; k<NVoxelsOriginalMask; ++k)
@@ -859,7 +859,7 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 		distance_2 = 0;
 
 		std::vector<double> neighbours;
-
+		neigbour_dir.initZeros(numberdirections, 2);
 		//Computing closest neighbours and its mean distance
 		for (int i = 0; i<numberdirections; ++i)
 		{
@@ -903,7 +903,7 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 
 		neighbours.clear();
 
-		//A direction is an outlier if is significantive higher than overal distibution
+		//A direction is an outlier if is significative higher than overal distibution
 		for (int i = 0; i<numberdirections; ++i)
 		{
 			double meandistance = MAT_ELEM(neigbour_dir, i, 0)/MAT_ELEM(neigbour_dir, i, 1);
@@ -919,8 +919,10 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 					std::cout << "outlier in i=" << i << std::endl;
 			}
 		}
-
-		std::cout << "-----------" << std::endl;
+		if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
+		{
+			std::cout << "-----------" << std::endl;
+		}
 	}
 
 
