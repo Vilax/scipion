@@ -847,11 +847,7 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 
 	double ang = 20.0;
 
-	double criticalZ = icdf_gauss(significance);
-
 	Matrix2D<double> neigbour_dir;
-
-
 
 	for (int k = 0; k<NVoxelsOriginalMask; ++k)
 	{
@@ -863,34 +859,39 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 		//Computing closest neighbours and its mean distance
 		for (int i = 0; i<numberdirections; ++i)
 		{
-			x1 = MAT_ELEM(trigProducts, 0, i);
-			y1 = MAT_ELEM(trigProducts, 1, i);
-			z1 = MAT_ELEM(trigProducts, 2, i);
-
-			for (int j = 0; j<numberdirections; ++j)
+			double resi = MAT_ELEM(resolutionMat, i, k);
+			if (resi>0)
 			{
-				x2 = MAT_ELEM(trigProducts, 0, j);
-				y2 = MAT_ELEM(trigProducts, 1, j);
-				z2 = MAT_ELEM(trigProducts, 2, j);
+				x1 = MAT_ELEM(trigProducts, 0, i);
+				y1 = MAT_ELEM(trigProducts, 1, i);
+				z1 = MAT_ELEM(trigProducts, 2, i);
 
-				if (i != j)
+				for (int j = 0; j<numberdirections; ++j)
 				{
-					distance = (180/PI)*acos(x1*x2 + y1*y2 + z1*z2);
-					if (distance < ang)
+					if (i != j)
 					{
-						double resi = MAT_ELEM(resolutionMat, i, k);
+						x2 = MAT_ELEM(trigProducts, 0, j);
+						y2 = MAT_ELEM(trigProducts, 1, j);
+						z2 = MAT_ELEM(trigProducts, 2, j);
 						double resj = MAT_ELEM(resolutionMat, j, k);
-						x1 *= resi;
-						y1 *= resi;
-						z1 *= resi;
-						x2 *= resj;
-						y2 *= resj;
-						z2 *= resj;
-						distance = sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2) );
-						MAT_ELEM(neigbour_dir, i, 0) += distance;
-						MAT_ELEM(neigbour_dir, i, 1) += 1;
-						neighbours.push_back(distance);
+						if (resj>0)
+						{
+							distance = (180/PI)*acos(x1*x2 + y1*y2 + z1*z2);
 
+							if (distance < ang)
+							{
+		//						x1 *= resi;
+		//						y1 *= resi;
+		//						z1 *= resi;
+								x2 *= resj;
+								y2 *= resj;
+								z2 *= resj;
+								distance = sqrt( (resi*x1-x2)*(resi*x1-x2) + (resi*y1-y2)*(resi*y1-y2) + (resi*z1-z2)*(resi*z1-z2) );
+								MAT_ELEM(neigbour_dir, i, 0) += distance;
+								MAT_ELEM(neigbour_dir, i, 1) += 1;
+								neighbours.push_back(distance);
+							}
+						}
 					}
 				}
 			}
@@ -912,6 +913,7 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 				std::cout << k << " " <<MAT_ELEM(resolutionMat, i, k) << " " << MAT_ELEM(trigProducts, 0, i) << "  " <<
 						MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << ";" << std::endl;
 			}
+
 			if (meandistance>thresholdDirection)
 			{
 				MAT_ELEM(resolutionMat, i, k)=-1;
@@ -919,15 +921,11 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 					std::cout << "outlier in i=" << i << std::endl;
 			}
 		}
+
 		if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
-		{
 			std::cout << "-----------" << std::endl;
-		}
+
 	}
-
-
-
-
 }
 
 void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
@@ -1702,8 +1700,12 @@ void ProgResDir::run()
 	}
 	else
 	{
+		std::cout << "antes del for" << std::endl;
+		N_directions=angles.mdimx;
+		trigProducts.initZeros(3, N_directions);
 		for (size_t dir=0; dir<N_directions; dir++)
 		{
+			std::cout << "dir = " << dir + 1 << std::endl;
 			double rot = MAT_ELEM(angles, 0, dir);
 			double tilt = MAT_ELEM(angles, 1, dir);
 			MAT_ELEM(trigProducts, 0, dir) = sin(tilt*PI/180)*cos(rot*PI/180);
@@ -1712,6 +1714,7 @@ void ProgResDir::run()
 			Image<double> img;
 			FileName fnres = formatString("resolution_dir_%i.vol", dir+1);
 			img.read(fnres);
+			img().setXmippOrigin();
 
 			int maskPos = 0;
 
@@ -1719,13 +1722,15 @@ void ProgResDir::run()
 			{
 				if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
 				{
-					double myres = MAT_ELEM(resolutionMatrix, dir, maskPos);
+
+					MAT_ELEM(resolutionMatrix, dir, maskPos) = DIRECT_MULTIDIM_ELEM(img(), n);
 					++maskPos;
 				}
 			}
 		}
 
 	//Remove outliers
+	removeOutliers(trigProducts, resolutionMatrix);
 	removeOutliers(trigProducts, resolutionMatrix);
 //	removeOutliers(angles, resolutionMatrix);
 
