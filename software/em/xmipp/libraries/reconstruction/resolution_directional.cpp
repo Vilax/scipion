@@ -748,95 +748,6 @@ void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 }
 
 
-
-void ProgResDir::removeOutliersGood(Matrix2D<double> &anglesMat, Matrix2D<double> &resolutionMat)
-{
-	double x1, y1, z1, x2, y2, z2, distance, resolution, sigma,
-				rot, tilt, threshold, sigma2, lastMinDistance;
-	double meandistance = 0, distance_2 = 0;
-	int numberdirections = angles.mdimx, N=0;
-
-	double criticalZ = icdf_gauss(significance);
-
-	for (int k = 0; k<NVoxelsOriginalMask; ++k)
-	{
-		meandistance = 0;
-		distance_2 = 0;
-
-		for (int i = 0; i<numberdirections; ++i)
-		{
-			resolution = MAT_ELEM(resolutionMat, i, k);
-//			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
-//			tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
-			x1 = resolution*MAT_ELEM(trigProducts, 0, i);
-			y1 = resolution*MAT_ELEM(trigProducts, 1, i);
-			z1 = resolution*MAT_ELEM(trigProducts, 2, i);
-			lastMinDistance = 1e38;
-			for (int j = 0; j<numberdirections; ++j)
-			{
-//				rot = MAT_ELEM(anglesMat,0, j)*PI/180;
-//				tilt = MAT_ELEM(anglesMat,1, j)*PI/180;
-				resolution = MAT_ELEM(resolutionMat, j, k);
-				x2 = resolution*MAT_ELEM(trigProducts, 0, j);
-				y2 = resolution*MAT_ELEM(trigProducts, 1, j);
-				z2 = resolution*MAT_ELEM(trigProducts, 2, j);
-
-				if (i != j)
-				{
-					distance = sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1));
-//					std::cout << "distance = " << distance << std::endl;
-					if (distance < lastMinDistance)
-						lastMinDistance = distance;
-				}
-			}
-			meandistance += lastMinDistance;
-			distance_2 += lastMinDistance*lastMinDistance;
-		}
-
-		meandistance = (meandistance)/((double) numberdirections);
-		sigma2 = distance_2/((double) numberdirections) - meandistance*meandistance;
-
-		threshold = meandistance + criticalZ*sqrt(sigma2);
-
-		for (int i = 0; i<numberdirections; ++i)
-		{
-			resolution = MAT_ELEM(resolutionMat, i, k);
-//			rot = MAT_ELEM(anglesMat,0, i)*PI/180;
-//			tilt = MAT_ELEM(anglesMat,1, i)*PI/180;
-			x1 = resolution*MAT_ELEM(trigProducts, 0, i);
-			y1 = resolution*MAT_ELEM(trigProducts, 1, i);
-			z1 = resolution*MAT_ELEM(trigProducts, 2, i);
-			lastMinDistance = 1e38;
-			for (int j = 0; j<numberdirections; ++j)
-			{
-//				rot = MAT_ELEM(anglesMat,0, j)*PI/180;
-//				tilt = MAT_ELEM(anglesMat,1, j)*PI/180;
-				resolution = MAT_ELEM(resolutionMat, j, k);
-				x2 = resolution*MAT_ELEM(trigProducts, 0, j);
-				y2 = resolution*MAT_ELEM(trigProducts, 1, j);
-				z2 = resolution*MAT_ELEM(trigProducts, 2, j);
-
-				if (i != j)
-				{
-					distance = sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) + (z2-z1)*(z2-z1));
-					if (distance < lastMinDistance)
-						lastMinDistance = distance;
-				}
-			}
-			if (k==365855) //n=14621798
-			{
-				std::cout << k << " " << MAT_ELEM(resolutionMat, i, k) << " " << MAT_ELEM(trigProducts, 0, i) << " " << MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << ";"<< std::endl;
-			}
-			if (lastMinDistance>=threshold)
-			{
-				MAT_ELEM(resolutionMat, i, k) = -1;
-			}
-		}
-	}
-}
-
-
-
 void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 		Matrix2D<double> &resolutionMat)
 {
@@ -845,6 +756,10 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 	double meandistance = 0, distance_2 = 0;
 	int numberdirections = angles.mdimx, N=0, count = 0;
 
+	double criticalZ = icdf_gauss(significance);
+	double threshold_gauss;
+	double counter = 0;
+
 	double ang = 20.0;
 
 	Matrix2D<double> neigbour_dir;
@@ -852,9 +767,11 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 	for (int k = 0; k<NVoxelsOriginalMask; ++k)
 	{
 		meandistance = 0;
+		sigma = 0;
 		distance_2 = 0;
+		counter = 0;
 
-		std::vector<double> neighbours;
+//		std::vector<double> neighbours;
 		neigbour_dir.initZeros(numberdirections, 2);
 		//Computing closest neighbours and its mean distance
 		for (int i = 0; i<numberdirections; ++i)
@@ -880,16 +797,16 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 
 							if (distance < ang)
 							{
-		//						x1 *= resi;
-		//						y1 *= resi;
-		//						z1 *= resi;
 								x2 *= resj;
 								y2 *= resj;
 								z2 *= resj;
 								distance = sqrt( (resi*x1-x2)*(resi*x1-x2) + (resi*y1-y2)*(resi*y1-y2) + (resi*z1-z2)*(resi*z1-z2) );
 								MAT_ELEM(neigbour_dir, i, 0) += distance;
 								MAT_ELEM(neigbour_dir, i, 1) += 1;
-								neighbours.push_back(distance);
+//								neighbours.push_back(distance);
+								meandistance += distance;
+								++counter;
+								sigma += distance*distance;
 							}
 						}
 					}
@@ -899,10 +816,14 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 
 		double thresholdDirection;
 
-		std::sort(neighbours.begin(), neighbours.end());
-		thresholdDirection = neighbours[size_t(neighbours.size()*significance)];
+		meandistance= meandistance/counter;
+		sigma = sigma/counter - meandistance*meandistance;
 
-		neighbours.clear();
+//		std::sort(neighbours.begin(), neighbours.end());
+//		thresholdDirection = neighbours[size_t(neighbours.size()*significance)];
+		threshold_gauss = meandistance + criticalZ*sqrt(sigma);
+
+//		neighbours.clear();
 
 		//A direction is an outlier if is significative higher than overal distibution
 
@@ -913,31 +834,35 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 			{
 				meandistance = MAT_ELEM(neigbour_dir, i, 0)/MAT_ELEM(neigbour_dir, i, 1);
 
-				if (meandistance>thresholdDirection)
+				if ((meandistance>threshold_gauss) || MAT_ELEM(neigbour_dir, i, 0) <= 1)
 				{
 					MAT_ELEM(resolutionMat, i, k)=-1;
 					if (((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512)))
+					{
 						std::cout << "outlier in i=" << i << std::endl;
+					}
 				}
-
 			}
 			if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
 			{
-				std::cout << k << " " << MAT_ELEM(resolutionMat, i, k) << " " << MAT_ELEM(trigProducts, 0, i) << "  " <<
+				std::cout << k << " " << thresholdDirection << " " << MAT_ELEM(resolutionMat, i, k) << " " << MAT_ELEM(trigProducts, 0, i) << "  " <<
 						MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << ";" << std::endl;
 			}
 		}
 
 		if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
-			std::cout << "-----------" << std::endl;
+			std::cout << "threshold_gauss--------------=" << threshold_gauss << std::endl;
 
 	}
 }
+
 
 void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 									Matrix2D<double> &resolutionMat,
 									Matrix2D<double> &axis)
 {
+
+	std::cout << "FITTIG" << std::endl;
 	double x, y, z, a, b, c, resolution, rot, tilt;
 	int numberdirections = angles.mdimx;
 	std::vector<double> list_distances;
@@ -950,7 +875,7 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 	int dimMatrix = 0;
 	size_t mycounter;
 	Matrix2D<double> pseudoinv, quadricMatrix;
-	Matrix1D<double> onesVector, leastSquares;
+	Matrix1D<double> onesVector, leastSquares, residuals, residualssorted;
 	Matrix2D<double> eigenvectors;
 	Matrix1D<double> eigenvalues;
 	//rows 1 2 3 (length axis a b c- where a is the smallest one)
@@ -991,10 +916,74 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 			}
 		}
 
+
 		ellipMat.inv(pseudoinv);
 
 		onesVector.initConstant(mycounter, 1.0);
 		leastSquares = pseudoinv*onesVector;
+
+		//Removing outliers
+		residuals = ellipMat*leastSquares - onesVector;
+		residualssorted = residuals.sort();
+		double threshold_plus = VEC_ELEM(residualssorted, size_t(residualssorted.size()*significance));
+		double threshold_minus = VEC_ELEM(residualssorted, size_t(residualssorted.size()*(1.0-significance)));
+
+		mycounter = 0;
+		size_t ellipsoidcounter = 0;
+		for (int i = 0; i<numberdirections; ++i)
+		{
+			resolution = MAT_ELEM(resolutionMat, i, k);
+
+			if (resolution>0)
+			{
+				if ( (VEC_ELEM(residuals, mycounter) > threshold_plus) ||
+						(VEC_ELEM(residuals, mycounter) < threshold_minus) )
+				{
+					MAT_ELEM(resolutionMat, i, k) = -1;
+				}
+				else
+				{
+					++ellipsoidcounter;
+				}
+				++mycounter;
+			}
+		}
+
+		ellipMat.initZeros(ellipsoidcounter, 6);
+		mycounter = 0; //It is required to store the matrix ellipMat
+		for (int i = 0; i<numberdirections; ++i)
+		{
+			resolution = MAT_ELEM(resolutionMat, i, k);
+			if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
+			{
+				std::cout << k << " " << resolution << " " << MAT_ELEM(trigProducts, 0, i)
+						<< " " << MAT_ELEM(trigProducts, 1, i)
+						<< " " << MAT_ELEM(trigProducts, 2, i) << ";" << std::endl;
+			}
+
+			if (resolution>0)
+			{
+				x = resolution*MAT_ELEM(trigProducts, 0, i);
+				y = resolution*MAT_ELEM(trigProducts, 1, i);
+				z = resolution*MAT_ELEM(trigProducts, 2, i);
+
+				MAT_ELEM(ellipMat, mycounter, 0) = x*x;
+				MAT_ELEM(ellipMat, mycounter, 1) = y*y;
+				MAT_ELEM(ellipMat, mycounter, 2) = z*z;
+				MAT_ELEM(ellipMat, mycounter, 3) = 2*x*y;
+				MAT_ELEM(ellipMat, mycounter, 4) = 2*x*z;
+				MAT_ELEM(ellipMat, mycounter, 5) = 2*y*z;
+				++mycounter;
+			}
+		}
+
+		// defining ellipsoid
+
+		ellipMat.inv(pseudoinv);
+
+		onesVector.initConstant(mycounter, 1.0);
+		leastSquares = pseudoinv*onesVector;
+
 
 		MAT_ELEM(quadricMatrix, 0, 0) = VEC_ELEM(leastSquares, 0);
 		MAT_ELEM(quadricMatrix, 0, 1) = VEC_ELEM(leastSquares, 3);
@@ -1023,9 +1012,15 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		b = 1/sqrt(VEC_ELEM(eigenvalues, 1));
 		c = 1/sqrt(VEC_ELEM(eigenvalues, 2));
 
-//		std::cout << "a = " << a << std::endl;
-//		std::cout << "b = " << b << std::endl;
-//		std::cout << "c = " << c << std::endl;
+
+
+		if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
+		{
+			std::cout << "a = " << a << std::endl;
+			std::cout << "b = " << b << std::endl;
+			std::cout << "c = " << c << std::endl;
+			std::cout << "=--------------=" << std::endl;
+		}
 
 		MAT_ELEM(axis,0, k) = a;
 		MAT_ELEM(axis,1, k) = b;
