@@ -1741,7 +1741,7 @@ void ProgResDir::run()
 	ellipsoidFitting(trigProducts, resolutionMatrix, axis);
 //	ellipsoidFitting(angles, resolutionMatrix, axis);
 	}
-/*
+
 	Image<double> doaVol;
 	MultidimArray<double> &pdoaVol = doaVol();
 
@@ -1870,6 +1870,6 @@ void ProgResDir::run()
 	}
 
 	md.write(fnDirections);
-	*/
+
 }
 

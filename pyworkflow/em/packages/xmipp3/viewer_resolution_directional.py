@@ -176,13 +176,13 @@ class XmippMonoDirViewer(ProtocolViewer):
         return [cm]  
  
     def _showDoAColorSlices(self, param=None):
-        self._showColorSlices(OUTPUT_DOA_FILE, True)
+        self._showColorSlices(OUTPUT_DOA_FILE, True, 'Degree of Anisotropy (DoA)')
         
     def _showRadialColorSlices(self, param=None):
-        self._showColorSlices(OUTPUT_RADIAL_FILE, False)
+        self._showColorSlices(OUTPUT_RADIAL_FILE, False, 'Radial Resolution')
         
     def _showAzimuthalColorSlices(self, param=None):
-        self._showColorSlices(OUTPUT_AZIMUHTAL_FILE, False)
+        self._showColorSlices(OUTPUT_AZIMUHTAL_FILE, False, 'Azimuthal Resolution')
         
     def _showOriginalVolumeSlices(self, param=None):
         if self.protocol.halfVolumes.get() is True:
@@ -193,18 +193,21 @@ class XmippMonoDirViewer(ProtocolViewer):
             cm = DataView(self.protocol.inputVolumes.get().getFileName())
             return [cm]
    
-    def _showColorSlices(self, fileName, zerone):
+    def _showColorSlices(self, fileName, zerone, titleFigure):
         imageFile = self.protocol._getExtraPath(fileName)
         img = ImageHandler().read(imageFile)
         imgData = img.getData()
         imgData2 = np.ma.masked_where(imgData < 0.001, imgData, copy=True)
         if zerone is True:
-            fig, im = self._plotVolumeSlices('MonoDir slices', imgData2,
+            fig, im = self._plotVolumeSlices(titleFigure, imgData2,
                                          0, 1, self.getColorMap(), dataAxis=self._getAxis())
         else:
+#             sortedresolution = np.sort(imgData2)
+#             sortedresolution
+#             max_Res = sortedresolution[0.95*]
             max_Res = np.nanmax(imgData2)
             min_Res = np.nanmin(imgData2)
-            fig, im = self._plotVolumeSlices('MonoDir slices', imgData2,
+            fig, im = self._plotVolumeSlices(titleFigure, imgData2,
                                          min_Res, max_Res, self.getColorMap(), dataAxis=self._getAxis())
         cax = fig.add_axes([0.9, 0.1, 0.03, 0.8])
         cbar = fig.colorbar(im, cax=cax)
