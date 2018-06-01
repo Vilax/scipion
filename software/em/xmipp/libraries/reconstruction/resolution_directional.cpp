@@ -1330,8 +1330,8 @@ void ProgResDir::run()
 
 
 	produceSideInfo();
-	if (checkellipsoids == false)
-	{
+//	if (checkellipsoids == false)
+//	{
 	bool continueIter = false, breakIter = false;
 	double criticalZ=icdf_gauss(significance);
 
@@ -1698,9 +1698,9 @@ void ProgResDir::run()
 	}
 */
 
-	}
-	else
-	{
+//	}
+//	else
+//	{
 		std::cout << "antes del for" << std::endl;
 		N_directions=angles.mdimx;
 		trigProducts.initZeros(3, N_directions);
@@ -1740,7 +1740,7 @@ void ProgResDir::run()
 	Matrix2D<double> axis;
 	ellipsoidFitting(trigProducts, resolutionMatrix, axis);
 //	ellipsoidFitting(angles, resolutionMatrix, axis);
-	}
+//	}
 
 	Image<double> doaVol;
 	MultidimArray<double> &pdoaVol = doaVol();
