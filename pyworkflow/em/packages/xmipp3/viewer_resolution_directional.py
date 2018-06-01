@@ -204,9 +204,11 @@ class XmippMonoDirViewer(ProtocolViewer):
         else:
             
             
-            maskNan = np.asarray(np.isnan(imgData2))
+            maskNan = np.asarray(imgData2)
             print maskNan
             print '-------------'
+            maskNan = np.isnan(imgData2)
+
             
             ma = list(np.ma.masked_array(imgData2, mask=maskNan))
             sortedresolution = list(np.argsort(ma))
