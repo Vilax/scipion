@@ -206,7 +206,7 @@ class XmippMonoDirViewer(ProtocolViewer):
 #             aux = (np.array(aux))
 #             aux = aux.tolist()
 #             
-            max_Res = np.nanpercentile(imgData2, 95)
+            max_Res = np.nanpercentile(imgData2, 5)
             print max_Res
 #             max_Res = np.nanmax(imgData2)
             min_Res = np.nanmin(imgData2)
