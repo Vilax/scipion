@@ -204,10 +204,9 @@ class XmippMonoDirViewer(ProtocolViewer):
         else:
             maskNan = np.isnan(imgData2)
             goodResolutions = np.ma.masked_array(imgData2, mask=maskNan)
-            print goodResolutions
+
             max_Res = np.percentile(goodResolutions, 95)
             print max_Res
-#             max_Res = np.nanmax(imgData2)
             min_Res = np.nanmin(imgData2)
             fig, im = self._plotVolumeSlices(titleFigure, imgData2,
                                          min_Res, max_Res, self.getColorMap(), dataAxis=self._getAxis())
