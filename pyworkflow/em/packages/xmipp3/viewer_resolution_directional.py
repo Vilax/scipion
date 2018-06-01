@@ -202,8 +202,8 @@ class XmippMonoDirViewer(ProtocolViewer):
             fig, im = self._plotVolumeSlices(titleFigure, imgData2,
                                          0, 1, self.getColorMap(), dataAxis=self._getAxis())
         else:
+            print imgData2
             max_Res = np.percentile(imgData2, 95)
-            print max_Res
             min_Res = np.nanmin(imgData2)
             fig, im = self._plotVolumeSlices(titleFigure, imgData2,
                                          min_Res, max_Res, self.getColorMap(), dataAxis=self._getAxis())
