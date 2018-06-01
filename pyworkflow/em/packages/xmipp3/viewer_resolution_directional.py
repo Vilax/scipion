@@ -204,7 +204,7 @@ class XmippMonoDirViewer(ProtocolViewer):
         else:
             
             
-            maskNan = np.isnan(imgData2)
+            maskNan = np.asarray(np.isnan(imgData2))
             print maskNan
             print '-------------'
             
