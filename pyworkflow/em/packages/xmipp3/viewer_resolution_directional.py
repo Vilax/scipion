@@ -206,7 +206,7 @@ class XmippMonoDirViewer(ProtocolViewer):
             ma = np.ma.masked_array(imgData2, mask=maskNan)
             sortedresolution = np.argsort(ma)
 
-            len_sortedresolution = sortedresolution.len()
+            len_sortedresolution = len(sortedresolution)
             max_Res = sortedresolution[0.95*len_sortedresolution]
 #             max_Res = np.nanmax(imgData2)
             min_Res = np.nanmin(imgData2)
