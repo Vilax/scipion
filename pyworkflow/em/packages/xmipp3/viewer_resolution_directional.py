@@ -202,10 +202,13 @@ class XmippMonoDirViewer(ProtocolViewer):
             fig, im = self._plotVolumeSlices(titleFigure, imgData2,
                                          0, 1, self.getColorMap(), dataAxis=self._getAxis())
         else:
-#             sortedresolution = np.sort(imgData2)
-#             sortedresolution
-#             max_Res = sortedresolution[0.95*]
-            max_Res = np.nanmax(imgData2)
+            maskNan = np.isnan(imgData2)
+            ma = np.ma.masked_array(imgData2, mask=maskNan)
+            sortedresolution = np.argsort(ma)
+
+            len_sortedresolution = sortedresolution.len()
+            max_Res = sortedresolution[0.95*len_sortedresolution]
+#             max_Res = np.nanmax(imgData2)
             min_Res = np.nanmin(imgData2)
             fig, im = self._plotVolumeSlices(titleFigure, imgData2,
                                          min_Res, max_Res, self.getColorMap(), dataAxis=self._getAxis())

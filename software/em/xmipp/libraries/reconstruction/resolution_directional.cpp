@@ -431,7 +431,9 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 ////	}
 //	#endif
 
-	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
+	//TODO: instead of VRiesz use directly Amplitude
+//	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
+	transformer_inv.inverseFourierTransform(fftVRiesz, amplitude);
 
 	#ifdef DEBUG_DIR
 		Image<double> filteredvolume;
@@ -439,11 +441,12 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir+1,count));
 	#endif
 
-//	amplitude.initZeros(VRiesz);
-	amplitude.resizeNoCopy(VRiesz);
+
+//	amplitude.resizeNoCopy(VRiesz);
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 	{
-		DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+//		DIRECT_MULTIDIM_ELEM(amplitude,n)=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+		DIRECT_MULTIDIM_ELEM(amplitude,n) *= DIRECT_MULTIDIM_ELEM(amplitude,n);
 
 	}
 
@@ -491,7 +494,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 	{
-		DIRECT_MULTIDIM_ELEM(amplitude,n)+= DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
+		DIRECT_MULTIDIM_ELEM(amplitude,n) += DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 	}
 
 	transformer_inv.inverseFourierTransform(fftVRiesz_aux, VRiesz);
@@ -526,6 +529,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 			}
 		}
 	}
+
 	//TODO: change (k - z_size*0.5)
 
 		#ifdef MONO_AMPLITUDE
@@ -538,6 +542,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 		}
 		saveImg2.clear();
 		#endif
+
 
 	transformer_inv.FourierTransform(amplitude, fftVRiesz, false);
 
@@ -564,6 +569,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 			}
 		}
 	}
+
 	transformer_inv.inverseFourierTransform();
 
 	#ifdef MONO_AMPLITUDE
@@ -776,6 +782,12 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 		//Computing closest neighbours and its mean distance
 		for (int i = 0; i<numberdirections; ++i)
 		{
+			if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
+			{
+				std::cout << k << " " << MAT_ELEM(resolutionMat, i, k) << " " << MAT_ELEM(trigProducts, 0, i) << "  " <<
+						MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << ";" << std::endl;
+			}
+
 			double resi = MAT_ELEM(resolutionMat, i, k);
 			if (resi>0)
 			{
@@ -837,17 +849,9 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 				if ((meandistance>threshold_gauss) || MAT_ELEM(neigbour_dir, i, 0) <= 1)
 				{
 					MAT_ELEM(resolutionMat, i, k)=-1;
-					if (((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512)))
-					{
-						std::cout << "outlier in i=" << i << std::endl;
-					}
 				}
 			}
-			if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
-			{
-				std::cout << k << " " << thresholdDirection << " " << MAT_ELEM(resolutionMat, i, k) << " " << MAT_ELEM(trigProducts, 0, i) << "  " <<
-						MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << ";" << std::endl;
-			}
+
 		}
 
 		if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
@@ -1011,8 +1015,6 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		a = 1/sqrt(VEC_ELEM(eigenvalues, 0));
 		b = 1/sqrt(VEC_ELEM(eigenvalues, 1));
 		c = 1/sqrt(VEC_ELEM(eigenvalues, 2));
-
-
 
 		if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
 		{
@@ -1330,8 +1332,8 @@ void ProgResDir::run()
 
 
 	produceSideInfo();
-//	if (checkellipsoids == false)
-//	{
+	if (checkellipsoids == false)
+	{
 	bool continueIter = false, breakIter = false;
 	double criticalZ=icdf_gauss(significance);
 
@@ -1698,9 +1700,9 @@ void ProgResDir::run()
 	}
 */
 
-//	}
-//	else
-//	{
+	}
+	else
+	{
 		std::cout << "antes del for" << std::endl;
 		N_directions=angles.mdimx;
 		trigProducts.initZeros(3, N_directions);
@@ -1740,8 +1742,8 @@ void ProgResDir::run()
 	Matrix2D<double> axis;
 	ellipsoidFitting(trigProducts, resolutionMatrix, axis);
 //	ellipsoidFitting(angles, resolutionMatrix, axis);
-//	}
-
+	}
+/*
 	Image<double> doaVol;
 	MultidimArray<double> &pdoaVol = doaVol();
 
@@ -1870,6 +1872,6 @@ void ProgResDir::run()
 	}
 
 	md.write(fnDirections);
-
+*/
 }
 
