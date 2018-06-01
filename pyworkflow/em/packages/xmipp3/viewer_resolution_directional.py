@@ -204,11 +204,11 @@ class XmippMonoDirViewer(ProtocolViewer):
         else:
             maskNan = np.isnan(imgData2)
             ma = list(np.ma.masked_array(imgData2, mask=maskNan))
-            sortedresolution = np.argsort(ma)
+            sortedresolution = list(np.argsort(ma))
 
             len_sortedresolution = len(sortedresolution)
             max_Res = sortedresolution[int(round(0.95*len_sortedresolution))]
-            print len_sortedresolution
+            print max_Res
 #             max_Res = np.nanmax(imgData2)
             min_Res = np.nanmin(imgData2)
             fig, im = self._plotVolumeSlices(titleFigure, imgData2,
