@@ -201,8 +201,6 @@ void ProgResDir::produceSideInfo()
 	mask.write("mask.vol");
 	#endif
 
-	fftN=&fftV;
-
 	freq_fourier.initZeros(ZSIZE(inputVol));
 	int size = ZSIZE(inputVol);
 	maxRes = size;

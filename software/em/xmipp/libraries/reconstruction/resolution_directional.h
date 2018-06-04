@@ -53,11 +53,11 @@ class ProgResDir : public XmippProgram
 {
 public:
 	 /** Filenames */
-	FileName fnOut, fnVol, fnMask, fnSym, fnDoA, fnDirections, fnradial, fnazimuthal,
+	FileName fnOut, fnVol, fnMask, fnDoA, fnDirections, fnradial, fnazimuthal,
 	fnMDradial, fnMDazimuthal, fnMeanResolution, fnMDThr;
 
 	/** sampling rate, minimum resolution, and maximum resolution */
-	double sampling, minRes, maxRes, R, ang_sampling, N_points, N_directions, Rparticle, res_step;
+	double sampling, minRes, maxRes, R, ang_sampling, N_directions, Rparticle, res_step;
 
 	/** Is the volume previously masked?*/
 	int NVoxelsOriginalMask, Nvoxels, Nthr;
@@ -66,7 +66,7 @@ public:
 	double N_freq, significance;
 
 	/** Analyze radial and azimuthal resolutoin */
-	bool dontmeasure, checkellipsoids;
+	bool checkellipsoids;
 
 public:
 
@@ -121,7 +121,7 @@ public:
 public:
     Image<int> mask;
     MultidimArray<double> iu, VRiesz; // Inverse of the frequency
-	MultidimArray< std::complex<double> > fftV, *fftN, conefilter; // Fourier transform of the input volume
+	MultidimArray< std::complex<double> > fftV, conefilter; // Fourier transform of the input volume
 	FourierTransformer transformer_inv;
 	MultidimArray< std::complex<double> > fftVRiesz, fftVRiesz_aux;
 	FourierFilter lowPassFilter, FilterBand;
