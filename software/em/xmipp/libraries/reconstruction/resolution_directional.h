@@ -54,7 +54,7 @@ class ProgResDir : public XmippProgram
 public:
 	 /** Filenames */
 	FileName fnOut, fnVol, fnMask, fnSym, fnDoA, fnDirections, fnradial, fnazimuthal,
-	fnMDradial, fnMDazimuthal;
+	fnMDradial, fnMDazimuthal, fnMeanResolution;
 
 	/** sampling rate, minimum resolution, and maximum resolution */
 	double sampling, minRes, maxRes, R, ang_sampling, N_points, N_directions, Rparticle;
@@ -109,7 +109,9 @@ public:
     void radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
     		MultidimArray<int> &pmask,
     		MultidimArray<double> &radial,
-    		MultidimArray<double> &azimuthal);
+    		MultidimArray<double> &azimuthal,
+    		MultidimArray<double> &meanResolution,
+    		double &radial_Thr, double &azimuthal_Thr);
 
     void radialAverageInMask(MultidimArray<int> &mask,
     						MultidimArray<double> &inputVol, MetaData &md);

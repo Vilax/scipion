@@ -48,6 +48,7 @@ void ProgResDir::readParams()
 	fnazimuthal =getParam("--azimuthalRes");
 	fnMDradial =getParam("--radialAvg");
 	fnMDazimuthal =getParam("--azimuthalAvg");
+	fnMeanResolution =getParam("--resolutionAvg");
 	Nthr = getIntParam("--threads");
 	checkellipsoids = checkParam("--checkellipsoids");
 }
@@ -69,6 +70,7 @@ void ProgResDir::defineParams()
 	addParamsLine("  [--directions <vol_file=\"\">]  : Output preffered directions");
 	addParamsLine("  [--radialRes <vol_file=\"\">]  : Output radial resolution map");
 	addParamsLine("  [--azimuthalRes <vol_file=\"\">]  : Output azimuthal resolution map");
+	addParamsLine("  [--resolutionAvg <vol_file=\"\">]  : Output mean resolution map");
 	addParamsLine("  [--radialAvg <vol_file=\"\">]  : Radial Average of the radial resolution map");
 	addParamsLine("  [--azimuthalAvg <vol_file=\"\">]  : Radial Average of the azimuthal resolution map");
 	addParamsLine("  [--threads <s=4>]          : Number of threads");
@@ -431,8 +433,6 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 ////	}
 //	#endif
 
-	//TODO: instead of VRiesz use directly Amplitude
-//	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 	transformer_inv.inverseFourierTransform(fftVRiesz, amplitude);
 
 	#ifdef DEBUG_DIR
@@ -1105,7 +1105,9 @@ void ProgResDir::radialAverageInMask(MultidimArray<int> &mask, MultidimArray<dou
 void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 		MultidimArray<int> &pmask,
 		MultidimArray<double> &radial,
-		MultidimArray<double> &azimuthal)
+		MultidimArray<double> &azimuthal,
+		MultidimArray<double> &meanResolution,
+		double &radial_Thr, double &azimuthal_Thr)
 {
 
 	radial.initZeros(pmask);
@@ -1119,6 +1121,8 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 	int idx;
 	idx = 0;
 	double count_radial, count_azimuthal;
+
+	meanResolution.initZeros(pmask);
 	FOR_ALL_ELEMENTS_IN_ARRAY3D(pmask)
 	{
 		//i defines the direction and k the voxel
@@ -1127,10 +1131,11 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 			iu = 1/sqrt(i*i + j*j + k*k);
 			count_radial = 0;
 			count_azimuthal = 0;
+			std::vector<double> meanRes;
 			for (int ii = 0; ii<xrows; ++ii)
 			{
 				resolution = MAT_ELEM(resolutionMat, ii, idx);
-
+				meanRes.push_back(resolution);
 				if (resolution>0)
 				{
 
@@ -1157,16 +1162,36 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 //			std::cout << "count_azimuthal = " << count_azimuthal << std::endl;
 //			std::cout << "  " << std::endl;
 			++idx;
+			A3D_ELEM(meanResolution,k,i,j) = meanRes((size_t) floor(0.5*meanRes.size()));
+			meanRes.clear();
 		}
+
+
 		A3D_ELEM(radial,k,i,j) = radial_resolution/count_radial;
 		A3D_ELEM(azimuthal,k,i,j) = azimuthal_resolution/count_azimuthal;
 		azimuthal_resolution = 0;
 		radial_resolution = 0;
 	}
+	std::vector<double> radialList, azimuthalList;
 
+	FOR_ALL_ELEMENTS_IN_ARRAY3D(radial)
+	{
+		//i defines the direction and k the voxel
+		if (A3D_ELEM(pmask,k,i,j) > 0 )
+		{
+			radialList.push_back(A3D_ELEM(radial,k,i,j));
+			azimuthalList.push_back(A3D_ELEM(azimuthal,k,i,j));
+		}
+	}
 
+	std::sort(radialList.begin(),radialList.end());
+	std::sort(azimuthalList.begin(),azimuthalList.end());
+
+	radial_Thr = radialList((size_t) floor(radialList.size()*0.95));
+	azimuthal_Thr = azimuthalList((size_t) floor(azimuthalList.size()*0.95));
 }
 
+//TODO: change this function to be more efficient
 double ProgResDir::firstMonoResEstimation(MultidimArray< std::complex<double> > &myfftV,
 		double freq, double freqH, MultidimArray<double> &amplitude)
 {
@@ -1781,14 +1806,18 @@ void ProgResDir::run()
 	imgdoa = pdoaVol;
 	imgdoa.write(fnDoA);
 
-	MultidimArray<double> radial, azimuthal;
-	radialAzimuthalResolution(resolutionMatrix, mask(), radial, azimuthal);
+	MultidimArray<double> radial, azimuthal, meanResolution;
+	double radialThr, azimuthalThr;
+	radialAzimuthalResolution(resolutionMatrix, mask(), radial, azimuthal, meanResolution, radialThr, azimuthalThr);
 
 	imgdoa = radial;
 	imgdoa.write(fnradial);
 	imgdoa = azimuthal;
 	imgdoa.write(fnazimuthal);
+	imgdoa = meanResolution;
+	imgdoa.write(fnMeanResolution);
 
+	std::cout << "radial = " << radialThr << "  azimuthal = " << azimuthalThr << std::endl;
 	std::cout << "Calculating the radial and azimuthal resolution " << std::endl;
 
 
