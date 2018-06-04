@@ -44,11 +44,12 @@ void ProgResDir::readParams()
 	significance = getDoubleParam("--significance");
 	fnDoA = getParam("--doa_vol");
 	fnDirections = getParam("--directions");
-	fnradial =getParam("--radialRes");
-	fnazimuthal =getParam("--azimuthalRes");
-	fnMDradial =getParam("--radialAvg");
-	fnMDazimuthal =getParam("--azimuthalAvg");
-	fnMeanResolution =getParam("--resolutionAvg");
+	fnradial = getParam("--radialRes");
+	fnazimuthal = getParam("--azimuthalRes");
+	fnMDradial = getParam("--radialAvg");
+	fnMDazimuthal = getParam("--azimuthalAvg");
+	fnMeanResolution = getParam("--resolutionAvg");
+	fnMDThr = getParam("--radialAzimuthalThresholds");
 	Nthr = getIntParam("--threads");
 	checkellipsoids = checkParam("--checkellipsoids");
 }
@@ -72,6 +73,7 @@ void ProgResDir::defineParams()
 	addParamsLine("  [--azimuthalRes <vol_file=\"\">]  : Output azimuthal resolution map");
 	addParamsLine("  [--resolutionAvg <vol_file=\"\">]  : Output mean resolution map");
 	addParamsLine("  [--radialAvg <vol_file=\"\">]  : Radial Average of the radial resolution map");
+	addParamsLine("  [--radialAzimuthalThresholds <vol_file=\"\">]  : Radial and azimuthal threshold for representation resolution maps");
 	addParamsLine("  [--azimuthalAvg <vol_file=\"\">]  : Radial Average of the azimuthal resolution map");
 	addParamsLine("  [--threads <s=4>]          : Number of threads");
 	addParamsLine("  [--checkellipsoids]          : only for debug");
@@ -929,9 +931,11 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		//Removing outliers
 		residuals = ellipMat*leastSquares - onesVector;
 		residualssorted = residuals.sort();
+		std::cout << "llego" <<std::endl;
 		double threshold_plus = VEC_ELEM(residualssorted, size_t(residualssorted.size()*significance));
 		double threshold_minus = VEC_ELEM(residualssorted, size_t(residualssorted.size()*(1.0-significance)));
 
+		std::cout << "nollego" <<std::endl;
 		mycounter = 0;
 		size_t ellipsoidcounter = 0;
 		for (int i = 0; i<numberdirections; ++i)
@@ -940,9 +944,7 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 
 			if (resolution>0)
 			{
-					}
-					else
-					{		if ( (VEC_ELEM(residuals, mycounter) > threshold_plus) ||
+				if ( (VEC_ELEM(residuals, mycounter) > threshold_plus) ||
 						(VEC_ELEM(residuals, mycounter) < threshold_minus) )
 				{
 					MAT_ELEM(resolutionMat, i, k) = -1;
@@ -1135,7 +1137,8 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 			for (int ii = 0; ii<xrows; ++ii)
 			{
 				resolution = MAT_ELEM(resolutionMat, ii, idx);
-				meanRes.push_back(resolution);
+				if (resolution>0)
+					meanRes.push_back(resolution);
 				if (resolution>0)
 				{
 
@@ -1162,7 +1165,7 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 //			std::cout << "count_azimuthal = " << count_azimuthal << std::endl;
 //			std::cout << "  " << std::endl;
 			++idx;
-			A3D_ELEM(meanResolution,k,i,j) = meanRes((size_t) floor(0.5*meanRes.size()));
+			A3D_ELEM(meanResolution,k,i,j) = meanRes[(size_t) floor(0.5*meanRes.size())];
 			meanRes.clear();
 		}
 
@@ -1187,8 +1190,8 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 	std::sort(radialList.begin(),radialList.end());
 	std::sort(azimuthalList.begin(),azimuthalList.end());
 
-	radial_Thr = radialList((size_t) floor(radialList.size()*0.95));
-	azimuthal_Thr = azimuthalList((size_t) floor(azimuthalList.size()*0.95));
+	radial_Thr = radialList[(size_t) floor(radialList.size()*0.95)];
+	azimuthal_Thr = azimuthalList[(size_t) floor(azimuthalList.size()*0.95)];
 }
 
 //TODO: change this function to be more efficient
@@ -1397,7 +1400,6 @@ void ProgResDir::run()
 
 		FFT_IDX2DIGFREQ(aux_idx, volsize, w);
 		FFT_IDX2DIGFREQ(aux_idx+1, volsize, wH); //Frequency chosen for a first estimation
-
 	}
 	else
 	{
@@ -1730,34 +1732,34 @@ void ProgResDir::run()
 //	}
 //	else
 //	{
-		std::cout << "antes del for" << std::endl;
-		N_directions=angles.mdimx;
-		trigProducts.initZeros(3, N_directions);
-		for (size_t dir=0; dir<N_directions; dir++)
-		{
-			std::cout << "dir = " << dir + 1 << std::endl;
-			double rot = MAT_ELEM(angles, 0, dir);
-			double tilt = MAT_ELEM(angles, 1, dir);
-			MAT_ELEM(trigProducts, 0, dir) = sin(tilt*PI/180)*cos(rot*PI/180);
-			MAT_ELEM(trigProducts, 1, dir) = sin(tilt*PI/180)*sin(rot*PI/180);
-			MAT_ELEM(trigProducts, 2, dir) = cos(tilt*PI/180);
-			Image<double> img;
-			FileName fnres = formatString("resolution_dir_%i.vol", dir+1);
-			img.read(fnres);
-			img().setXmippOrigin();
-
-			int maskPos = 0;
-
-			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img())
-			{
-				if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
-				{
-
-					MAT_ELEM(resolutionMatrix, dir, maskPos) = DIRECT_MULTIDIM_ELEM(img(), n);
-					++maskPos;
-				}
-			}
-		}
+//		std::cout << "antes del for" << std::endl;
+//		N_directions=angles.mdimx;
+//		trigProducts.initZeros(3, N_directions);
+//		for (size_t dir=0; dir<N_directions; dir++)
+//		{
+////			std::cout << "dir = " << dir + 1 << std::endl;
+//			double rot = MAT_ELEM(angles, 0, dir);
+//			double tilt = MAT_ELEM(angles, 1, dir);
+//			MAT_ELEM(trigProducts, 0, dir) = sin(tilt*PI/180)*cos(rot*PI/180);
+//			MAT_ELEM(trigProducts, 1, dir) = sin(tilt*PI/180)*sin(rot*PI/180);
+//			MAT_ELEM(trigProducts, 2, dir) = cos(tilt*PI/180);
+//			Image<double> img;
+//			FileName fnres = formatString("resolution_dir_%i.vol", dir+1);
+//			img.read(fnres);
+//			img().setXmippOrigin();
+//
+//			int maskPos = 0;
+//
+//			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img())
+//			{
+//				if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
+//				{
+//
+//					MAT_ELEM(resolutionMatrix, dir, maskPos) = DIRECT_MULTIDIM_ELEM(img(), n);
+//					++maskPos;
+//				}
+//			}
+//		}
 
 	//Remove outliers
 	removeOutliers(trigProducts, resolutionMatrix);
@@ -1816,6 +1818,14 @@ void ProgResDir::run()
 	imgdoa.write(fnazimuthal);
 	imgdoa = meanResolution;
 	imgdoa.write(fnMeanResolution);
+
+	MetaData mdRadialAzimuthalThr;
+	size_t objIdx;
+	objIdx = mdRadialAzimuthalThr.addObject();
+	mdRadialAzimuthalThr.setValue(MDL_RESOLUTION_FREQ, radialThr, objIdx);
+	mdRadialAzimuthalThr.setValue(MDL_RESOLUTION_FREQ2, azimuthalThr, objIdx);
+
+	mdRadialAzimuthalThr.write(fnMDThr);
 
 	std::cout << "radial = " << radialThr << "  azimuthal = " << azimuthalThr << std::endl;
 	std::cout << "Calculating the radial and azimuthal resolution " << std::endl;

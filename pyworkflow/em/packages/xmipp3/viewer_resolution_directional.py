@@ -29,7 +29,7 @@ from pyworkflow.protocol.params import LabelParam, StringParam, EnumParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER
 from pyworkflow.em.viewer import ChimeraView, DataView
 from protocol_resolution_directional import XmippProtMonoDir
-from pyworkflow.em.metadata import MetaData, MDL_X, MDL_COUNT
+from pyworkflow.em.metadata import MetaData, MDL_X, MDL_COUNT, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FREQ2
 from pyworkflow.em import ImageHandler
 import numpy as np
 import matplotlib.pyplot as plt
@@ -56,6 +56,7 @@ OUTPUT_DOA_FILE = 'local_anisotropy.vol'
 OUTPUT_SPH_FILE = 'sphericity.vol'
 OUTPUT_RADIAL_FILE = 'radial_resolution.vol'
 OUTPUT_AZIMUHTAL_FILE = 'azimuthal_resolution.vol'
+OUTPUT_THRESHOLDS_FILE = 'thresholds.xmd'
 
 #TODO: prepare volumes for chimera
 OUTPUT_VARIANCE_FILE_CHIMERA = 'varResolution_Chimera.vol'
@@ -202,12 +203,17 @@ class XmippMonoDirViewer(ProtocolViewer):
             fig, im = self._plotVolumeSlices(titleFigure, imgData2,
                                          0, 1, self.getColorMap(), dataAxis=self._getAxis())
         else:
-#             aux = imgData2.tolist()
-#             aux = (np.array(aux))
-#             aux = aux.tolist()
-#             
-            max_Res = np.nanpercentile(imgData2, 95)
-            print max_Res
+            md =MetaData()
+            md.read(self.protocol._getExtraPath(OUTPUT_THRESHOLDS_FILE))
+            idx = 1
+            val1 = md.getValue(MDL_RESOLUTION_FREQ, idx)
+            val2 = md.getValue(MDL_RESOLUTION_FREQ2, idx)
+
+            if val1>=val2:
+                max_Res = val1
+            else:
+                max_Res = val2
+
 #             max_Res = np.nanmax(imgData2)
             min_Res = np.nanmin(imgData2)
             fig, im = self._plotVolumeSlices(titleFigure, imgData2,
