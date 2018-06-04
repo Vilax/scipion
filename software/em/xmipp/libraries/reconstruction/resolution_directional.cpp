@@ -135,12 +135,6 @@ void ProgResDir::produceSideInfo()
 		}
 	}
 
-	// Prepare low pass filter
-	lowPassFilter.FilterShape = RAISED_COSINE;
-	lowPassFilter.raised_w = 0.01;
-	lowPassFilter.do_generate_3dmask = false;
-	lowPassFilter.FilterBand = LOWPASS;
-
 	// Prepare mask
 	MultidimArray<int> &pMask=mask();
 
@@ -1334,6 +1328,12 @@ double ProgResDir::firstMonoResEstimation(MultidimArray< std::complex<double> > 
 	}
 
 	// Low pass filter the monogenic amplitude
+	// Prepare low pass filter
+	FourierFilter lowPassFilter, FilterBand;
+	lowPassFilter.FilterShape = RAISED_COSINE;
+	lowPassFilter.raised_w = 0.01;
+	lowPassFilter.do_generate_3dmask = false;
+	lowPassFilter.FilterBand = LOWPASS;
 	lowPassFilter.w1 = freq;
 	amplitude.setXmippOrigin();
 	lowPassFilter.applyMaskSpace(amplitude);

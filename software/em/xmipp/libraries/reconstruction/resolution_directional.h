@@ -123,7 +123,6 @@ public:
 	MultidimArray< std::complex<double> > fftV, conefilter; // Fourier transform of the input volume
 	FourierTransformer transformer_inv;
 	MultidimArray< std::complex<double> > fftVRiesz, fftVRiesz_aux;
-	FourierFilter lowPassFilter, FilterBand;
 	int N_smoothing;
 	Matrix2D<double> angles, resolutionMatrix, maskMatrix, trigProducts;
 	Matrix1D<double> freq_fourier;
