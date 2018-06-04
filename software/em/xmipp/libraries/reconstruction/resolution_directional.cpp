@@ -931,11 +931,10 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		//Removing outliers
 		residuals = ellipMat*leastSquares - onesVector;
 		residualssorted = residuals.sort();
-		std::cout << "llego" <<std::endl;
+
 		double threshold_plus = VEC_ELEM(residualssorted, size_t(residualssorted.size()*significance));
 		double threshold_minus = VEC_ELEM(residualssorted, size_t(residualssorted.size()*(1.0-significance)));
 
-		std::cout << "nollego" <<std::endl;
 		mycounter = 0;
 		size_t ellipsoidcounter = 0;
 		for (int i = 0; i<numberdirections; ++i)
