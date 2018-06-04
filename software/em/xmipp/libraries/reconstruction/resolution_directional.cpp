@@ -940,7 +940,9 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 
 			if (resolution>0)
 			{
-				if ( (VEC_ELEM(residuals, mycounter) > threshold_plus) ||
+					}
+					else
+					{		if ( (VEC_ELEM(residuals, mycounter) > threshold_plus) ||
 						(VEC_ELEM(residuals, mycounter) < threshold_minus) )
 				{
 					MAT_ELEM(resolutionMat, i, k) = -1;
@@ -1332,8 +1334,8 @@ void ProgResDir::run()
 
 
 	produceSideInfo();
-	if (checkellipsoids == false)
-	{
+//	if (checkellipsoids == false)
+//	{
 	bool continueIter = false, breakIter = false;
 	double criticalZ=icdf_gauss(significance);
 
@@ -1700,9 +1702,9 @@ void ProgResDir::run()
 	}
 */
 
-	}
-	else
-	{
+//	}
+//	else
+//	{
 		std::cout << "antes del for" << std::endl;
 		N_directions=angles.mdimx;
 		trigProducts.initZeros(3, N_directions);
@@ -1742,8 +1744,8 @@ void ProgResDir::run()
 	Matrix2D<double> axis;
 	ellipsoidFitting(trigProducts, resolutionMatrix, axis);
 //	ellipsoidFitting(angles, resolutionMatrix, axis);
-	}
-/*
+//	}
+
 	Image<double> doaVol;
 	MultidimArray<double> &pdoaVol = doaVol();
 
@@ -1872,6 +1874,6 @@ void ProgResDir::run()
 	}
 
 	md.write(fnDirections);
-*/
+
 }
 

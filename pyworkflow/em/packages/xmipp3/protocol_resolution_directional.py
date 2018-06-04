@@ -168,6 +168,8 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params += ' --threads %i' % self.numberOfThreads.get()
 
         self.runJob('xmipp_resolution_directional', params)
+        
+        #TODO: Take a metadata and set maxRes minRes, idem with azimuthal and tangencial
 
     def createEllipsoid(self):
 
