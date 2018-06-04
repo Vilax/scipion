@@ -42,6 +42,7 @@ void ProgResDir::readParams()
 	ang_sampling = getDoubleParam("--angular_sampling");
 	R = getDoubleParam("--volumeRadius");
 	significance = getDoubleParam("--significance");
+	res_step = getDoubleParam("--resStep");
 	fnDoA = getParam("--doa_vol");
 	fnDirections = getParam("--directions");
 	fnradial = getParam("--radialRes");
@@ -65,6 +66,7 @@ void ProgResDir::defineParams()
 	addParamsLine("  [-o <output=\"MGresolution.vol\">]: Local resolution volume (in Angstroms)");
 	addParamsLine("  [--sampling_rate <s=1>]      : Sampling rate (A/px)");
 	addParamsLine("  [--angular_sampling <s=15>]  : Angular Sampling rate (degrees)");
+	addParamsLine("  [--resStep <s=0.3>]  		  : resolution step (precision) in A");
 	addParamsLine("  [--volumeRadius <s=100>]     : This parameter determines the radius of a sphere where the volume is");
 	addParamsLine("  [--significance <s=0.95>]    : The level of confidence for the hypothesis test.");
 	addParamsLine("  [--doa_vol <vol_file=\"\">]  : Output filename with DoA volume");
@@ -1369,10 +1371,7 @@ void ProgResDir::run()
 	double range = maxRes-minRes;
 	double step = range/N_freq;
 
-	if (step<0.3)
-		step=0.3;
-
-	step = 0.3;
+	step = res_step;
 
 	std::cout << "Analyzing directions " << std::endl;
 	std::cout << "maxRes = " << maxRes << std::endl;

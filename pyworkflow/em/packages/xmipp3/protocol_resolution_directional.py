@@ -82,14 +82,19 @@ class XmippProtMonoDir(ProtAnalysis3D):
                       help='The mask determines which points are specimen and which ones not')
 
         group = form.addGroup('Extra parameters')
-        group.addParam('angularsampling', FloatParam, default=15, expertLevel=LEVEL_ADVANCED,
-                      label="Angular Sampling",
-                      help='Angular sampling to cover the projection sphere')
+#         group.addParam('angularsampling', FloatParam, default=15, expertLevel=LEVEL_ADVANCED,
+#                       label="Angular Sampling",
+#                       help='Angular sampling to cover the projection sphere')
         
         group.addParam('significance', FloatParam, default=0.95, expertLevel=LEVEL_ADVANCED,
                       label="Significance",
                       help='Relution is computed using hipothesis tests, this value determines'
                       'the significance of that test')
+        
+        group.addParam('resstep', FloatParam, default=0.3, expertLevel=LEVEL_ADVANCED,
+                      label="Resolution Step",
+                      help='The resolution will be sought in steps of this values, '
+                      'with step = 0.3, then 1A, 1.3A, 1.6A,...')
         
         group.addParam('isPremasked', BooleanParam, default=False,
                       label="Is the original premasked?",
@@ -158,9 +163,10 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params += ' --mask %s' % self.maskFn
         params += ' -o %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
         params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
-        params += ' --angular_sampling %f' % self.angularsampling.get()
+        params += ' --angular_sampling %f' % 15
         params += ' --volumeRadius %f' % xdim
         params += ' --significance %f' % self.significance.get()
+        params += ' --resStep %f' % self.resstep.get()
         params += ' --doa_vol %s' % self._getExtraPath(OUTPUT_DOA_FILE)
         params += ' --directions %s' % self._getExtraPath(OUTPUT_DIRECTIONS_FILE)
         params += ' --radialRes %s' % self._getExtraPath(OUTPUT_RADIAL_FILE)

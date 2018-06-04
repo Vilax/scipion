@@ -57,7 +57,7 @@ public:
 	fnMDradial, fnMDazimuthal, fnMeanResolution, fnMDThr;
 
 	/** sampling rate, minimum resolution, and maximum resolution */
-	double sampling, minRes, maxRes, R, ang_sampling, N_points, N_directions, Rparticle;
+	double sampling, minRes, maxRes, R, ang_sampling, N_points, N_directions, Rparticle, res_step;
 
 	/** Is the volume previously masked?*/
 	int NVoxelsOriginalMask, Nvoxels, Nthr;
