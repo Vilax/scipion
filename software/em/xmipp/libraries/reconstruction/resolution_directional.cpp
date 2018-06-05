@@ -1183,8 +1183,8 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 	std::sort(radialList.begin(),radialList.end());
 	std::sort(azimuthalList.begin(),azimuthalList.end());
 
-	radial_Thr = radialList[(size_t) floor(radialList.size()*0.95)];
-	azimuthal_Thr = azimuthalList[(size_t) floor(azimuthalList.size()*0.95)];
+	radial_Thr = radialList[(size_t) floor(radialList.size()*0.9)];
+	azimuthal_Thr = azimuthalList[(size_t) floor(azimuthalList.size()*0.9)];
 }
 
 //TODO: change this function to be more efficient
