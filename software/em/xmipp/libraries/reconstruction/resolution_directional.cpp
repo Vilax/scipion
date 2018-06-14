@@ -1130,11 +1130,10 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 			for (int ii = 0; ii<xrows; ++ii)
 			{
 				resolution = MAT_ELEM(resolutionMat, ii, idx);
-				if (resolution>0)
-					meanRes.push_back(resolution);
+
 				if (resolution>0)
 				{
-
+					meanRes.push_back(resolution);
 					x = MAT_ELEM(trigProducts, 0, ii);
 					y = MAT_ELEM(trigProducts, 1, ii);
 					z = MAT_ELEM(trigProducts, 2, ii);
@@ -1153,6 +1152,7 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 					}
 
 				}
+
 			}
 //			std::cout << "count_radial = " << count_radial << std::endl;
 //			std::cout << "count_azimuthal = " << count_azimuthal << std::endl;
@@ -1162,9 +1162,17 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 			meanRes.clear();
 		}
 
+		if (count_radial<1)
+			A3D_ELEM(radial,k,i,j) = A3D_ELEM(meanResolution,k,i,j);
+		else
+			A3D_ELEM(radial,k,i,j) = radial_resolution/count_radial;
 
-		A3D_ELEM(radial,k,i,j) = radial_resolution/count_radial;
-		A3D_ELEM(azimuthal,k,i,j) = azimuthal_resolution/count_azimuthal;
+		if (count_azimuthal<1)
+			A3D_ELEM(azimuthal,k,i,j) = A3D_ELEM(meanResolution,k,i,j);
+		else
+			A3D_ELEM(azimuthal,k,i,j) = azimuthal_resolution/count_azimuthal;
+
+
 		azimuthal_resolution = 0;
 		radial_resolution = 0;
 	}
