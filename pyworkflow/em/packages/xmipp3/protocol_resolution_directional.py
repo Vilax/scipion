@@ -91,7 +91,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
                       help='Relution is computed using hipothesis tests, this value determines'
                       'the significance of that test')
         
-        group.addParam('resstep', FloatParam, default=0.3, expertLevel=LEVEL_ADVANCED,
+        group.addParam('resstep', FloatParam, default=0.5, expertLevel=LEVEL_ADVANCED,
                       label="Resolution Step",
                       help='The resolution will be sought in steps of this values, '
                       'with step = 0.3, then 1A, 1.3A, 1.6A,...')
