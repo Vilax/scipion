@@ -431,11 +431,11 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, amplitude);
 
-	#ifdef DEBUG_DIR
+//	#ifdef DEBUG_DIR
 		Image<double> filteredvolume;
 		filteredvolume = VRiesz;
 		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir+1,count));
-	#endif
+//	#endif
 
 
 //	amplitude.resizeNoCopy(VRiesz);
@@ -528,7 +528,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 
 	//TODO: change (k - z_size*0.5)
 
-		#ifdef MONO_AMPLITUDE
+//		#ifdef MONO_AMPLITUDE
 		Image<double> saveImg2;
 		saveImg2 = amplitude;
 		if (fnDebug.c_str() != "")
@@ -537,7 +537,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 			saveImg2.write(fnDebug+iternumber);
 		}
 		saveImg2.clear();
-		#endif
+//		#endif
 
 
 	transformer_inv.FourierTransform(amplitude, fftVRiesz, false);
@@ -568,7 +568,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 
 	transformer_inv.inverseFourierTransform();
 
-	#ifdef MONO_AMPLITUDE
+//	#ifdef MONO_AMPLITUDE
 
 //	if (fnDebug.c_str() != "")
 //	{
@@ -576,7 +576,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 		FileName iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir+1, count);
 		saveImg2.write(fnDebug+iternumber);
 //	}
-	#endif // DEBUG
+//	#endif // DEBUG
 }
 
 
