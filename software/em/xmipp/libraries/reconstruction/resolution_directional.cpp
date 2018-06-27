@@ -1422,7 +1422,7 @@ void ProgResDir::run()
 
 	std::cout << "N_directions = " << N_directions << std::endl;
 
-	double cone_angle = 20.0; //(degrees)
+	double cone_angle = 45.0; //(degrees)
 	cone_angle = PI*cone_angle/180;
 
 	trigProducts.initZeros(3, N_directions);
