@@ -24,5 +24,5 @@
  ***************************************************************************/
 
 
-#include <reconstruction/validation_tilt_pairs_new.h>
-RUN_XMIPP_PROGRAM(ProgValidationTiltPairs)
+#include "../../../libraries/reconstruction/image_class_quality.h"
+RUN_XMIPP_PROGRAM(ProgClassQuality)

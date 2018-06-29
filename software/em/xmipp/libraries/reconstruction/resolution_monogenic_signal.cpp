@@ -142,11 +142,11 @@ void ProgMonogenicSignalRes::produceSideInfo()
 			}
 		}
 	}
-	#ifdef DEBUG
+//	#ifdef DEBUG
 	Image<double> saveiu;
 	saveiu = 1/iu;
 	saveiu.write("iu.vol");
-	#endif
+//	#endif
 
 	// Prepare low pass filter
 	lowPassFilter.FilterShape = RAISED_COSINE;

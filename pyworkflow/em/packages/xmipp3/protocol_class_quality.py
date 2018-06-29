@@ -36,12 +36,12 @@ from pyworkflow.em.metadata import MetaData, getBlocksInMetaDataFile
 
 
 
-class XmippProtValidateTiltPairs(ProtAnalysis3D):
+class XmippProtClassQuality(ProtAnalysis3D):
     """    
     Ranks a set of volumes according to their alignment reliability obtained from a clusterability test.
     """
 
-    _label = 'validate_tiltpairs'
+    _label = 'class quality'
     WEB = 0
 
     
@@ -55,76 +55,30 @@ class XmippProtValidateTiltPairs(ProtAnalysis3D):
     def _defineParams(self, form):
         form.addSection(label='Input')
         
-        form.addParam('inputVolume', PointerParam, pointerClass='SetOfVolumes, Volume',
-                      label="Input volume",  
-                      help='Select the input volume.')
-        form.addParam('inputTiltPairs', PointerParam, pointerClass='ParticlesTiltPair', 
-                      label="Input particles tilt pairs",  
-                      help='Select the input projection images .')      
         form.addParam('inputClasses', PointerParam, pointerClass='SetOfClasses2D', 
-                      label="Untilted Classes",  
-                      help='Select the input projection images .') 
-        form.addParam('symmetryGroup', StringParam, default='c1',
-                      label="Symmetry group", 
-                      help='See [[Xmipp Symmetry][http://www2.mrc-lmb.cam.ac.uk/Xmipp/index.php/Conventions_%26_File_formats#Symmetry]] page '
-                           'for a description of the symmetry format accepted by Xmipp') 
-        form.addParam('angularSampling', FloatParam, default=5, expertLevel=LEVEL_ADVANCED,
-                      label="Angular Sampling (degrees)",
-                      help='Angular distance (in degrees) between neighboring projection points ')
-        form.addParallelSection(threads=0, mpi=4)
-    
+                      label="Classes",  
+                      help='Select the input classes.') 
+
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):        
-        self.classes = self.inputClasses.get()
-        self.untilt = self.inputTiltPairs.get().getUntilted()
-        self.tilt = self.inputTiltPairs.get().getTilted()
         
+ 
+        convertId = self._insertFunctionStep('convertInputStep')
         
-        convertId = self._insertFunctionStep('convertInputStep', self.classes, self.untilt, self.tilt)
-        
-        volStepId = self._insertFunctionStep('validationStep')
+        quialityId = self._insertFunctionStep('qualityStep')
               
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def convertInputStep(self, classes, untilt, tilt):
+    def convertInputStep(self, classes):
+        
+        self.classes = self.inputClasses.get()
         classesFn = self._getTmpPath('input_classes.xmd')
-        untiltFn = self._getExtraPath('images_untilted.xmd')
-        tiltFn = self._getExtraPath('images_tilted.xmd')
-        
+       
         writeSetOfClasses2D(classes, classesFn)
-        writeSetOfParticles(untilt, untiltFn)
-        writeSetOfParticles(tilt, tiltFn)
         
-        self.classes2metadata(classesFn, tiltFn)
-        
-        
-
-    def classes2metadata(self, classesFn, tiltFn):
-        #It is compared always with tilt due to the input is untilted classes
-        #The output is a metadata with correspondence untilted particles
-        mdClasses = MetaData()
-        mdOneBlock = MetaData()
-        
-        mdClasses.read(classesFn)
-        mdBlocks = getBlocksInMetaDataFile(classesFn)
-
-        for mdBlock in mdBlocks:
-            if mdBlock =='classes':
-                continue
-            print mdBlock
-            mdOneBlock.read(mdBlock + "@" + classesFn)
-            fnblock = self._getExtraPath(mdBlock+"_untilted.xmd")
-            mdOneBlock.write(fnblock)
-            params =  ' -i %s' % (tiltFn)
-            params += ' --set intersection %s '"'itemId'"' '"'itemId'"' ' % (fnblock)
-            params += ' -o %s' % (self._getExtraPath(mdBlock+"_tilted.xmd"))
-            
-            self.runJob('xmipp_metadata_utilities', params)
-            print ' '
-
-
-    def validationStep(self):
+      
+    def qualityStep(self):
         classesFn = self._getTmpPath('input_classes.xmd')
         mdClasses = MetaData()
         mdClasses.read(classesFn)
@@ -144,7 +98,7 @@ class XmippProtValidateTiltPairs(ProtAnalysis3D):
 #             params += ' --maxshift %f' % (self.maxshift.get())
             
              
-            self.runJob('xmipp_validation_tilt_pairs_new', params)
+            self.runJob('xmipp_image_class_quality', params)
     
     def createOutputStep(self):
         outputVols = self._createSetOfVolumes()
@@ -157,11 +111,10 @@ class XmippProtValidateTiltPairs(ProtAnalysis3D):
     #--------------------------- INFO functions -------------------------------------------- 
     def _validate(self):
         validateMsgs = []
-        # if there are Volume references, it cannot be empty.
-        if not self.inputVolume.get().hasValue():
-            validateMsgs.append('Please provide an input reference volume.')
-        if not self.inputTiltPairs.get().hasValue():
-            validateMsgs.append('Please provide input particles.')            
+        # if there are no classes, it cannot be empty.
+        if not self.inputClasses.get().hasValue():
+            validateMsgs.append('Please provide an a set of classes.')
+        
         return validateMsgs
     
     def _summary(self):
@@ -186,5 +139,5 @@ class XmippProtValidateTiltPairs(ProtAnalysis3D):
         return messages
     
     def _citations(self):
-        return ['Vargas2014a']
+        return ['Vilas2018']
     
