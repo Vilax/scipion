@@ -77,50 +77,64 @@ void ProgClassQuality::produceSideInfo()
 	int sizeVol;
 	sizeVol = XSIZE(img());
 
-//sizeVol = 300;
 	MultidimArray<double> inputImg;
-	if(sizeVol<256)
-	{
+	inputImg.setXmippOrigin();
+//	if(sizeVol<256)
+//	{
+//		inputImg_aux.setXmippOrigin();
+//		inputImg_aux.window(inputImg, -128, -128, 128, 128, 0.0);
+//
+////		int N_smoothing;
+////		N_smoothing = floor( 0.5*(256 - YSIZE(inputImg)) );
+////
+////		int y_size = YSIZE(inputImg);
+////		int siz = y_size*0.5;
+////
+////		double limit_radius = (siz-N_smoothing);
+////		long n=0;
+////
+////		int ux, uy;
+////		for(int i=0; i<y_size; ++i)
+////		{
+////			uy = (i - siz);
+////			uy *= uy;
+////			for(int j=0; j<y_size; ++j)
+////			{
+////				ux = (j - siz);
+////				ux *= ux;
+////				double radius = sqrt(ux + uy);
+////				if ((radius>=limit_radius))
+////					DIRECT_MULTIDIM_ELEM(inputImg, n) *= 0.5*(1+cos(PI*(limit_radius-radius)/(N_smoothing)));
+////				++n;
+////			}
+////		}
+//
+//	}
+//	else
+//	{
+		inputImg = inputImg_aux;
 
-		inputImg.setXmippOrigin();
-		inputImg_aux.setXmippOrigin();
-		inputImg_aux.window(inputImg, -128, -128, 128, 128, 0.0);
-
-//		int N_smoothing;
-//		N_smoothing = floor( 0.5*(256 - YSIZE(inputImg)) );
-//
-//		int y_size = YSIZE(inputImg);
-//		int siz = y_size*0.5;
-//
-//		double limit_radius = (siz-N_smoothing);
-//		long n=0;
-//
-//		int ux, uy;
-//		for(int i=0; i<y_size; ++i)
+//		int N_smoothing =60;
+//		inputImg.setXmippOrigin();
+//		FOR_ALL_ELEMENTS_IN_ARRAY2D(inputImg)
 //		{
-//			uy = (i - siz);
-//			uy *= uy;
-//			for(int j=0; j<y_size; ++j)
-//			{
-//				ux = (j - siz);
-//				ux *= ux;
-//				double radius = sqrt(ux + uy);
-//				if ((radius>=limit_radius))
-//					DIRECT_MULTIDIM_ELEM(inputImg, n) *= 0.5*(1+cos(PI*(limit_radius-radius)/(N_smoothing)));
-//				++n;
-//			}
+//
+//			if (i*i+j*j < N_smoothing*N_smoothing)
+//				A2D_ELEM(inputImg, i, j) = cos(0.5*sqrt(i*i + j*j));
+//			else
+//				A2D_ELEM(inputImg, i, j) = 0;
 //		}
 
-	}
+//	}
 
 //		MultidimArray<double> inputImg = img();
 //		inputImg.setXmippOrigin();
 
-	Image<double> saveimg;
-	saveimg = inputImg;
-	saveimg.write("ppp.xmp");
+//	Image<double> saveimg;
+//	saveimg() = inputImg;
+//	saveimg.write("circul.xmp");
 
-	exit(0);
+
 
 //	transformer_inv.setThreadsNumber(nthrs);
 
@@ -130,6 +144,7 @@ void ProgClassQuality::produceSideInfo()
 
 	transformer.FourierTransform(inputImg, fftV);
 	iu.initZeros(fftV);
+
 
 	// Calculate u and first component of Riesz vector
 	double uz, uy, ux, uy2, u2;
@@ -165,6 +180,20 @@ void ProgClassQuality::produceSideInfo()
 	{
 		mask.read(fnMask);
 		mask().setXmippOrigin();
+
+		R = floor(XSIZE(inputImg)*0.4);
+
+
+		std::cout << "R= " << R << std::endl;
+		NVoxelsOriginalMask = 0;
+
+		FOR_ALL_ELEMENTS_IN_ARRAY2D(pMask)
+		{
+			if (A2D_ELEM(pMask, i, j) == 1)
+				++NVoxelsOriginalMask;
+			if (i*i+j*j > R*R)
+				A2D_ELEM(pMask, i, j) = -1;
+		}
 	}
 	else
 	{
@@ -172,25 +201,9 @@ void ProgClassQuality::produceSideInfo()
 		exit(0);
 	}
 
-	R = floor(XSIZE(inputImg)*0.4);
 
-	NVoxelsOriginalMask = 0;
-	FOR_ALL_ELEMENTS_IN_ARRAY2D(pMask)
-	{
-
-		if (i*i+j*j < R*R)
-			A2D_ELEM(inputImg, i, j) = cos(0.5*sqrt(i*i + j*j));
-		else
-			A2D_ELEM(inputImg, i, j) = 0;
-
-		if (A2D_ELEM(pMask, i, j) == 1)
-			++NVoxelsOriginalMask;
-		if (i*i+j*j > R*R)
-			A2D_ELEM(pMask, i, j) = -1;
-	}
-
-	saveiu = inputImg;
-	saveiu.write("circulo.xmp");
+//	saveiu() = inputImg;
+//	saveiu.write("circulo.xmp");
 
 //	#ifdef DEBUG_MASK
 	mask.write("mask.vol");
@@ -198,21 +211,25 @@ void ProgClassQuality::produceSideInfo()
 
 	fftN=&fftV;
 
-	img.clear();
+
 
 	double u;
 	int size_fourier = YSIZE(fftV);
 	freq_fourier.initZeros(size_fourier);
 
-	int size = XSIZE(pMask);
+	int size = XSIZE(inputImg);
+	img.clear();
+	std::cout << "XSIZE= " << size << "  YSIZE= " << size_fourier << std::endl;
 
 	VEC_ELEM(freq_fourier,0) = 1e-38;
-	for(size_t k=0; k<size_fourier; ++k)
+	for(size_t k=1; k<size_fourier; ++k)
 	{
 		FFT_IDX2DIGFREQ(k,size, u);
 		VEC_ELEM(freq_fourier,k) = u;
+		std::cout << k << " " << VEC_ELEM(freq_fourier,k) << std::endl;
 	}
 }
+
 
 
 void ProgClassQuality::amplitudeMonogenicSignal(MultidimArray< std::complex<double> > &myfftV,
@@ -225,6 +242,7 @@ void ProgClassQuality::amplitudeMonogenicSignal(MultidimArray< std::complex<doub
 	// Filter the input volume and add it to amplitude
 	long n=0;
 	double ideltal=PI/(freq-freqH);
+
 
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(myfftV)
 	{
@@ -249,6 +267,7 @@ void ProgClassQuality::amplitudeMonogenicSignal(MultidimArray< std::complex<doub
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
 
+
 //	#ifdef DEBUG
 	Image<double> filteredvolume;
 	filteredvolume = VRiesz;
@@ -269,7 +288,8 @@ void ProgClassQuality::amplitudeMonogenicSignal(MultidimArray< std::complex<doub
 		for(size_t j=0; j<XSIZE(myfftV); ++j)
 		{
 			ux = VEC_ELEM(freq_fourier,j);
-			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = ux*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+			A2D_ELEM(fftVRiesz, i, j) = ux*A2D_ELEM(fftVRiesz_aux, i, j);
+//			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = ux*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
 //			DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = uy*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
 			++n;
 		}
@@ -283,13 +303,17 @@ void ProgClassQuality::amplitudeMonogenicSignal(MultidimArray< std::complex<doub
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 
+	std::cout << "YSIZE(myfftV) = "<<  YSIZE(myfftV) << "  XSIZE(myfftV) = " << XSIZE(myfftV) << std::endl;
+
 	n=0;
+	fftVRiesz.initZeros(myfftV);
 	for(size_t i=0; i<YSIZE(myfftV); ++i)
 	{
 		uy = VEC_ELEM(freq_fourier,i);
 		for(size_t j=0; j<XSIZE(myfftV); ++j)
 		{
-			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = uy*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+			A2D_ELEM(fftVRiesz, i, j) = uy*A2D_ELEM(fftVRiesz_aux, i, j);
+//			DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = uy*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
 			++n;
 		}
 	}
@@ -433,6 +457,7 @@ void ProgClassQuality::run()
 {
 	produceSideInfo();
 
+
 	Image<double> outputResolution;
 	outputResolution().initZeros(VRiesz);
 
@@ -517,7 +542,6 @@ void ProgClassQuality::run()
 
 		amplitudeMonogenicSignal(fftV, freq, freqH, freqL, amplitudeMS, iter, fnDebug);
 
-		exit(0);
 
 		double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
 		noiseValues.clear();
@@ -576,12 +600,12 @@ void ProgClassQuality::run()
 			// Check local resolution
 			double thresholdNoise;
 			std::sort(noiseValues.begin(),noiseValues.end());
-			thresholdNoise = noiseValues[size_t(noiseValues.size()*significance)];
+			//thresholdNoise = noiseValues[size_t(noiseValues.size()*significance)];
 			thresholdNoise = meanN+criticalZ*sqrt(sigma2N);
 //			#ifdef DEBUG
 			  std::cout << "Iteration = " << iter << ",   Resolution= " << resolution <<
 					  ",   Signal = " << meanS << ",   Noise = " << meanN << ",  Threshold = "
-					  << thresholdNoise << std::endl;//" " << thresholdNoiseGauss << std::endl;
+					  << thresholdNoise << std::endl;
 //			#endif
 
 			double z=(meanS-meanN)/sqrt(sigma2S/NS+sigma2N/NN);
