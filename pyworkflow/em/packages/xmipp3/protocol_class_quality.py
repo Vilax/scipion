@@ -57,7 +57,15 @@ class XmippProtClassQuality(ProtAnalysis3D):
         
         form.addParam('inputClasses', PointerParam, pointerClass='SetOfClasses2D', 
                       label="Classes",  
-                      help='Select the input classes.') 
+                      help='Select the input classes.')
+        
+        form.addParam('significance', FloatParam, default=0.95, 
+                       expertLevel=LEVEL_ADVANCED,
+                      label="Significance",
+                      help='Relution is computed using hypothesis tests, '
+                      'this value determines the significance of that test')
+        
+        form.addParallelSection(threads=4)
 
     #--------------------------- INSERT steps functions --------------------------------------------
     def _insertAllSteps(self):        
@@ -70,10 +78,10 @@ class XmippProtClassQuality(ProtAnalysis3D):
         self._insertFunctionStep('createOutputStep')
     
     #--------------------------- STEPS functions ---------------------------------------------------
-    def convertInputStep(self, classes):
+    def convertInputStep(self):
         
-        self.classes = self.inputClasses.get()
-        classesFn = self._getTmpPath('input_classes.xmd')
+        classes = self.inputClasses.get()
+        classesFn = self._getExtraPath('input_classes.xmd')
        
         writeSetOfClasses2D(classes, classesFn)
         
@@ -89,16 +97,39 @@ class XmippProtClassQuality(ProtAnalysis3D):
             if mdBlock == 'classes':
                 continue
             
-            params =  ' --untilt %s' %(self._getExtraPath(mdBlock+"_untilted.xmd"))
-            params += ' --tilt %s' %(self._getExtraPath(mdBlock+"_tilted.xmd"))
-            params += ' --vol %s' %(self.inputVolume.get().getFileName())
-            params += ' --angular_sampling %f' %self.angularSampling.get()
-#             params += ' --sym %s' %(self.sym.get())
-            params += ' -o %s' %(mdBlock+'assigned_out.xmd')
-#             params += ' --maxshift %f' % (self.maxshift.get())
-            
+            params =  ' -i %s' %(self._getExtraPath(mdBlock+"_untilted.xmd"))
+            params += ' -o %s' %(self._getExtraPath(mdBlock+"_tilted.xmd"))
+            params += ' --mask %s' %(self.inputVolume.get().getFileName())
+            params += ' --sampling %f' %self.angularSampling.get()
+            params += ' --significance %f' %(self.significance.get())
+            params += ' --md_outputdata %s' %()
+            params += ' --threads %i' % self.numberOfThreads.get()
+            params += ' --createAverages '
+            params += ' --md_particles %s' %()
+
              
             self.runJob('xmipp_image_class_quality', params)
+
+#         classesFn = self._getTmpPath('input_classes.xmd')
+#         mdClasses = MetaData()
+#         mdClasses.read(classesFn)
+# 
+#         mdBlocks = getBlocksInMetaDataFile(classesFn)
+#         
+#         for mdBlock in mdBlocks:
+#             if mdBlock == 'classes':
+#                 continue
+#             
+#             params =  ' --untilt %s' %(self._getExtraPath(mdBlock+"_untilted.xmd"))
+#             params += ' --tilt %s' %(self._getExtraPath(mdBlock+"_tilted.xmd"))
+#             params += ' --vol %s' %(self.inputVolume.get().getFileName())
+#             params += ' --angular_sampling %f' %self.angularSampling.get()
+# #             params += ' --sym %s' %(self.sym.get())
+#             params += ' -o %s' %(mdBlock+'assigned_out.xmd')
+# #             params += ' --maxshift %f' % (self.maxshift.get())
+#             
+#              
+#             self.runJob('xmipp_image_class_quality', params)
     
     def createOutputStep(self):
         outputVols = self._createSetOfVolumes()

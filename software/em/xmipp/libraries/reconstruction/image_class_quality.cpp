@@ -47,7 +47,7 @@ void ProgClassQuality::defineParams()
 {
 	addUsageLine("This function determines the local resolution of a map");
 	addParamsLine("  -i <img_file=\"\">   : Input volume");
-	addParamsLine("  [--mask <img_file=\"\">]  : Mask defining the macromolecule");
+	addParamsLine("  --mask <img_file=\"\">  : Mask defining the macromolecule");
 	addParamsLine("                          :+ If two half volume are given, the noise is estimated from them");
 	addParamsLine("                          :+ Otherwise the noise is estimated outside the mask");
 	addParamsLine("  [-o <output=\"MGresolution.vol\">]: Local resolution volume (in Angstroms)");
