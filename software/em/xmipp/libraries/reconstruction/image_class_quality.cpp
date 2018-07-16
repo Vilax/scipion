@@ -34,8 +34,6 @@ void ProgClassQuality::readParams()
 	fnOut = getParam("-o");
 	fnMask = getParam("--mask");
 	sampling = getDoubleParam("--sampling");
-	minRes = getDoubleParam("--minRes");
-	maxRes = getDoubleParam("--maxRes");
 	freq_step = getDoubleParam("--step");
 	significance = getDoubleParam("--significance");
 	fnMd = getParam("--md_outputdata");
@@ -55,8 +53,6 @@ void ProgClassQuality::defineParams()
 	addParamsLine("                            : Use -1 to disable this option");
 	addParamsLine("  [--step <s=0.25>]       : The resolution is computed at a number of frequencies between mininum and");
 	addParamsLine("                            : maximum resolution px/A. This parameter determines that number");
-	addParamsLine("  [--minRes <s=30>]         : Minimum resolution (A)");
-	addParamsLine("  [--maxRes <s=1>]          : Maximum resolution (A)");
 	addParamsLine("  [--significance <s=0.95>]    : The level of confidence for the hypothesis test.");
 	addParamsLine("  [--md_outputdata <file=\".\">]  : It is a control file. The provided mask can contain voxels of noise.");
 	addParamsLine("                                  : Moreover, voxels inside the mask cannot be measured due to an unsignificant");
@@ -77,66 +73,11 @@ void ProgClassQuality::produceSideInfo()
 	int sizeVol;
 	sizeVol = XSIZE(img());
 
+	maxRes = (double) (sizeVol-1);
+
 	MultidimArray<double> inputImg;
 	inputImg.setXmippOrigin();
-//	if(sizeVol<256)
-//	{
-//		inputImg_aux.setXmippOrigin();
-//		inputImg_aux.window(inputImg, -128, -128, 128, 128, 0.0);
-//
-////		int N_smoothing;
-////		N_smoothing = floor( 0.5*(256 - YSIZE(inputImg)) );
-////
-////		int y_size = YSIZE(inputImg);
-////		int siz = y_size*0.5;
-////
-////		double limit_radius = (siz-N_smoothing);
-////		long n=0;
-////
-////		int ux, uy;
-////		for(int i=0; i<y_size; ++i)
-////		{
-////			uy = (i - siz);
-////			uy *= uy;
-////			for(int j=0; j<y_size; ++j)
-////			{
-////				ux = (j - siz);
-////				ux *= ux;
-////				double radius = sqrt(ux + uy);
-////				if ((radius>=limit_radius))
-////					DIRECT_MULTIDIM_ELEM(inputImg, n) *= 0.5*(1+cos(PI*(limit_radius-radius)/(N_smoothing)));
-////				++n;
-////			}
-////		}
-//
-//	}
-//	else
-//	{
-		inputImg = inputImg_aux;
-
-//		int N_smoothing =60;
-//		inputImg.setXmippOrigin();
-//		FOR_ALL_ELEMENTS_IN_ARRAY2D(inputImg)
-//		{
-//
-//			if (i*i+j*j < N_smoothing*N_smoothing)
-//				A2D_ELEM(inputImg, i, j) = cos(0.5*sqrt(i*i + j*j));
-//			else
-//				A2D_ELEM(inputImg, i, j) = 0;
-//		}
-
-//	}
-
-//		MultidimArray<double> inputImg = img();
-//		inputImg.setXmippOrigin();
-
-//	Image<double> saveimg;
-//	saveimg() = inputImg;
-//	saveimg.write("circul.xmp");
-
-
-
-//	transformer_inv.setThreadsNumber(nthrs);
+	inputImg = inputImg_aux;
 
 	FourierTransformer transformer;
 
@@ -197,8 +138,66 @@ void ProgClassQuality::produceSideInfo()
 	}
 	else
 	{
-		std::cout << "Error: a mask ought to be provided" << std::endl;
-		exit(0);
+		pMask.resizeNoCopy(inputImg);
+		std::cout << "There is no mask. This is not desired but class quality will try to calculate one" << std::endl;
+		FourierFilter Filter;
+		Filter.FilterBand=LOWPASS;
+		Filter.FilterShape=REALGAUSSIAN;
+
+		Filter.w1 = 0.02*XSIZE(inputImg);
+		Filter.do_generate_3dmask=false;
+
+		MultidimArray<double> imgFiltered=inputImg;
+
+		Filter.applyMaskSpace(imgFiltered);
+
+		Image<double> saveImg;
+		saveImg() = imgFiltered;
+		saveImg.write("filtered.xmp");
+
+		double maxVal;
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imgFiltered)
+		{
+			double lastVal;
+			lastVal = DIRECT_MULTIDIM_ELEM(imgFiltered, n);
+			if (lastVal > maxVal)
+				maxVal = lastVal;
+		}
+
+		std::cout << "maxVal = " << maxVal << std::endl;
+
+		maxVal *= 0.05;
+		std::cout << "maxVal = " << maxVal << std::endl;
+
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imgFiltered)
+		{
+			double lastVal;
+			lastVal = DIRECT_MULTIDIM_ELEM(imgFiltered, n);
+			if (lastVal > maxVal)
+				DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
+			else
+				DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
+		}
+		mask().setXmippOrigin();
+
+		R = floor(XSIZE(inputImg)*0.4);
+
+
+		std::cout << "R= " << R << std::endl;
+		NVoxelsOriginalMask = 0;
+
+		FOR_ALL_ELEMENTS_IN_ARRAY2D(pMask)
+		{
+			if (A2D_ELEM(pMask, i, j) == 1)
+				++NVoxelsOriginalMask;
+			if (i*i+j*j > R*R)
+				A2D_ELEM(pMask, i, j) = -1;
+		}
+
+		Image<int> saveMask;
+		saveMask() = pMask;
+		saveMask.write("mascaraauto.xmp");
+
 	}
 
 
@@ -395,7 +394,7 @@ void ProgClassQuality::resolution2eval(int &count_res, double step,
 {
 	resolution = maxRes - count_res*step;
 	freq = sampling/resolution;
-	std::cout << "Res = " << resolution << " " << freq << std::endl;
+//	std::cout << "Res = " << resolution << " " << freq << std::endl;
 	++count_res;
 
 	double Nyquist = 2*sampling;
@@ -404,8 +403,6 @@ void ProgClassQuality::resolution2eval(int &count_res, double step,
 
 	DIGFREQ2FFT_IDX(freq, YSIZE(VRiesz), fourier_idx);
 
-//	std::cout << "Resolution = " << resolution << "   iter = " << count_res-1 << std::endl;
-//	std::cout << "freq = " << freq << "   Fourier index = " << fourier_idx << std::endl;
 
 	FFT_IDX2DIGFREQ(fourier_idx, YSIZE(VRiesz), aux_frequency);
 
@@ -413,7 +410,6 @@ void ProgClassQuality::resolution2eval(int &count_res, double step,
 
 	if (fourier_idx == last_fourier_idx)
 	{
-//		std::cout << "entro en el if"  << std::endl;
 		continueIter = true;
 		return;
 	}
@@ -479,6 +475,9 @@ void ProgClassQuality::run()
 		R_=0.25;
 
 	double Nyquist = 2*sampling;
+
+	minRes = Nyquist;
+
 	if (minRes<2*sampling)
 		minRes = Nyquist;
 
