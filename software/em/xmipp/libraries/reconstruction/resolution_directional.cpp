@@ -1113,8 +1113,8 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 	double azimuthal_angle = 70*PI/180;
 	double resolution, dotproduct, x, y, z, iu, arcos;
 	int xrows = angles.mdimx;
-	int idx;
-	idx = 0;
+	int idx = 0;
+
 	double count_radial, count_azimuthal;
 
 	meanResolution.initZeros(pmask);
@@ -1127,9 +1127,16 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 			count_radial = 0;
 			count_azimuthal = 0;
 			std::vector<double> meanRes;
+
+			double lastRes = 100; //A non-sense value
+
 			for (int ii = 0; ii<xrows; ++ii)
 			{
 				resolution = MAT_ELEM(resolutionMat, ii, idx);
+
+				if (resolution<lastRes)
+					lastRes = resolution;
+
 
 				if (resolution>0)
 				{
@@ -1154,13 +1161,18 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 				}
 
 			}
+
+
 //			std::cout << "count_radial = " << count_radial << std::endl;
 //			std::cout << "count_azimuthal = " << count_azimuthal << std::endl;
 //			std::cout << "  " << std::endl;
 			++idx;
-			A3D_ELEM(meanResolution,k,i,j) = meanRes[(size_t) floor(0.5*meanRes.size())];
+//			A3D_ELEM(meanResolution,k,i,j) = meanRes[(size_t) floor(0.5*meanRes.size())];
+			A3D_ELEM(meanResolution,k,i,j) = lastRes;
 			meanRes.clear();
 		}
+
+
 
 		if (count_radial<1)
 			A3D_ELEM(radial,k,i,j) = A3D_ELEM(meanResolution,k,i,j);
@@ -1684,8 +1696,8 @@ void ProgResDir::run()
 			{
 				double myres = MAT_ELEM(resolutionMatrix, dir, maskPos);
 				DIRECT_MULTIDIM_ELEM(pResolutionVol, n) = myres;
-				if (n == 14621798)
-					std::cout << maskPos << std::endl;
+//				if (n == 14621798)
+//					std::cout << maskPos << std::endl;
 				++maskPos;
 			}
 		}
