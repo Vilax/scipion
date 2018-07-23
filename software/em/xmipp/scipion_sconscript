@@ -623,6 +623,7 @@ for p in ['angular_break_symmetry',
           'resolution_fsc',
           'resolution_ibw',
           'resolution_monogenic_signal',
+          'resolution_monotomo',
           'resolution_ssnr',
           'score_micrograph',
 
