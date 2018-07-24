@@ -55,6 +55,8 @@ OUTPUT_ELLIP = 'ellipsoid.vol'
 OUTPUT_RADIAL_FILE = 'radial_resolution.vol'
 OUTPUT_AZIMUTHAL_FILE = 'azimuthal_resolution.vol'
 OUTPUT_MEANRES_FILE = 'mean_resolution.vol'
+OUTPUT_HIGHESTRES_FILE = 'highestResolution.vol'
+OUTPUT_LOWESTRES_FILE = 'lowestResolution.vol'
 OUTPUT_THRESHOLDS_FILE = 'thresholds.xmd'
 
 
@@ -172,6 +174,8 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params += ' --radialRes %s' % self._getExtraPath(OUTPUT_RADIAL_FILE)
         params += ' --azimuthalRes %s' % self._getExtraPath(OUTPUT_AZIMUTHAL_FILE)
         params += ' --resolutionAvg %s' % self._getExtraPath(OUTPUT_MEANRES_FILE)
+        params += ' --highestResolutionVol %s' % self._getExtraPath(OUTPUT_HIGHESTRES_FILE)
+        params += ' --lowestResolutionVol %s' % self._getExtraPath(OUTPUT_LOWESTRES_FILE)
         params += ' --radialAzimuthalThresholds %s' % self._getExtraPath(OUTPUT_THRESHOLDS_FILE)
         params += ' --radialAvg %s' % self._getExtraPath(OUTPUT_MD_RADIAL_FILE)
         params += ' --azimuthalAvg %s' % self._getExtraPath(OUTPUT_MD_AZIMUTHAL_FILE)

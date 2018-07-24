@@ -50,6 +50,8 @@ void ProgResDir::readParams()
 	fnMDradial = getParam("--radialAvg");
 	fnMDazimuthal = getParam("--azimuthalAvg");
 	fnMeanResolution = getParam("--resolutionAvg");
+	fnHighestResolution = getParam("--highestResolutionVol");
+	fnLowestResolution = getParam("--lowestResolutionVol");
 	fnMDThr = getParam("--radialAzimuthalThresholds");
 	Nthr = getIntParam("--threads");
 	checkellipsoids = checkParam("--checkellipsoids");
@@ -74,6 +76,8 @@ void ProgResDir::defineParams()
 	addParamsLine("  [--radialRes <vol_file=\"\">]  : Output radial resolution map");
 	addParamsLine("  [--azimuthalRes <vol_file=\"\">]  : Output azimuthal resolution map");
 	addParamsLine("  [--resolutionAvg <vol_file=\"\">]  : Output mean resolution map");
+	addParamsLine("  [--highestResolutionVol <vol_file=\"\">]  : Output highest resolution map");
+	addParamsLine("  [--lowestResolutionVol <vol_file=\"\">]  : Output lowest resolution map");
 	addParamsLine("  [--radialAvg <vol_file=\"\">]  : Radial Average of the radial resolution map");
 	addParamsLine("  [--radialAzimuthalThresholds <vol_file=\"\">]  : Radial and azimuthal threshold for representation resolution maps");
 	addParamsLine("  [--azimuthalAvg <vol_file=\"\">]  : Radial Average of the azimuthal resolution map");
@@ -1825,16 +1829,18 @@ void ProgResDir::run()
 	imgdoa = pdoaVol;
 	imgdoa.write(fnDoA);
 
-	MultidimArray<double> radial, azimuthal, meanResolution;
+	MultidimArray<double> radial, azimuthal, meanResolution, lowestResolution, highestResolution;
 	double radialThr, azimuthalThr;
-	radialAzimuthalResolution(resolutionMatrix, mask(), radial, azimuthal, meanResolution, radialThr, azimuthalThr);
+	radialAzimuthalResolution(resolutionMatrix, mask(), radial, azimuthal, meanResolution, lowestResolution, highestResolution, radialThr, azimuthalThr);
 
 	imgdoa = radial;
 	imgdoa.write(fnradial);
 	imgdoa = azimuthal;
 	imgdoa.write(fnazimuthal);
-	imgdoa = meanResolution;
-	imgdoa.write(fnMeanResolution);
+	imgdoa = lowestResolution;
+	imgdoa.write(fnLowestResolution);
+	imgdoa = highestResolution;
+	imgdoa.write(fnHighestResolution);
 
 	MetaData mdRadialAzimuthalThr;
 	size_t objIdx;
