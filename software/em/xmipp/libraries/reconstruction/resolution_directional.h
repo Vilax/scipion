@@ -110,6 +110,8 @@ public:
     		MultidimArray<double> &radial,
     		MultidimArray<double> &azimuthal,
     		MultidimArray<double> &meanResolution,
+    		MultidimArray<double> &lowestResolution,
+    		MultidimArray<double> &highestResolution,
     		double &radial_Thr, double &azimuthal_Thr);
 
     void radialAverageInMask(MultidimArray<int> &mask,

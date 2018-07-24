@@ -177,8 +177,6 @@ void ProgResDir::produceSideInfo()
 	std::cout << "particle radius = " << Rparticle << std::endl;
 	size_t xrows = angles.mdimx;
 
-	std::cout << "sus muertos...  " << maxRes << std::endl;
-
 	resolutionMatrix.initConstant(xrows, NVoxelsOriginalMask, maxRes);
 
 
@@ -1102,11 +1100,15 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 		MultidimArray<double> &radial,
 		MultidimArray<double> &azimuthal,
 		MultidimArray<double> &meanResolution,
+		MultidimArray<double> &lowestResolution,
+		MultidimArray<double> &highestResolution,
 		double &radial_Thr, double &azimuthal_Thr)
 {
 
 	radial.initZeros(pmask);
 	azimuthal.initZeros(pmask);
+	lowestResolution.initZeros(pmask);
+	highestResolution.initZeros(pmask);
 	double radial_angle = 20*PI/180;
 	double azimuthal_resolution = 0;
 	double radial_resolution = 0;
@@ -1126,7 +1128,7 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 			iu = 1/sqrt(i*i + j*j + k*k);
 			count_radial = 0;
 			count_azimuthal = 0;
-			std::vector<double> meanRes;
+			std::vector<double> ResList;
 
 			double lastRes = 100; //A non-sense value
 
@@ -1134,13 +1136,9 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 			{
 				resolution = MAT_ELEM(resolutionMat, ii, idx);
 
-				if (resolution<lastRes)
-					lastRes = resolution;
-
-
 				if (resolution>0)
 				{
-					meanRes.push_back(resolution);
+					ResList.push_back(resolution);
 					x = MAT_ELEM(trigProducts, 0, ii);
 					y = MAT_ELEM(trigProducts, 1, ii);
 					z = MAT_ELEM(trigProducts, 2, ii);
@@ -1163,13 +1161,16 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 			}
 
 
+
 //			std::cout << "count_radial = " << count_radial << std::endl;
 //			std::cout << "count_azimuthal = " << count_azimuthal << std::endl;
 //			std::cout << "  " << std::endl;
 			++idx;
 //			A3D_ELEM(meanResolution,k,i,j) = meanRes[(size_t) floor(0.5*meanRes.size())];
-			A3D_ELEM(meanResolution,k,i,j) = lastRes;
-			meanRes.clear();
+			A3D_ELEM(lowestResolution,k,i,j) = ResList[ (size_t) floor(0.95*ResList.size()) ];
+			A3D_ELEM(highestResolution,k,i,j) = ResList[ (size_t) floor(0.03*ResList.size()) ];
+
+			ResList.clear();
 		}
 
 
