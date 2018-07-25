@@ -1171,6 +1171,8 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 //			std::cout << "  " << std::endl;
 			++idx;
 //			A3D_ELEM(meanResolution,k,i,j) = meanRes[(size_t) floor(0.5*meanRes.size())];
+			std::sort(ResList.begin(),ResList.end());
+
 			A3D_ELEM(lowestResolution,k,i,j) = ResList[ (size_t) floor(0.95*ResList.size()) ];
 			A3D_ELEM(highestResolution,k,i,j) = ResList[ (size_t) floor(0.03*ResList.size()) ];
 
