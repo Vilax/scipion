@@ -29,8 +29,9 @@ from pyworkflow.protocol.params import LabelParam, StringParam, EnumParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER
 from pyworkflow.em.viewer import ChimeraView, DataView
 from protocol_resolution_directional import XmippProtMonoDir
-from pyworkflow.em.metadata import MetaData, MDL_X, MDL_COUNT, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FREQ2
+from pyworkflow.em.metadata import MetaData, MDL_X, MDL_COUNT, MDL_RESOLUTION_FREQ, MDL_RESOLUTION_FREQ2, MDL_COST, MDL_RESOLUTION_SSNR
 from pyworkflow.em import ImageHandler
+from plotter import XmippPlotter
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -147,6 +148,9 @@ class XmippMonoDirViewer(ProtocolViewer):
         
         groupRadAzim.addParam('doShowLowestResolutionMap', LabelParam,
                label="Show lowest Resolution Map")        
+        
+        groupRadAzim.addParam('doshowAnisotropyResolution', LabelParam,
+               label="Anisotropy and reoslution")        
 
         group = form.addGroup('Choose a Color Map')
         group.addParam('colorMap', EnumParam, choices=COLOR_CHOICES.values(),
@@ -177,7 +181,8 @@ class XmippMonoDirViewer(ProtocolViewer):
                 'doShowChimera': self._showChimera,
                 'doShowDoAHistogram': self._plotHistogramDoA,
                 'doShowRadialHistogram': self._plotHistogramRadial,
-                'doShowAzimuthalHistogram': self._plotHistogramAzimuthal
+                'doShowAzimuthalHistogram': self._plotHistogramAzimuthal,
+                'doshowAnisotropyResolution': self._showAnisotropyResolution
                 }
 
     def _showDoASlices(self, param=None):
@@ -198,6 +203,9 @@ class XmippMonoDirViewer(ProtocolViewer):
         
     def _showAzimuthalColorSlices(self, param=None):
         self._showColorSlices(OUTPUT_AZIMUHTAL_FILE, False, 'Azimuthal Resolution')
+        
+    def _showAnisotropyResolution(self, param=None):
+        self.plotAnisotropyResolution(self.protocol._getExtraPath('anires.xmd'))
         
     def _showOriginalVolumeSlices(self, param=None):
         if self.protocol.halfVolumes.get() is True:
@@ -384,6 +392,22 @@ class XmippMonoDirViewer(ProtocolViewer):
 
         fhCmd.close()
 
+
+    def plotAnisotropyResolution(self, path):        
+        from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter as Xmplt
+
+        print path
+        md = MetaData(path)
+        y = md.getColumnValues(MDL_COST)
+        x = md.getColumnValues(MDL_RESOLUTION_SSNR)
+        
+        plt.figure()
+        plt.plot(x, y,'x')
+        plt.title('resolutoin vs anisotropy')
+        plt.xlabel("resolution")
+        plt.ylabel("Anisotropy")
+#         
+        return plt.show()
 
 
     @staticmethod

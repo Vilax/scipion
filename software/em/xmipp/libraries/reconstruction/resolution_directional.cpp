@@ -53,6 +53,8 @@ void ProgResDir::readParams()
 	fnHighestResolution = getParam("--highestResolutionVol");
 	fnLowestResolution = getParam("--lowestResolutionVol");
 	fnMDThr = getParam("--radialAzimuthalThresholds");
+	fnMonoRes = getParam("--monores");
+	fnAniRes = getParam("--aniRes");
 	Nthr = getIntParam("--threads");
 	checkellipsoids = checkParam("--checkellipsoids");
 }
@@ -81,6 +83,8 @@ void ProgResDir::defineParams()
 	addParamsLine("  [--radialAvg <vol_file=\"\">]  : Radial Average of the radial resolution map");
 	addParamsLine("  [--radialAzimuthalThresholds <vol_file=\"\">]  : Radial and azimuthal threshold for representation resolution maps");
 	addParamsLine("  [--azimuthalAvg <vol_file=\"\">]  : Radial Average of the azimuthal resolution map");
+	addParamsLine("  [--monores <vol_file=\"\">]  : Local resolution map");
+	addParamsLine("  [--aniRes <vol_file=\"\">]  : metadata of anisotropy and resolution");
 	addParamsLine("  [--threads <s=4>]          : Number of threads");
 	addParamsLine("  [--checkellipsoids]          : only for debug");
 }
@@ -1890,54 +1894,70 @@ void ProgResDir::run()
 	int siz;
 	siz = XSIZE(arrows);
 	double xcoor, ycoor, zcoor, rad, rot, tilt;
-	MetaData md;
-	size_t objId;
-	FileName fn_md;
+	MetaData md, mdAniRes;
+	size_t objId, objIdAniRes;
+	FileName fn_md, fn_AniRes;
+
+	imgdoa.read(fnDoA);
+	Image<double> monores;
+	monores.read(fnMonoRes);
+	monores().setXmippOrigin();
 
 	FOR_ALL_ELEMENTS_IN_ARRAY3D(arrows)
 	{
-			if (A3D_ELEM(mask(),k,i,j) > 0 ) //before ==1
+		if (A3D_ELEM(mask(),k,i,j) > 0 ) //before ==1
+		{
+			double doa = A3D_ELEM(imgdoa(),k,i,j);
+			double res = A3D_ELEM(monores(),k,i,j);
+
+			objIdAniRes = mdAniRes.addObject();
+			mdAniRes.setValue(MDL_COST, doa, objIdAniRes);
+			mdAniRes.setValue(MDL_RESOLUTION_SSNR, res, objIdAniRes);
+
+
+
+			//lambda_3 is assumed as the least eigenvalue
+			if ( (i%gridStep==0) && (j%gridStep==0) && (k%gridStep==0) )
 			{
+				double lambda_1 = MAT_ELEM(axis, 0, idx);
+				double lambda_3 = MAT_ELEM(axis, 2, idx);
 
-				//lambda_3 is assumed as the least eigenvalue
-				if ( (i%gridStep==0) && (j%gridStep==0) && (k%gridStep==0) )
-				{
-					double lambda_1 = MAT_ELEM(axis, 0, idx);
-					double lambda_3 = MAT_ELEM(axis, 2, idx);
+				xcoor = MAT_ELEM(axis, 3, idx);
+				ycoor = MAT_ELEM(axis, 4, idx);
+				zcoor = MAT_ELEM(axis, 5, idx);
 
-					xcoor = MAT_ELEM(axis, 3, idx);
-					ycoor = MAT_ELEM(axis, 4, idx);
-					zcoor = MAT_ELEM(axis, 5, idx);
-
-					rot = atan2(ycoor, xcoor)*180/PI;
-					tilt = acos(zcoor)*180/PI;
+				rot = atan2(ycoor, xcoor)*180/PI;
+				tilt = acos(zcoor)*180/PI;
 
 
 //					rotation3DMatrix(double ang, const Matrix1D<double> &axis,
 //					                      Matrix2D<double> &result, bool homogeneous)
 
-					double sc;
-					sc = lambda_1/8.0;
+				double sc;
+				sc = lambda_1/8.0;
 //					std::cout << "a = " << lambda_3 << "  c= " << lambda_1 << std::endl;
 //					std::cout << "sc = " << sc << "  c/sc= " << lambda_1/sc << std::endl;
 
-					//write md with values!
-					objId = md.addObject();
-					md.setValue(MDL_ANGLE_ROT, rot, objId);
-					md.setValue(MDL_ANGLE_TILT, tilt, objId);
-					md.setValue(MDL_XCOOR, (int) j, objId);
-					md.setValue(MDL_YCOOR, (int) i, objId);
-					md.setValue(MDL_ZCOOR, (int) k, objId);
-					md.setValue(MDL_MAX, 7.0, objId);
-					md.setValue(MDL_MIN, lambda_3/sc, objId);
-					md.setValue(MDL_INTSCALE, lambda_3/lambda_1, objId);
-				}
-				++idx;
+				//write md with values!
+				objId = md.addObject();
+				md.setValue(MDL_ANGLE_ROT, rot, objId);
+				md.setValue(MDL_ANGLE_TILT, tilt, objId);
+				md.setValue(MDL_XCOOR, (int) j, objId);
+				md.setValue(MDL_YCOOR, (int) i, objId);
+				md.setValue(MDL_ZCOOR, (int) k, objId);
+				md.setValue(MDL_MAX, 7.0, objId);
+				md.setValue(MDL_MIN, lambda_3/sc, objId);
+				md.setValue(MDL_INTSCALE, lambda_3/lambda_1, objId);
 			}
-			++n;
+			++idx;
+		}
+		++n;
 	}
 
 	md.write(fnDirections);
+	mdAniRes.write(fnAniRes);
+
+
 
 }
 

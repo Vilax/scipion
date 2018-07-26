@@ -123,12 +123,14 @@ class XmippProtMonoDir(ProtAnalysis3D):
         self.maskFn = self.Mask.get().getFileName()
 
         # Convert input into xmipp Metadata format
-        convertId = self._insertFunctionStep('convertInputStep', )
-        
-        MS = self._insertFunctionStep('directionalResolutionStep',
+        convertId = self._insertFunctionStep('convertInputStep')
+
+        self._insertFunctionStep('MonoResStep')      
+          
+        self._insertFunctionStep('directionalResolutionStep',
                                       prerequisites=[convertId])
 
-        self._insertFunctionStep('createOutputStep', prerequisites=[MS])
+        self._insertFunctionStep('createOutputStep')
 
         self._insertFunctionStep("createEllipsoid")
         self._insertFunctionStep("createHistrogramStep")
@@ -180,10 +182,43 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params += ' --radialAvg %s' % self._getExtraPath(OUTPUT_MD_RADIAL_FILE)
         params += ' --azimuthalAvg %s' % self._getExtraPath(OUTPUT_MD_AZIMUTHAL_FILE)
         params += ' --threads %i' % self.numberOfThreads.get()
+        params += ' --monores %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
+        params += ' --aniRes %s' % self._getExtraPath('anires.xmd')
 
         self.runJob('xmipp_resolution_directional', params)
         
         #TODO: Take a metadata and set maxRes minRes, idem with azimuthal and tangencial
+
+
+    def MonoResStep(self):
+
+        if self.isPremasked:
+            if self.volumeRadius == -1:
+                xdim, _ydim, _zdim = self.inputVolumes.get().getDim()
+                xdim = xdim*0.5
+            else:
+                xdim = self.volumeRadius.get()
+        else:
+            xdim, _ydim, _zdim = self.inputVolumes.get().getDim()
+            xdim = xdim*0.5
+                
+
+        params = ' --vol %s' % self.vol0Fn
+        params += ' --mask %s' % self.maskFn
+        params += ' --mask_out %s' % self._getTmpPath('mask.vol')  
+        params += ' -o %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
+
+        params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
+        params += ' --number_frequencies %f' % 30
+        params += ' --minRes %f' % (2.0*self.inputVolumes.get().getSamplingRate())
+        params += ' --maxRes %f' % 18.0
+        params += ' --volumeRadius %f' % xdim
+        params += ' --exact'
+        params += ' --sym %s' % 'c1'
+        params += ' --significance %f' % self.significance.get()
+        params += ' --md_outputdata %s' % self._getTmpPath('metadata.xmd')  
+        params += ' --filtered_volume %s' % ''
+        self.runJob('xmipp_resolution_monogenic_signal', params)
 
     def createEllipsoid(self):
 
