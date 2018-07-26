@@ -143,10 +143,10 @@ class XmippMonoDirViewer(ProtocolViewer):
                label="Show azimuthal resolution histogram")
         
         groupRadAzim.addParam('doShowHighestResolutionMap', LabelParam,
-               label="Show radial resolution histogram")
+               label="Show highest Resolution Map")
         
         groupRadAzim.addParam('doShowLowestResolutionMap', LabelParam,
-               label="Show radial resolution histogram")        
+               label="Show lowest Resolution Map")        
 
         group = form.addGroup('Choose a Color Map')
         group.addParam('colorMap', EnumParam, choices=COLOR_CHOICES.values(),
