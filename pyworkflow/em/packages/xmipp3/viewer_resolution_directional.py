@@ -49,8 +49,8 @@ CHIMERA_ELLIP = 'ellipsoid.vol'
 
 
 OUTPUT_RESOLUTION_MEAN = 'mean_volume.vol'
-OUTPUT_RESOLUTION_MAX_FILE = 'maxResolution.vol'
-OUTPUT_RESOLUTION_MIN_FILE = 'minResolution.vol'
+OUTPUT_RESOLUTION_LOWEST_FILE = 'lowestResolution.vol'
+OUTPUT_RESOLUTION_HIGHEST_FILE = 'highestResolution.vol'
 OUTPUT_VARIANCE_FILE = 'resolution_variance.vol'
 OUTPUT_DOA_FILE = 'local_anisotropy.vol'
 OUTPUT_SPH_FILE = 'sphericity.vol'
@@ -141,6 +141,12 @@ class XmippMonoDirViewer(ProtocolViewer):
         
         groupRadAzim.addParam('doShowAzimuthalHistogram', LabelParam,
                label="Show azimuthal resolution histogram")
+        
+        groupRadAzim.addParam('doShowHighestResolutionMap', LabelParam,
+               label="Show radial resolution histogram")
+        
+        groupRadAzim.addParam('doShowLowestResolutionMap', LabelParam,
+               label="Show radial resolution histogram")        
 
         group = form.addGroup('Choose a Color Map')
         group.addParam('colorMap', EnumParam, choices=COLOR_CHOICES.values(),
@@ -166,6 +172,8 @@ class XmippMonoDirViewer(ProtocolViewer):
                 'doShowDoAColorSlices': self._showDoAColorSlices,
                 'doShowRadialColorSlices': self._showRadialColorSlices,
                 'doShowAzimuthalColorSlices': self._showAzimuthalColorSlices,
+                'doShowHighestResolutionMap': self._showHighestResolutionColorSlices,
+                'doShowLowestResolutionMap': self._showLowestResolutionColorSlices,
                 'doShowChimera': self._showChimera,
                 'doShowDoAHistogram': self._plotHistogramDoA,
                 'doShowRadialHistogram': self._plotHistogramRadial,
@@ -181,6 +189,12 @@ class XmippMonoDirViewer(ProtocolViewer):
         
     def _showRadialColorSlices(self, param=None):
         self._showColorSlices(OUTPUT_RADIAL_FILE, False, 'Radial Resolution')
+        
+    def _showHighestResolutionColorSlices(self, param=None):
+        self._showColorSlices(OUTPUT_RESOLUTION_HIGHEST_FILE, False, 'Highest Resolution')
+        
+    def _showLowestResolutionColorSlices(self, param=None):
+        self._showColorSlices(OUTPUT_RESOLUTION_LOWEST_FILE, False, 'Lowest Resolution')
         
     def _showAzimuthalColorSlices(self, param=None):
         self._showColorSlices(OUTPUT_AZIMUHTAL_FILE, False, 'Azimuthal Resolution')
