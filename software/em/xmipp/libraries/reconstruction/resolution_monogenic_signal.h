@@ -63,7 +63,6 @@ public:
 	double freq_step, trimBound, significance;
 
 	/** The search for resolutions is linear or inverse**/
-
 	bool exactres, noiseOnlyInHalves, automaticMode;
 
 public:

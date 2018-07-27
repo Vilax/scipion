@@ -106,10 +106,10 @@ class XmippProtMonoRes(ProtAnalysis3D):
 #                       'If no symmetry is present, give c1.')
 
         line = group.addLine('Resolution Range (Å)',
-                            help="If the user knows the range of resolutions or"
-                                " only a range of frequencies needs to be analysed." 
-                                "If Low is empty MonoRes will try to estimate the range. "
-                                "it should be better if a range is provided")
+                            help='If the user knows the range of resolutions or'
+                                'only a range of frequencies needs to be analysed.' 
+                                'If Low is empty MonoRes will try to estimate the range. '
+                                'it should be better if a range is provided')
         
         group.addParam('significance', FloatParam, default=0.95, 
                        expertLevel=LEVEL_ADVANCED,
@@ -158,7 +158,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
                       'of the volume size as radius')
 
         line.addParam('minRes', FloatParam, default=0, label='High')
-        line.addParam('maxRes', FloatParam, allowsNull=True, label='Low')
+        line.addParam('maxRes', FloatParam, default=12, allowsNull=True, label='Low')
         line.addParam('stepSize', FloatParam, allowsNull=True,
                       expertLevel=LEVEL_ADVANCED, label='Step')
 
@@ -273,7 +273,6 @@ class XmippProtMonoRes(ProtAnalysis3D):
     def maskRadius(self, halfmaps, premaskedmap):
         if halfmaps:
             if premaskedmap:
-
                 if self.volumeRadiusHalf == -1:
                     xdim, _ydim, _zdim = self.inputVolume.get().getDim()
                     xdim = xdim*0.5
@@ -324,6 +323,7 @@ class XmippProtMonoRes(ProtAnalysis3D):
         params += ' --significance %f' % self.significance.get()
         params += ' --md_outputdata %s' % self._getFileName(METADATA_MASK_FILE)  
         params += ' --filtered_volume %s' % ''
+        params += ' --threads %i' % self.numberOfThreads.get()
 
         self.runJob('xmipp_resolution_monogenic_signal', params)
 
@@ -368,7 +368,8 @@ class XmippProtMonoRes(ProtAnalysis3D):
                                                     OUTPUT_RESOLUTION_FILE_CHIMERA)
         params += ' --sym %s' % 'c1'#self.symmetry.get()
         params += ' --significance %f' % self.significance.get()
-        params += ' --md_outputdata %s' % self._getFileName(METADATA_MASK_FILE)  
+        params += ' --md_outputdata %s' % self._getFileName(METADATA_MASK_FILE)
+        params += ' --threads %i' % self.numberOfThreads.get()
         if self.filterInput.get():
             params += ' --filtered_volume %s' % self._getFileName(FN_FILTERED_MAP)
         else:
@@ -462,4 +463,3 @@ class XmippProtMonoRes(ProtAnalysis3D):
 
     def _citations(self):
         return ['Vilas2018']
-

@@ -209,7 +209,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params += ' -o %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
 
         params += ' --sampling_rate %f' % self.inputVolumes.get().getSamplingRate()
-        params += ' --number_frequencies %f' % 30
+        params += ' --step %f' % 0.25
         params += ' --minRes %f' % (2.0*self.inputVolumes.get().getSamplingRate())
         params += ' --maxRes %f' % 18.0
         params += ' --volumeRadius %f' % xdim

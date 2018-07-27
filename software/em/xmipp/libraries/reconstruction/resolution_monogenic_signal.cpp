@@ -39,7 +39,6 @@ void ProgMonogenicSignalRes::readParams()
 	fnchim = getParam("--chimera_volume");
 	sampling = getDoubleParam("--sampling_rate");
 	R = getDoubleParam("--volumeRadius");
-	nonmanual_mask = checkParam("--nonmanual_mask");
 	minRes = getDoubleParam("--minRes");
 	maxRes = getDoubleParam("--maxRes");
 	fnSym = getParam("--sym");
@@ -64,7 +63,6 @@ void ProgMonogenicSignalRes::defineParams()
 	addParamsLine("                          :+ Otherwise the noise is estimated outside the mask");
 	addParamsLine("  [--mask_out <vol_file=\"\">]  : sometimes the provided mask is not perfect, and contains voxels out of the particle");
 	addParamsLine("                          :+ Thus the algorithm calculated a tight mask to the volume");
-	addParamsLine("  [--nonmanual_mask    ]  : If the mask has been generated in a manual way, for example by an automatic method (Otsu)..");
 	addParamsLine("  [--vol2 <vol_file=\"\">]: Half volume 2");
 	addParamsLine("  [-o <output=\"MGresolution.vol\">]: Local resolution volume (in Angstroms)");
 	addParamsLine("  [--meanVol <vol_file=\"\">]: Mean volume of half1 and half2 (only it is neccesary the two haves are used)");
@@ -230,6 +228,8 @@ void ProgMonogenicSignalRes::amplitudeMonogenicSignal3D(MultidimArray< std::comp
 	fftVRiesz.initZeros(myfftV);
 	fftVRiesz_aux.initZeros(myfftV);
 	std::complex<double> J(0,1);
+
+//	std::cout << "freqH= " << freqH << " freq=" << freq << std::endl;
 
 	// Filter the input volume and add it to amplitude
 	long n=0;
@@ -637,40 +637,8 @@ void ProgMonogenicSignalRes::run()
 	bool lefttrimming = false;
 	int fourier_idx, last_fourier_idx = -1, fourier_idx_2;
 
-	//A first MonoRes estimation to get an accurate mask
-
-	double mean_Signal, mean_noise, thresholdFirstEstimation;
-
-	DIGFREQ2FFT_IDX((maxRes+3)/sampling, ZSIZE(VRiesz), fourier_idx);
-
-	FFT_IDX2DIGFREQ(fourier_idx, ZSIZE(VRiesz), freq);
-	FFT_IDX2DIGFREQ(fourier_idx + 2, ZSIZE(VRiesz), freqH);
-	FFT_IDX2DIGFREQ(fourier_idx - 2, ZSIZE(VRiesz), freqL);
-
-	//std::cout << " freq = " << freq << " freqH = " << freqH << " freqL= " << freq <<std::endl;
 	int count_res = 0;
 	FileName fnDebug;
-
-	firstMonoResEstimation(fftV, freq, freqH, freqL, amplitudeMS,
-			count_res, fnDebug, mean_Signal, mean_noise, thresholdFirstEstimation);
-
-	//refining the mask
-//	std::cout << "mean_Signal = " << mean_Signal << std::endl;
-	NVoxelsOriginalMask = 0;
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
-	{
-		if (DIRECT_MULTIDIM_ELEM(pMask, n) >=1)
-		{
-			if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)<thresholdFirstEstimation)
-			{
-				DIRECT_MULTIDIM_ELEM(pMask, n) = 0;
-			}
-			else
-			{
-				++NVoxelsOriginalMask;
-			}
-		}
-	}
 
 //	imgMask2 = mask;
 //	imgMask2.write("mascara_refinada.vol");
@@ -683,7 +651,6 @@ void ProgMonogenicSignalRes::run()
 
 	do
 	{
-
 
 		bool continueIter = false;
 		bool breakIter = false;
@@ -940,7 +907,6 @@ void ProgMonogenicSignalRes::run()
 //					std::cout << " NRES" << NRES << std::endl;
 					if ( ( NRES/((double)NVoxelsOriginalMask) ) > 0.8 )
 					{
-						std::cout << " entroooo" << std::endl;
 						mask.read(fnMask);
 					}
 				}
@@ -1036,12 +1002,6 @@ void ProgMonogenicSignalRes::run()
 	amplitudeMN.clear();
 	amplitudeMS.clear();
 
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pOutputResolution)
-	{
-	if (DIRECT_MULTIDIM_ELEM(pOutputResolution,n) > maxRes)
-		DIRECT_MULTIDIM_ELEM(pOutputResolution,n) = 0;
-	}
-
 	double last_resolution_2 = resolution;
 	if (fnSym!="c1")
 	{
@@ -1092,6 +1052,7 @@ void ProgMonogenicSignalRes::run()
 	objId = md.addObject();
 	md.setValue(MDL_IMAGE, fnOut, objId);
 	md.setValue(MDL_COUNT, (size_t) NVoxelsOriginalMask, objId);
+	md.setValue(MDL_SCALE, R, objId);
 	md.setValue(MDL_COUNT2, (size_t) Nvoxels, objId);
 
 	md.write(fnMd);
