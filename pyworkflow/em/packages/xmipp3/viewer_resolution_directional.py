@@ -150,7 +150,7 @@ class XmippMonoDirViewer(ProtocolViewer):
                label="Show lowest Resolution Map")        
         
         groupRadAzim.addParam('doshowAnisotropyResolution', LabelParam,
-               label="Anisotropy and reoslution")        
+               label="Anisotropy and resolution")        
 
         group = form.addGroup('Choose a Color Map')
         group.addParam('colorMap', EnumParam, choices=COLOR_CHOICES.values(),
@@ -392,22 +392,68 @@ class XmippMonoDirViewer(ProtocolViewer):
 
         fhCmd.close()
 
-
+# 
+#     def plotAnisotropyResolution(self, path):        
+#         from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter as Xmplt
+#  
+#         print path
+#         md = MetaData(path)
+#         y = md.getColumnValues(MDL_COST)
+#         x = md.getColumnValues(MDL_RESOLUTION_SSNR)
+#          
+#         plt.figure()
+#         plt.plot(x, y,'x')
+#         plt.title('resolutoin vs anisotropy')
+#         plt.xlabel("resolution")
+#         plt.ylabel("Anisotropy")
+# #         
+#         return plt.show()
+    
     def plotAnisotropyResolution(self, path):        
-        from pyworkflow.em.packages.xmipp3.plotter import XmippPlotter as Xmplt
-
-        print path
         md = MetaData(path)
         y = md.getColumnValues(MDL_COST)
         x = md.getColumnValues(MDL_RESOLUTION_SSNR)
         
+        xmax = np.amax(x)
+        xmin = np.amin(x)
+        
+        ymax = np.amax(y)
+        ymin = np.amin(y)
+        resstep = 0.5
+        anistep = 0.1
+        
+        from math import floor, ceil
+        xbin = floor((xmax - xmin)/resstep)
+        ybin = ceil((ymax - ymin)/0.05)
+        
+        print xbin, ybin
+        
+        from matplotlib.pyplot import contour, contourf
         plt.figure()
-        plt.plot(x, y,'x')
-        plt.title('resolutoin vs anisotropy')
-        plt.xlabel("resolution")
+#         plt.plot(x, y,'x')
+        plt.title('resolution vs anisotropy')
+        plt.xlabel("Resolution")
         plt.ylabel("Anisotropy")
-#         
-        return plt.show()
+         
+#         counts,ybins,xbins,image = plt.hist2d(x,y,bins=100)#)[xbin, ybin])
+        img, xedges, yedges, imageAx = plt.hist2d(x, y, (50, 50), cmap=plt.cm.jet)
+        plt.colorbar()
+        plt.show()
+        
+        xplotter = XmippPlotter(x=1, y=1, mainTitle="aaaaa "
+                                                     "along %s-axis."
+                                                     %self._getAxis())
+        a = xplotter.createSubPlot("Slice " , '', '')
+        matrix = img
+        print matrix
+        plot = xplotter.plotMatrix(a, matrix, 0, 200,
+                                       cmap=self.getColorMap(),
+                                       interpolation="nearest")
+        xplotter.getColorBar(plot)
+        print matrix
+        
+        return [xplotter]
+
 
 
     @staticmethod
