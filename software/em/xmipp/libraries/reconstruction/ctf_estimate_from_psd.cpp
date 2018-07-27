@@ -85,6 +85,11 @@ void ProgCTFEstimateFromPSD::assignCTFfromParameters(double *p, CTFDescription &
 
 	ctfmodel.Tm = Tm;
 
+    /*
+        ¡¡ BE CAREFULL in add new parameters between the existing ones !!
+             below in the core of the program we set step(i) = 0 or 1 
+        if you change here the value of certain param, change it everywhere!
+    */
     ASSIGN_CTF_PARAM(0, DeltafU);
     ASSIGN_CTF_PARAM(1, DeltafV);
     ASSIGN_CTF_PARAM(2, azimuthal_angle);
@@ -172,6 +177,11 @@ void ProgCTFEstimateFromPSD::assignCTFfromParameters(double *p, CTFDescription &
 void ProgCTFEstimateFromPSD::assignParametersFromCTF(CTFDescription &ctfmodel, double *p, int ia,
                              int l, int modelSimplification)
 {
+    /*
+        ¡¡ BE CAREFULL in add new parameters between the existing ones !!
+             below in the core of the program we set step(i) to 0 or 1 
+        if you change here the value of certain param, change it everywhere!
+    */
     ASSIGN_PARAM_CTF(0, DeltafU);
     ASSIGN_PARAM_CTF(1, DeltafV);
     ASSIGN_PARAM_CTF(2, azimuthal_angle);
@@ -279,14 +289,14 @@ void ProgCTFEstimateFromPSD::readParams()
 /* Usage ------------------------------------------------------------------- */
 void ProgCTFEstimateFromPSD::defineBasicParams(XmippProgram * program)
 {
-	ProgCTFBasicParams::defineBasicParams(program);
+    ProgCTFBasicParams::defineBasicParams(program);
 	CTFDescription::defineParams(program);
-
 }
 
 void ProgCTFEstimateFromPSD::defineParams()
 {
     defineBasicParams(this);
+//    ProgCTFBasicParams::defineParams();
 }
 
 /* Produce side information ------------------------------------------------ */
@@ -1112,6 +1122,8 @@ void ProgCTFEstimateFromPSD::estimate_background_sqrt_parameters()
     }
     A(1, 0) = A(0, 1);
 
+    std::cout << "( " << A(0,0) << " " << A(0,1) << " )" << std::endl <<
+                 "( " << A(1,0) << " " << A(1,1) << " )" << std::endl;
     b = A.inv() * b;
 
     current_ctfmodel.sqU = current_ctfmodel.sqV = b(0);

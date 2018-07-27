@@ -64,6 +64,7 @@ class Message():
     LABEL_NEW = 'New'
     LABEL_NEW_ACTION = 'New     '
     LABEL_EDIT = 'Edit'
+    LABEL_RENAME = 'Rename '
     LABEL_EDIT_ACTION = 'Edit     '
     LABEL_COPY = 'Copy'
     LABEL_COPY_ACTION = 'Copy   '
@@ -84,7 +85,8 @@ class Message():
     LABEL_CONTINUE = 'Continue'
     LABEL_CONTINUE_ACTION = 'Approve continue'
     LABEL_EXPORT = 'Export'
-    
+    LABEL_EXPORT_UPLOAD = 'Export & upload'
+
     #-- Tabs --
     LABEL_DATA = 'Data'
     LABEL_SUMMARY = 'Summary'
@@ -246,7 +248,7 @@ It is used by a few programs like Ctffind or Frealign."""
     TEXT_NO_CTF_READY = 'CTF of *Input Micrographs* not ready yet.'
     TEXT_NO_OUTPUT_CO = 'Output coordinates not ready yet.'
     ERROR_NO_EST_CTF = '_estimateCTF should be implemented'
-    
+    TEXT_NO_OUTPUT_FILES = 'No output file produced'
     
     TITLE_LAUNCHED = 'Success'
     LABEL_LAUNCHED = 'The protocol was launched successfully.'
@@ -342,6 +344,7 @@ class Icon():
     ACTION_COPY = 'fa-files-o.png'
     ACTION_DELETE = 'fa-trash-o.png'
     ACTION_REFRESH = 'fa-refresh.png'
+    ACTION_RENAME = 'rename.png'
     # TODO: change action_steps icon - fa-codefork?
     ACTION_STEPS = 'fa-list-ul.png'
     ACTION_BROWSE = 'fa-folder-open.png'
@@ -358,7 +361,8 @@ class Icon():
     ACTION_HELP = 'fa-question-circle.png'
     ACTION_REFERENCES = 'fa-external-link.png'
     ACTION_EXPORT = 'fa-external-link.png'
-    
+    ACTION_EXPORT_UPLOAD = 'fa-upload.png'
+
     ACTION_SEARCH = 'fa-search.png'
     ACTION_EXECUTE = 'fa-cogs.png'
     ACTION_IN = 'fa-sign-in.png'
@@ -380,6 +384,8 @@ class Icon():
     LINK = 'fa-iconmoon-link.png'
     ROOT = 'root.png'
     ROCKET = 'fa-rocket.png'
+
+    SCIPION_ICON = 'scipion_bn_icon.png'
 
 class Color():
     RED_COLOR = 'Firebrick' # Red color for background label  = #B22222

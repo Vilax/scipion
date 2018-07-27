@@ -31,19 +31,16 @@ from pyworkflow.em import PdbFile
 from pyworkflow.em import Volume
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import EMObject
+from pyworkflow.em.headers import Ccp4Header, START
+from pyworkflow.em.packages.ccp4.convert import (getProgram, runCCP4Program)
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.convert_header.CCP4.convert import (getProgram,
-                                                       copyMRCHeader,
-                                                       runCCP4Program,
-                                                       cootPdbTemplateFileName,
-                                                       cootScriptFileName,
-                                                       START
-                                                       )
+from pyworkflow.protocol.constants import STATUS_FINISHED
 from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
     BooleanParam, StringParam
 from pyworkflow.utils.properties import Message
-from pyworkflow.em.data import Transform
 
+cootPdbTemplateFileName = "cootOut%04d.pdb"
+cootScriptFileName = "cootScript.py"
 
 class CootRefine(EMProtocol):
     """Coot is an interactive graphical application for
@@ -55,6 +52,7 @@ the pdb file from coot  to scipion '
     _program = ""
     _version = VERSION_1_2
     COOT = 'coot'
+    COOTINI='coot.ini'
 
     # --------------------------- DEFINE param functions -------------------
     def _defineParams(self, form):
@@ -89,10 +87,27 @@ the pdb file from coot  to scipion '
                       help="""Makes coot an interactive protocol""")
         form.addSection(label='Help')
         form.addLine('Press "w" in coot to transfer the pdb file from coot '
-                     'to scipion')
-        form.addLine("You may also execute (from script -> python) the "
-                     "command scipion_write(imol)")
-        form.addLine("where imol is the PDB id")
+                     'to scipion.\nYou may also execute (from script -> '
+                     'python) the command scipion_write(imol).\nimol is the '
+                     'PDB id.\nPress "x" in coot to change from one chain to '
+                     'the previous one.\nPress "X" in coot to change from one '
+                     'chain to the next one.\nPress "U" in coot to initiate '
+                     'global variables.\nYou have to set in advance the '
+                     'protocolDirectory/extra/coot.ini text file:\n['
+                     'myvars]\nimol: '
+                     '0\naa_main_chain: '
+                     'X\naa_auxiliary_chain: XX\naaNumber: 160\nstep: 15\nIn '
+                     'this case global variables will initiate in '
+                     'aminoacid number 160\nand each shift over the '
+                     'sequence will include a segment of 15 aminoacids.\n'
+                     'Press "z" in coot to refine those upstream 15 '
+                     'aminoacids included in each step.\nPress "Z" in coot ' \
+                     'to refine those downstream 15 aminoacids included in ' \
+                     'each step.\nPress "E" in coot to print the ' \
+                     'environment.\nPress "e" in coot to finish your ' \
+                     'project. Then your project will not be interactive ' \
+                     'anymore.')
+
         # --------------------------- INSERT steps functions ---------------
 
     def _insertAllSteps(self):
@@ -116,7 +131,7 @@ the pdb file from coot  to scipion '
                                              self.inVolumes,
                                              self.norVolumesNames)
 
-        self._insertFunctionStep('runCootStep', self.inVolumes,
+        self.step = self._insertFunctionStep('runCootStep', self.inVolumes,
                                  self.norVolumesNames,
                                  prerequisites=[convertId],
                                  interactive=self.doInteractive)
@@ -145,9 +160,10 @@ the pdb file from coot  to scipion '
                     img.write(norVolName)
                 else:
                     ImageHandler().convert(inVolName, norVolName)
-                copyMRCHeader(inVolName, norVolName, inVol.getOrigin(
-                              returnInitIfNone=True).getShifts(),
-                              inVol.getSamplingRate(), originField=START)
+                Ccp4Header(norVolName).copyCCP4Header(
+                    inVolName, inVol.getOrigin(
+                               force=True).getShifts(),
+                               inVol.getSamplingRate(), originField=START)
 
     def runCootStep(self, inVolumes, norVolumesNames):
 
@@ -175,7 +191,8 @@ the pdb file from coot  to scipion '
                          self._getExtraPath(cootPdbTemplateFileName),
                          norVolumesNames,
                          listOfPDBs,
-                         self.extraCommands.get()
+                         self.extraCommands.get(),
+                         self._getExtraPath(self.COOTINI)
                          )
 
         args = ""
@@ -220,7 +237,7 @@ the pdb file from coot  to scipion '
                 outVol = Volume()
                 sampling = inVol.getSamplingRate()
                 origin = inVol.getOrigin(
-                    returnInitIfNone=True).getShifts()
+                    force=True)
                 outVol.setSamplingRate(sampling)
                 outVol.setOrigin(origin)
 
@@ -232,6 +249,11 @@ the pdb file from coot  to scipion '
                 counter += 1
                 self._defineOutputs(**outputs)
                 self._defineSourceRelation(inVol, outVol)
+        if os.path.isfile(self._getExtraPath('STOPPROTCOL')):
+            self.setStatus(STATUS_FINISHED)
+            # NOTE: (ROB) can a derthy way to make an interactive process finish but I do not
+            # think there is a clean one
+            self._steps[self.step-1].setInteractive(False)
 
     # --------------------------- INFO functions ---------------------------
     def _validate(self):
@@ -305,6 +327,7 @@ mydict['aa_auxiliary_chain']="BB"
 mydict['aaNumber']=37
 mydict['step']=5
 mydict['outfile']='%s'
+cootPath='%s'
 '''
 
 cootScriptBody = '''
@@ -362,10 +385,11 @@ def _updateMol():
     aa_main_chain: A
     aa_auxiliary_chain: AA
     aaNumber: 82
-    called /tmp/coot.ini"""
+    step: 15
+    called protocolDirectory/extra/coot.ini"""
     global mydict
     config = ConfigParser.ConfigParser()
-    config.read(os.environ.get('COOT_INI',"/tmp/coot.ini"))
+    config.read(os.environ.get('COOT_INI',cootPath))
     try:
         mydict['imol']               = int(config.get("myvars", "imol"))
         mydict['aa_main_chain']      = config.get("myvars", "aa_main_chain")
@@ -375,8 +399,8 @@ def _updateMol():
         mydict['outfile']            = config.get("myvars", "outfile")
     except ConfigParser.NoOptionError:
         pass
-    print ("reading:", "/tmp/coot.ini", mydict)
     beep(0.1)
+
 
 def getOutPutFileName(template):
     """get name based on template that does not exists
@@ -415,6 +439,14 @@ def _printEnv():
     for key in os.environ.keys():
        print "%30s %s \\n" % (key,os.environ[key])
 
+def _finishProj():
+    global mydict
+    filenName = mydict['outfile']%1
+    dirPath = os.path.dirname(filenName)
+    fileName = os.path.join(dirPath,"STOPPROTCOL")
+    open(fileName,"w").close()
+    beep(0.1)
+
 #change chain id
 add_key_binding("change_chain_id_down","x", lambda: _change_chain_id(-1))
 add_key_binding("change_chain_id_down","X", lambda: _change_chain_id(1))
@@ -430,7 +462,10 @@ add_key_binding("init global variables","U", lambda: _updateMol())
 add_key_binding("write pdb file","w", lambda: _write())
 
 #print environ
-add_key_binding("print enviroment","e", lambda: _printEnv())
+add_key_binding("print enviroment","E", lambda: _printEnv())
+
+#finish project
+add_key_binding("finish project","e", lambda: _finishProj())
 
 '''
 
@@ -444,12 +479,13 @@ def createScriptFile(imol,  # problem PDB id
                                   # reference
                      listOfPDBs,  # PDB to be loaded, first one
                                   # is the problem PDB
-                     extraCommands=''  # extra commands to add at the
+                     extraCommands='',  # extra commands to add at the
                                        # end of the file
                                        # mainly used for testing
+                     cootFileName='/tmp/coot.ini'
                      ):
     f = open(scriptFile, "w")
-    f.write(cootScriptHeader % (imol, pdbFile))
+    f.write(cootScriptHeader % (imol, pdbFile,cootFileName ))
     f.write(cootScriptBody)
     # load PDB and MAP
     f.write("\n#load Atomic Structures\n")  # problem atomic structure must be
@@ -462,3 +498,17 @@ def createScriptFile(imol,  # problem PDB id
     f.write("\n#Extra Commands\n")
     f.write(extraCommands)
     f.close()
+
+
+    # create coot.ini if it does not exist
+    if os.path.exists(cootFileName):
+        pass
+    else:
+        f = open(cootFileName,"w")
+        f.write("""[myvars]
+imol: 0
+aa_main_chain: A
+aa_auxiliary_chain: AA
+aaNumber: 100
+step: 10
+""")

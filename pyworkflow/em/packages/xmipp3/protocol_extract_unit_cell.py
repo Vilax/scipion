@@ -30,9 +30,9 @@ from pyworkflow.em.constants import SCIPION_SYM_NAME
 from pyworkflow.em.constants import SYM_I222, SYM_I222r, SYM_In25, SYM_In25r, \
     SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL, SYM_OCTAHEDRAL
 from pyworkflow.em.data import Transform
+from pyworkflow.em.headers import Ccp4Header
 from pyworkflow.em.packages.xmipp3 import XMIPP_SYM_NAME
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.convert_header.CCP4.convert import Ccp4Header
 from pyworkflow.protocol.params import PointerParam, FloatParam, EnumParam, \
     IntParam
 
@@ -132,13 +132,13 @@ class XmippProtExtractUnit(EMProtocol):
         args += " %f " % self.offset.get()
         sampling = self.inputVolumes.get().getSamplingRate()
         args += " %f " % sampling
-        origin = self.inputVolumes.get().getVolOriginAsTuple()
+        origin = self.inputVolumes.get().getShiftsFromOrigin()
         # x origin coordinate (from Angstroms to pixels)
-        args += " %f " % (origin[0] / sampling)
+        args += " %f " % (origin[0] / (-1. * sampling))
         # y origin coordinate (from Angstroms to pixels)
-        args += " %f " % (origin[1] / sampling)
+        args += " %f " % (origin[1] / (-1. * sampling))
         # z origin coordinate (from Angstroms to pixels)
-        args += " %f " % (origin[2] / sampling)
+        args += " %f " % (origin[2] / (-1. * sampling))
 
         self.runJob("xmipp_transform_window", args)
 

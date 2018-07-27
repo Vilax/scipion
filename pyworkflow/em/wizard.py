@@ -28,36 +28,33 @@
 This module implement some wizards
 """
 
-import os
-from os.path import basename, exists
 import Tkinter as tk
+import os
 import ttk
 
-from pyworkflow.wizard import Wizard
-import pyworkflow.gui.dialog as dialog
-from pyworkflow.gui.widgets import LabelSlider
-from pyworkflow.gui.tree import BoundTree, TreeProvider
-from pyworkflow import findResource
-from pyworkflow.object import PointerList, Pointer
+import xmipp
 
-from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.constants import (UNIT_PIXEL, 
+import pyworkflow.gui.dialog as dialog
+from pyworkflow import findResource
+from pyworkflow.em.constants import (UNIT_PIXEL,
                                      UNIT_PIXEL_FOURIER,
                                      UNIT_ANGSTROM,
-                                     UNIT_ANGSTROM_FOURIER,
-                                     FILTER_LOW_PASS, 
-                                     FILTER_BAND_PASS, 
+                                     FILTER_LOW_PASS,
+                                     FILTER_BAND_PASS,
                                      FILTER_HIGH_PASS
                                      )
+from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import (Volume, SetOfMicrographs, SetOfParticles,
                                 SetOfVolumes)
+from pyworkflow.em.headers import Ccp4Header
 from pyworkflow.em.protocol.protocol_import import (ProtImportImages,
-                                                    ProtImportMovies,
                                                     ProtImportCoordinates,
                                                     ProtImportVolumes)
+from pyworkflow.gui.tree import BoundTree, TreeProvider
+from pyworkflow.gui.widgets import LabelSlider
+from pyworkflow.object import PointerList, Pointer
+from pyworkflow.wizard import Wizard
 
-
-import xmipp
 
 #===============================================================================
 #    Wizard EM base class
@@ -867,11 +864,40 @@ class ImportCoordinatesBoxSizeWizard(Wizard):
 
 
 class ImportOriginVolumeWizard(Wizard):
+
     _targets = [(ProtImportVolumes, ['x', 'y', 'z'])]
 
     def show(self, form, *params):
         protocol = form.protocol
-        filesPattern = protocol.filesPattern
-        filesPath = protocol.filesPath
-        print "wwwwwwwwwwwwwwwww", filesPattern, filesPath
-        form.setVar('x', 53)
+        filesPath = protocol.filesPath.get()
+        filesPattern = protocol.filesPattern.get()
+        if filesPattern:
+            fullPattern = os.path.join(filesPath, filesPattern)
+        else:
+            fullPattern = filesPath
+
+        sampling = protocol.samplingRate.get()
+        for fileName, fileId in protocol.iterFiles():
+            inputVol = Volume()
+            inputVol.setFileName(fileName)
+            if ((str(fullPattern)).endswith('mrc') or
+                (str(fullPattern)).endswith('map')):
+                ccp4header = Ccp4Header(fileName, readHeader=True)
+                x, y, z = ccp4header.getOrigin(changeSign=True)  # In Angstroms
+            else:
+                x, y, z = self._halfOriginCoordinates(inputVol, sampling)
+
+            form.setVar('x', x)
+            form.setVar('y', y)
+            form.setVar('z', z)
+
+    def _halfOriginCoordinates(self, volume, sampling):
+        xdim, ydim, zdim = volume.getDim()
+        if zdim > 1:
+            zdim = zdim / 2.
+        x = xdim / 2. * sampling
+        y = ydim / 2. * sampling
+        z = zdim * sampling
+        return x, y, z
+
+

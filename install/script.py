@@ -243,7 +243,7 @@ arpack = env.addLibrary(
     commands=[('cd ' + SW_BIN + '; ln -s $(which gfortran) f77',
                SW_BIN + '/f77'),
               ('cd ' + SW_TMP + '/arpack-96; make all',
-               SW_LIB +'libarpack.a')],
+               SW_LIB +'/libarpack.a')],
     default=False)
 # See http://modb.oce.ulg.ac.be/mediawiki/index.php/How_to_compile_ARPACK
 
@@ -251,13 +251,28 @@ if get('CUDA'):
     opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=ON']
 else:
     opencvFlags = ['-DWITH_FFMPEG=OFF -DWITH_CUDA:BOOL=OFF']
-opencv = env.addLibrary(
-    'opencv',
-    tar='opencv-2.4.13.tgz',
-    targets=[env.getLib('opencv_core')],
-    flags=opencvFlags,
-    cmake=True,
-    default=not noOpencv)
+
+if os.environ.get('OPENCV_VER') == '3.4.1':
+    opencvFlags.append('-DCMAKE_INSTALL_PREFIX=' + env.getSoftware())
+    opencv = env.addLibrary(
+        'opencv',
+        tar='opencv-3.4.1.tgz',
+        targets=[env.getLib('opencv_core')],
+        flags=opencvFlags,
+        # cmake=True,  # the instalation protocol have changed (e.g. mkdir build)
+        commands=[('cd ' + SW_TMP + '/opencv-3.4.1; mkdir build; cd build; '
+                   'cmake ' + ' '.join(opencvFlags) + ' .. ; '
+                   'make -j ' + str(env.getProcessors()) + '; '
+                   'make install', SW_LIB +'/libopencv_core.so')],
+        default=not noOpencv)
+else:
+    opencv = env.addLibrary(
+        'opencv',
+        tar='opencv-2.4.13.tgz',
+        targets=[env.getLib('opencv_core')],
+        flags=opencvFlags,
+        cmake=True,
+        default=not noOpencv)
 
 # ---------- Libraries required by PyTom 
 
@@ -286,8 +301,9 @@ nfft3 = env.addLibrary(
 
 # Add pip to our python
 pip = env.addTarget('pip')
-pip.addCommand('python scripts/get-pip.py -I', targets=SW_PYT_PACK + '/pip',
-               default=True, final=True)
+# we will install a certain version of setuptools
+pip.addCommand('python scripts/get-pip.py -I --no-setuptools',
+               targets=SW_PYT_PACK + '/pip', default=True, final=True)
 
 # Scons has a different pattern: it is expected to be in bin..TODO
 scons = env.addModule(
@@ -297,10 +313,14 @@ scons = env.addModule(
 #env.addPipModule('scons','2.3.6', target='scons-2.3.6')
 
 # Required python modules
-env.addPipModule('setuptools', '38.2.5')
+env.addPipModule('setuptools', '39.0.1')
 numpy = env.addPipModule('numpy','1.14.1')
 matplotlib = env.addPipModule('matplotlib', '1.5.3', target='matplotlib-1.5.3*')
+
+
+env.addPipModule('poster', '0.8.1', target='poster-0.8.1*')
 env.addPipModule('psutil', '2.1.1', target='psutil-2.1.1*')
+env.addPipModule('biopython', '1.71', target='biopython-1.71*')
 env.addPipModule('mpi4py', '1.3.1')
 scipy = env.addPipModule('scipy', '0.14.0',
                      default=not noScipy, deps=[lapack, matplotlib])
@@ -358,6 +378,10 @@ env.addPackage('ctffind4', version='4.1.5',
 env.addPackage('ctffind4', version='4.1.8',
                tar='ctffind_V4.1.8.tgz')
 
+env.addPackage('ctffind4', version='4.1.10',
+               tar='ctffind4-4.1.10.tgz')
+
+
 env.addPackage('summovie', version='1.0.2',
                tar='summovie_1.0.2.tgz')
 
@@ -384,10 +408,6 @@ env.addPackage('frealign', version='9.07',
 relion_commands = [('./INSTALL.sh -j %d' % env.getProcessors(),
                           ['relion_build.log',
                            'bin/relion_refine'])]
-
-env.addPackage('relion', version='1.3',
-               tar='relion-1.3.tgz',
-               commands=relion_commands)
 
 env.addPackage('relion', version='1.4',
                tar='relion-1.4.tgz',
@@ -422,6 +442,9 @@ env.addPackage('localrec', version='1.1.0',
 env.addPackage('localrec', version='1.2.0',
                tar='localrec-1.2.0.tgz')
 
+env.addPackage('locscale', version='0.1',
+               tar='locscale-0.1.tgz')
+
 env.addPackage('resmap', version='1.1.5s2',
                tar='resmap-1.1.5-s2.tgz',
                deps=['scipy'])
@@ -436,14 +459,11 @@ env.addPackage('motioncorr', version='2.1',
 env.addPackage('motioncor2', version='17.01.30',
                tar='motioncor2_01302017.tgz')
 
-env.addPackage('motioncor2', version='1.0.0',
-               tar='motioncor2_1.0.0.tgz')
-
 env.addPackage('motioncor2', version='1.0.2',
                tar='motioncor2-1.0.2.tgz')
 
-env.addPackage('motioncor2', version='1.0.4',
-               tar='motioncor2-1.0.4.tgz')
+env.addPackage('motioncor2', version='1.0.5',
+               tar='motioncor2-1.0.5.tgz')
 
 env.addPackage('simple', version='2.1',
                tar='simple2.tgz')
