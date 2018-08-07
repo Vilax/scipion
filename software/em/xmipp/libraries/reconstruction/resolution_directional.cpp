@@ -1224,8 +1224,10 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 	for (size_t ii = 0; ii<xrows; ++ii)
 	{
 		objId = mdprefDirs.addObject();
+		int con = VEC_ELEM(PrefferredDirHist,ii);
+		std::cout << ii << " " << con << std::endl;
 		mdprefDirs.setValue(MDL_IDX, ii, objId);
-		mdprefDirs.setValue(MDL_COUNT, VEC_ELEM(PrefferredDirHist,ii), objId);
+		mdprefDirs.setValue(MDL_COUNT, con, objId);
 
 
 	}
