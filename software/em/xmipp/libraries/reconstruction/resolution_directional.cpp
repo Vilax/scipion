@@ -55,6 +55,7 @@ void ProgResDir::readParams()
 	fnMDThr = getParam("--radialAzimuthalThresholds");
 	fnMonoRes = getParam("--monores");
 	fnAniRes = getParam("--aniRes");
+	fnprefMin = getParam("--prefMin");
 	Nthr = getIntParam("--threads");
 	checkellipsoids = checkParam("--checkellipsoids");
 }
@@ -85,6 +86,7 @@ void ProgResDir::defineParams()
 	addParamsLine("  [--azimuthalAvg <vol_file=\"\">]  : Radial Average of the azimuthal resolution map");
 	addParamsLine("  [--monores <vol_file=\"\">]  : Local resolution map");
 	addParamsLine("  [--aniRes <vol_file=\"\">]  : metadata of anisotropy and resolution");
+	addParamsLine("  [--prefMin <vol_file=\"\">]  : metadata of highest resolution per direction");
 	addParamsLine("  [--threads <s=4>]          : Number of threads");
 	addParamsLine("  [--checkellipsoids]          : only for debug");
 }
@@ -1232,7 +1234,7 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 
 
 	}
-	mdprefDirs.write("histograma_preff.xmd");
+	mdprefDirs.write(fnprefMin);
 
 	std::vector<double> radialList, azimuthalList;
 

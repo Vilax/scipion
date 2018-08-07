@@ -58,6 +58,7 @@ OUTPUT_MEANRES_FILE = 'mean_resolution.vol'
 OUTPUT_HIGHESTRES_FILE = 'highestResolution.vol'
 OUTPUT_LOWESTRES_FILE = 'lowestResolution.vol'
 OUTPUT_THRESHOLDS_FILE = 'thresholds.xmd'
+OUTPUT_MD_MINDIRECTIONAL_FILE = 'hist_prefdir.xmd'
 
 
 class XmippProtMonoDir(ProtAnalysis3D):
@@ -181,6 +182,7 @@ class XmippProtMonoDir(ProtAnalysis3D):
         params += ' --radialAzimuthalThresholds %s' % self._getExtraPath(OUTPUT_THRESHOLDS_FILE)
         params += ' --radialAvg %s' % self._getExtraPath(OUTPUT_MD_RADIAL_FILE)
         params += ' --azimuthalAvg %s' % self._getExtraPath(OUTPUT_MD_AZIMUTHAL_FILE)
+        params += ' --prefMin %s' % self._getExtraPath(OUTPUT_MD_MINDIRECTIONAL_FILE)
         params += ' --threads %i' % self.numberOfThreads.get()
         params += ' --monores %s' % self._getExtraPath(OUTPUT_RESOLUTION_FILE)
         params += ' --aniRes %s' % self._getExtraPath('anires.xmd')
