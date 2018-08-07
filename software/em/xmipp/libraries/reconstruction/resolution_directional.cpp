@@ -1221,15 +1221,15 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 	}
 
 
-	for (int ii = 0; ii<xrows; ++ii)
+	for (size_t ii = 0; ii<xrows; ++ii)
 	{
 		objId = mdprefDirs.addObject();
 		mdprefDirs.setValue(MDL_IDX, ii, objId);
-		mdprefDirs.setValue(MDL_COUNT, (int) VEC_ELEM(PrefferredDirHist,ii), objId);
+		mdprefDirs.setValue(MDL_COUNT, VEC_ELEM(PrefferredDirHist,ii), objId);
 
-		mdprefDirs.write("histograma_preff.xmd");
+
 	}
-
+	mdprefDirs.write("histograma_preff.xmd");
 
 	std::vector<double> radialList, azimuthalList;
 
