@@ -784,11 +784,11 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 		//Computing closest neighbours and its mean distance
 		for (int i = 0; i<numberdirections; ++i)
 		{
-			if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
-			{
-				std::cout << k << " " << MAT_ELEM(resolutionMat, i, k) << " " << MAT_ELEM(trigProducts, 0, i) << "  " <<
-						MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << ";" << std::endl;
-			}
+//			if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
+//			{
+//				std::cout << k << " " << MAT_ELEM(resolutionMat, i, k) << " " << MAT_ELEM(trigProducts, 0, i) << "  " <<
+//						MAT_ELEM(trigProducts, 1, i) << " " << MAT_ELEM(trigProducts, 2, i) << ";" << std::endl;
+//			}
 
 			double resi = MAT_ELEM(resolutionMat, i, k);
 			if (resi>0)
@@ -1224,7 +1224,8 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 	for (size_t ii = 0; ii<xrows; ++ii)
 	{
 		objId = mdprefDirs.addObject();
-		int con = VEC_ELEM(PrefferredDirHist,ii);
+		int con;
+		con = VEC_ELEM(PrefferredDirHist,ii);
 		std::cout << ii << " " << con << std::endl;
 		mdprefDirs.setValue(MDL_IDX, ii, objId);
 		mdprefDirs.setValue(MDL_COUNT, con, objId);
