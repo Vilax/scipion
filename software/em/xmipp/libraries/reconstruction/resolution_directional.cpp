@@ -961,12 +961,12 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		for (int i = 0; i<numberdirections; ++i)
 		{
 			resolution = MAT_ELEM(resolutionMat, i, k);
-			if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
-			{
-				std::cout << k << " " << resolution << " " << MAT_ELEM(trigProducts, 0, i)
-						<< " " << MAT_ELEM(trigProducts, 1, i)
-						<< " " << MAT_ELEM(trigProducts, 2, i) << ";" << std::endl;
-			}
+//			if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
+//			{
+//				std::cout << k << " " << resolution << " " << MAT_ELEM(trigProducts, 0, i)
+//						<< " " << MAT_ELEM(trigProducts, 1, i)
+//						<< " " << MAT_ELEM(trigProducts, 2, i) << ";" << std::endl;
+//			}
 
 			if (resolution>0)
 			{
@@ -1019,13 +1019,13 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 		b = 1/sqrt(VEC_ELEM(eigenvalues, 1));
 		c = 1/sqrt(VEC_ELEM(eigenvalues, 2));
 
-		if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
-		{
-			std::cout << "a = " << a << std::endl;
-			std::cout << "b = " << b << std::endl;
-			std::cout << "c = " << c << std::endl;
-			std::cout << "=--------------=" << std::endl;
-		}
+//		if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
+//		{
+//			std::cout << "a = " << a << std::endl;
+//			std::cout << "b = " << b << std::endl;
+//			std::cout << "c = " << c << std::endl;
+//			std::cout << "=--------------=" << std::endl;
+//		}
 
 		MAT_ELEM(axis,0, k) = a;
 		MAT_ELEM(axis,1, k) = b;
@@ -1110,7 +1110,8 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 		MultidimArray<double> &meanResolution,
 		MultidimArray<double> &lowestResolution,
 		MultidimArray<double> &highestResolution,
-		double &radial_Thr, double &azimuthal_Thr)
+		double &radial_Thr, double &azimuthal_Thr,
+		MetaData &mdprefDirs)
 {
 
 	radial.initZeros(pmask);
@@ -1127,7 +1128,11 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 
 	double count_radial, count_azimuthal;
 
+	Matrix1D<int> PrefferredDirHist;
+	PrefferredDirHist.initZeros(xrows);
+
 	meanResolution.initZeros(pmask);
+	size_t objId;
 	FOR_ALL_ELEMENTS_IN_ARRAY3D(pmask)
 	{
 		//i defines the direction and k the voxel
@@ -1180,9 +1185,24 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 			A3D_ELEM(lowestResolution,k,i,j) = ResList[ (size_t) floor(0.95*ResList.size()) ];
 			A3D_ELEM(highestResolution,k,i,j) = ResList[ (size_t) floor(0.03*ResList.size()) ];
 
-			ResList.clear();
-		}
+			double highres = A3D_ELEM(highestResolution,k,i,j);
 
+			ResList.clear();
+
+			//Prefferred directions
+
+			for (int ii = 0; ii<xrows; ++ii)
+			{
+				resolution = MAT_ELEM(resolutionMat, ii, idx);
+
+				if (resolution>0)
+				{
+					if ((highres>(resolution-0.1)) && (highres<(resolution+0.1)))
+						VEC_ELEM(PrefferredDirHist,ii) += 1;
+				}
+
+			}
+		}
 
 
 		if (count_radial<1)
@@ -1199,6 +1219,18 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 		azimuthal_resolution = 0;
 		radial_resolution = 0;
 	}
+
+
+	for (int ii = 0; ii<xrows; ++ii)
+	{
+		objId = mdprefDirs.addObject();
+		mdprefDirs.setValue(MDL_IDX, ii, objId);
+		mdprefDirs.setValue(MDL_COUNT, (int) VEC_ELEM(PrefferredDirHist,ii), objId);
+
+		mdprefDirs.write("histograma_preff.xmd");
+	}
+
+
 	std::vector<double> radialList, azimuthalList;
 
 	FOR_ALL_ELEMENTS_IN_ARRAY3D(radial)
@@ -1836,8 +1868,12 @@ void ProgResDir::run()
 	imgdoa.write(fnDoA);
 
 	MultidimArray<double> radial, azimuthal, meanResolution, lowestResolution, highestResolution;
+	MetaData prefDir;
+
 	double radialThr, azimuthalThr;
-	radialAzimuthalResolution(resolutionMatrix, mask(), radial, azimuthal, meanResolution, lowestResolution, highestResolution, radialThr, azimuthalThr);
+	radialAzimuthalResolution(resolutionMatrix, mask(), radial, azimuthal, meanResolution,
+			lowestResolution, highestResolution, radialThr, azimuthalThr, prefDir);
+
 
 	imgdoa = radial;
 	imgdoa.write(fnradial);
