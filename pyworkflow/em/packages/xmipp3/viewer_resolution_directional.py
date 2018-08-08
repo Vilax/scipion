@@ -150,7 +150,10 @@ class XmippMonoDirViewer(ProtocolViewer):
                label="Show lowest Resolution Map")        
         
         groupRadAzim.addParam('doshowAnisotropyResolution', LabelParam,
-               label="Anisotropy and resolution")        
+               label="Anisotropy and resolution")  
+        
+        groupRadAzim.addParam('doShowDirectionsHistogram', LabelParam,
+               label="Show directions histogram")      
 
         group = form.addGroup('Choose a Color Map')
         group.addParam('colorMap', EnumParam, choices=COLOR_CHOICES.values(),
@@ -182,6 +185,7 @@ class XmippMonoDirViewer(ProtocolViewer):
                 'doShowDoAHistogram': self._plotHistogramDoA,
                 'doShowRadialHistogram': self._plotHistogramRadial,
                 'doShowAzimuthalHistogram': self._plotHistogramAzimuthal,
+                'doShowDirectionsHistogram': self._plotHistogramDirections,
                 'doshowAnisotropyResolution': self._showAnisotropyResolution
                 }
 
@@ -254,6 +258,9 @@ class XmippMonoDirViewer(ProtocolViewer):
         
     def _plotHistogramAzimuthal(self, param=None):
         self._plotHistogram('hist_azimuthal.xmd', 'Azimuthal Resolution', 'Resolution')
+        
+    def _plotHistogramDirections(self, param=None):
+        self._plotHistogram('hist_prefdir.xmd', 'Highest Resolution per Direction', 'Direction')
 
     def _plotHistogram(self, fnhist, titlename, xname):
         md = MetaData()

@@ -1180,7 +1180,7 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 //			std::cout << "count_radial = " << count_radial << std::endl;
 //			std::cout << "count_azimuthal = " << count_azimuthal << std::endl;
 //			std::cout << "  " << std::endl;
-			++idx;
+
 //			A3D_ELEM(meanResolution,k,i,j) = meanRes[(size_t) floor(0.5*meanRes.size())];
 			std::sort(ResList.begin(),ResList.end());
 
@@ -1204,6 +1204,7 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 				}
 
 			}
+			++idx;
 		}
 
 
@@ -1229,7 +1230,7 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 		size_t con;
 		con = (size_t) VEC_ELEM(PrefferredDirHist,ii);
 		std::cout << ii << " " << con << std::endl;
-		mdprefDirs.setValue(MDL_IDX, ii, objId);
+		mdprefDirs.setValue(MDL_X, (double) ii, objId);
 		mdprefDirs.setValue(MDL_COUNT, con, objId);
 
 
