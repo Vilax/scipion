@@ -1284,7 +1284,6 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 			++idx;
 		}
 
-
 		if (count_radial<1)
 			A3D_ELEM(radial,k,i,j) = A3D_ELEM(meanResolution,k,i,j);
 		else

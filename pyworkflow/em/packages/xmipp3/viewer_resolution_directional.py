@@ -187,6 +187,7 @@ class XmippMonoDirViewer(ProtocolViewer):
                 'doShowRadialHistogram': self._plotHistogramRadial,
                 'doShowAzimuthalHistogram': self._plotHistogramAzimuthal,
                 'doShowDirectionsHistogram': self._plotHistogramDirections,
+                'doShowDirectionsHistogram': self._show2DDistribution,
                 'doshowAnisotropyResolution': self._showAnisotropyResolution
                 
                 }
@@ -212,6 +213,9 @@ class XmippMonoDirViewer(ProtocolViewer):
         
     def _showAnisotropyResolution(self, param=None):
         self.plotAnisotropyResolution(self.protocol._getExtraPath('anires.xmd'))
+        
+    def _show2DDistribution(self, param=None):
+        self._createAngDist2D(self.protocol._getExtraPath('hist_prefdir.xmd'))
         
     def _showOriginalVolumeSlices(self, param=None):
         if self.protocol.halfVolumes.get() is True:
@@ -264,9 +268,9 @@ class XmippMonoDirViewer(ProtocolViewer):
     def _plotHistogramDirections(self, param=None):
         self._plotHistogram('hist_prefdir.xmd', 'Highest Resolution per Direction', 'Direction')
         
-    def _createAngDist2D(self):
+    def _createAngDist2D(self, path):
         view = EmPlotter(x=1, y=1, mainTitle="Highest Resolution per Direction", windowTitle="Angular distribution")
-        view.plotAngularDistributionFromMd(self.protocol._getExtraPath('hist_prefdir.xmd'))
+        view.plotAngularDistributionFromMd(path)
 
     def _plotHistogram(self, fnhist, titlename, xname):
         md = MetaData()
