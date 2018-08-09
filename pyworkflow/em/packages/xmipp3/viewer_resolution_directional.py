@@ -154,7 +154,9 @@ class XmippMonoDirViewer(ProtocolViewer):
                label="Anisotropy and resolution")  
         
         groupRadAzim.addParam('doShowDirectionsHistogram', LabelParam,
-               label="Show directions histogram")      
+               label="Show directions histogram")
+        groupRadAzim.addParam('doShowDirectionsSphere', LabelParam,
+               label="Show directions sphere")    
 
         group = form.addGroup('Choose a Color Map')
         group.addParam('colorMap', EnumParam, choices=COLOR_CHOICES.values(),
@@ -187,7 +189,7 @@ class XmippMonoDirViewer(ProtocolViewer):
                 'doShowRadialHistogram': self._plotHistogramRadial,
                 'doShowAzimuthalHistogram': self._plotHistogramAzimuthal,
                 'doShowDirectionsHistogram': self._plotHistogramDirections,
-                'doShowDirectionsHistogram': self._show2DDistribution,
+                'doShowDirectionsSphere': self._show2DDistribution,
                 'doshowAnisotropyResolution': self._showAnisotropyResolution
                 
                 }
