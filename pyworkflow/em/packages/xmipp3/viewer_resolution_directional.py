@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 
-from pyworkflow.gui.plotter import Plotter, plotAngularDistributionFromMd
+from pyworkflow.gui.plotter import Plotter
 from pyworkflow.em.plotter import plotAngularDistributionFromMd
 from pyworkflow.protocol.params import LabelParam, StringParam, EnumParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER
