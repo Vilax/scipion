@@ -272,7 +272,7 @@ class XmippMonoDirViewer(ProtocolViewer):
         
     def _createAngDist2D(self, path):
         view = XmippPlotter(x=1, y=1, mainTitle="Highest Resolution per Direction", windowTitle="Angular distribution")
-        view.plotAngularDistributionFromMd(path)
+        view.plotAngularDistributionFromMd(path, 'directional resolution distribution')
 
     def _plotHistogram(self, fnhist, titlename, xname):
         md = MetaData()
