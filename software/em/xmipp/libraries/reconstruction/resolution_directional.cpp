@@ -1230,10 +1230,12 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 		size_t con;
 		con = (size_t) VEC_ELEM(PrefferredDirHist,ii);
 		std::cout << ii << " " << con << std::endl;
+
+		mdprefDirs.setValue(MDL_ANGLE_ROT, MAT_ELEM(angles, 0, ii), objId);
+		mdprefDirs.setValue(MDL_ANGLE_TILT, MAT_ELEM(angles, 1, ii), objId);
+		mdprefDirs.setValue(MDL_WEIGHT, con, objId);
 		mdprefDirs.setValue(MDL_X, (double) ii, objId);
 		mdprefDirs.setValue(MDL_COUNT, con, objId);
-
-
 	}
 	mdprefDirs.write(fnprefMin);
 
@@ -1902,7 +1904,7 @@ void ProgResDir::run()
 	std::cout << "Calculating the radial and azimuthal resolution " << std::endl;
 
 
-	MetaData mdRadial, mdAzimuthal;
+	MetaData mdRadial, mdAzimuthal, mdHighest, mdLowest;
 
 //	Image<double> V;
 //	V.read(fnVol);
@@ -1913,9 +1915,14 @@ void ProgResDir::run()
 
 	radialAverageInMask(mask(), azimuthal, mdAzimuthal);
 	radialAverageInMask(mask(), radial, mdRadial);
+	radialAverageInMask(mask(), highestResolution, mdHighest);
+	radialAverageInMask(mask(), lowestResolution, mdLowest);
+
 
 	mdAzimuthal.write(fnMDazimuthal);
 	mdRadial.write(fnMDradial);
+//	mdHighest.write(fnmdHighest);
+//	mdLowest.write(fnmdLowest);
 
 
 ///////////////////////

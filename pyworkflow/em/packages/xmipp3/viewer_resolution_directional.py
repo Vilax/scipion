@@ -24,7 +24,7 @@
 # *
 # **************************************************************************
 
-from pyworkflow.gui.plotter import Plotter
+from pyworkflow.gui.plotter import Plotter, plotAngularDistributionFromMd
 from pyworkflow.protocol.params import LabelParam, StringParam, EnumParam
 from pyworkflow.viewer import ProtocolViewer, DESKTOP_TKINTER
 from pyworkflow.em.viewer import ChimeraView, DataView
@@ -187,6 +187,7 @@ class XmippMonoDirViewer(ProtocolViewer):
                 'doShowAzimuthalHistogram': self._plotHistogramAzimuthal,
                 'doShowDirectionsHistogram': self._plotHistogramDirections,
                 'doshowAnisotropyResolution': self._showAnisotropyResolution
+                
                 }
 
     def _showDoASlices(self, param=None):
@@ -261,6 +262,10 @@ class XmippMonoDirViewer(ProtocolViewer):
         
     def _plotHistogramDirections(self, param=None):
         self._plotHistogram('hist_prefdir.xmd', 'Highest Resolution per Direction', 'Direction')
+        
+    def _createAngDist2D(self):
+        view = EmPlotter(x=1, y=1, mainTitle="Highest Resolution per Direction", windowTitle="Angular distribution")
+        view.plotAngularDistributionFromMd(self.protocol._getExtraPath('hist_prefdir.xmd'))
 
     def _plotHistogram(self, fnhist, titlename, xname):
         md = MetaData()
