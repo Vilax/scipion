@@ -1127,7 +1127,7 @@ void ProgResDir::radialAverageInMask(MultidimArray<int> &mask,
 		inputVol_2.setXmippOrigin();
 		inputVol_3.setXmippOrigin();
 		inputVol_4.setXmippOrigin();
-		inputVol_4.setXmippOrigin();
+		inputVol_5.setXmippOrigin();
 
 		pMask.setXmippOrigin();
 
@@ -1153,7 +1153,7 @@ void ProgResDir::radialAverageInMask(MultidimArray<int> &mask,
 						cum_mean_2 += A3D_ELEM(inputVol_2, k, i, j);
 						cum_mean_3 += A3D_ELEM(inputVol_3, k, i, j);
 						cum_mean_4 += A3D_ELEM(inputVol_4, k, i, j);
-						cum_mean_4 += A3D_ELEM(inputVol_4, k, i, j);
+						cum_mean_5 += A3D_ELEM(inputVol_5, k, i, j);
 
 						N = N + 1;
 					}
@@ -1168,7 +1168,7 @@ void ProgResDir::radialAverageInMask(MultidimArray<int> &mask,
 				md.setValue(MDL_VOLUME_SCORE2, cum_mean_2, objId);
 				md.setValue(MDL_VOLUME_SCORE3, cum_mean_3, objId);
 				md.setValue(MDL_VOLUME_SCORE4, cum_mean_4, objId);
-				md.setValue(MDL_AVG, cum_mean_4, objId);
+				md.setValue(MDL_AVG, cum_mean_5, objId);
 			}
 			else
 			{
@@ -1985,6 +1985,7 @@ void ProgResDir::run()
 	Image<double> monores;
 	monores.read(fnMonoRes);
 	MultidimArray<double> monoresVol;
+	monoresVol = monores();
 	radialAverageInMask(mask(), radial, azimuthal, highestResolution, lowestResolution, monoresVol, mdAvg);
 
 
