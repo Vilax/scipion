@@ -1310,7 +1310,7 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 
 		mdprefDirs.setValue(MDL_ANGLE_ROT, MAT_ELEM(angles, 0, ii), objId);
 		mdprefDirs.setValue(MDL_ANGLE_TILT, MAT_ELEM(angles, 1, ii), objId);
-		mdprefDirs.setValue(MDL_WEIGHT, con, objId);
+		mdprefDirs.setValue(MDL_WEIGHT, (double) con, objId);
 		mdprefDirs.setValue(MDL_X, (double) ii, objId);
 		mdprefDirs.setValue(MDL_COUNT, con, objId);
 	}
