@@ -1047,7 +1047,69 @@ void ProgResDir::ellipsoidFitting(Matrix2D<double> &anglesMat,
 	}
 }
 
-void ProgResDir::radialAverageInMask(MultidimArray<int> &mask, MultidimArray<double> &inputVol, MetaData &md)
+//void ProgResDir::radialAverageInMask(MultidimArray<int> &mask, MultidimArray<double> &inputVol, MetaData &md)
+//{
+//		double u_inf, u_sup, u;
+//
+//		MultidimArray<int> &pMask = mask;
+//		int step = 1;
+//
+//		double N;
+//		MultidimArray<double> radialAvg(XSIZE(inputVol)*0.5);
+//		MultidimArray<double> test_ring;
+//		test_ring.initZeros(inputVol);
+//		//DIRECT_MULTIDIM_ELEM(radialAvg,0) = sqrt(real(conj(A3D_ELEM(fftV, 0,0,0))*A3D_ELEM(fftV, 0,0,0)));
+////		std::cout << "XSIZE = " << XSIZE(inputVol) << std::endl;
+//
+//		int uk, uj, ui;
+//
+//		int siz = XSIZE(inputVol);
+//		size_t objId;
+//
+//		inputVol.setXmippOrigin();
+//		pMask.setXmippOrigin();
+//
+//		for(size_t kk=1; kk<siz*0.5; ++kk)
+//		{
+//			double cum_mean = 0;
+//			N = 0;
+//			u_sup = kk + step;
+//			u_inf = kk - step;
+//
+//			FOR_ALL_ELEMENTS_IN_ARRAY3D(pMask)
+//			{
+//				 if (A3D_ELEM(pMask, k, i, j)>0)
+//				{
+//				  //std::cout << "entro " << std::endl;
+//					u = sqrt(k*k + i*i + j*j);
+//					if ((u<u_sup) && (u>=u_inf))
+//					{
+//						cum_mean += A3D_ELEM(inputVol, k, i, j);
+//						N = N + 1;
+//					}
+//
+//				 }
+//			}
+//
+//			objId = md.addObject();
+//			if (cum_mean==0)
+//			{
+//				md.setValue(MDL_IDX, kk, objId);
+//				md.setValue(MDL_AVG, cum_mean, objId);
+//			}
+//			else
+//			{
+//				md.setValue(MDL_IDX, kk, objId);
+//				md.setValue(MDL_AVG, (cum_mean/N), objId);
+//			}
+//		}
+//}
+
+
+void ProgResDir::radialAverageInMask(MultidimArray<int> &mask,
+		MultidimArray<double> &inputVol_1, MultidimArray<double> &inputVol_2,
+		MultidimArray<double> &inputVol_3, MultidimArray<double> &inputVol_4,
+		MultidimArray<double> &inputVol_5, MetaData &md)
 {
 		double u_inf, u_sup, u;
 
@@ -1055,23 +1117,27 @@ void ProgResDir::radialAverageInMask(MultidimArray<int> &mask, MultidimArray<dou
 		int step = 1;
 
 		double N;
-		MultidimArray<double> radialAvg(XSIZE(inputVol)*0.5);
-		MultidimArray<double> test_ring;
-		test_ring.initZeros(inputVol);
-		//DIRECT_MULTIDIM_ELEM(radialAvg,0) = sqrt(real(conj(A3D_ELEM(fftV, 0,0,0))*A3D_ELEM(fftV, 0,0,0)));
-//		std::cout << "XSIZE = " << XSIZE(inputVol) << std::endl;
-
+		MultidimArray<double> radialAvg(XSIZE(inputVol_1)*0.5);
 		int uk, uj, ui;
 
-		int siz = XSIZE(inputVol);
+		int siz = XSIZE(inputVol_1);
 		size_t objId;
 
-		inputVol.setXmippOrigin();
+		inputVol_1.setXmippOrigin();
+		inputVol_2.setXmippOrigin();
+		inputVol_3.setXmippOrigin();
+		inputVol_4.setXmippOrigin();
+		inputVol_4.setXmippOrigin();
+
 		pMask.setXmippOrigin();
 
 		for(size_t kk=1; kk<siz*0.5; ++kk)
 		{
-			double cum_mean = 0;
+			double cum_mean_1 = 0;
+			double cum_mean_2 = 0;
+			double cum_mean_3 = 0;
+			double cum_mean_4 = 0;
+			double cum_mean_5 = 0;
 			N = 0;
 			u_sup = kk + step;
 			u_inf = kk - step;
@@ -1080,27 +1146,38 @@ void ProgResDir::radialAverageInMask(MultidimArray<int> &mask, MultidimArray<dou
 			{
 				 if (A3D_ELEM(pMask, k, i, j)>0)
 				{
-				  //std::cout << "entro " << std::endl;
 					u = sqrt(k*k + i*i + j*j);
 					if ((u<u_sup) && (u>=u_inf))
 					{
-						cum_mean += A3D_ELEM(inputVol, k, i, j);
+						cum_mean_1 += A3D_ELEM(inputVol_1, k, i, j);
+						cum_mean_2 += A3D_ELEM(inputVol_2, k, i, j);
+						cum_mean_3 += A3D_ELEM(inputVol_3, k, i, j);
+						cum_mean_4 += A3D_ELEM(inputVol_4, k, i, j);
+						cum_mean_4 += A3D_ELEM(inputVol_4, k, i, j);
+
 						N = N + 1;
 					}
-
 				 }
 			}
 
 			objId = md.addObject();
-			if (cum_mean==0)
+			if ((cum_mean_1==0) || (cum_mean_2==0) || (cum_mean_3==0) || (cum_mean_4==0) || (cum_mean_5==0))
 			{
 				md.setValue(MDL_IDX, kk, objId);
-				md.setValue(MDL_AVG, cum_mean, objId);
+				md.setValue(MDL_VOLUME_SCORE1, cum_mean_1, objId);
+				md.setValue(MDL_VOLUME_SCORE2, cum_mean_2, objId);
+				md.setValue(MDL_VOLUME_SCORE3, cum_mean_3, objId);
+				md.setValue(MDL_VOLUME_SCORE4, cum_mean_4, objId);
+				md.setValue(MDL_AVG, cum_mean_4, objId);
 			}
 			else
 			{
 				md.setValue(MDL_IDX, kk, objId);
-				md.setValue(MDL_AVG, (cum_mean/N), objId);
+				md.setValue(MDL_VOLUME_SCORE1, (cum_mean_1/N), objId);
+				md.setValue(MDL_VOLUME_SCORE2, (cum_mean_2/N), objId);
+				md.setValue(MDL_VOLUME_SCORE3, (cum_mean_3/N), objId);
+				md.setValue(MDL_VOLUME_SCORE4, (cum_mean_4/N), objId);
+				md.setValue(MDL_AVG, (cum_mean_5/N), objId);
 			}
 		}
 }
@@ -1904,25 +1981,15 @@ void ProgResDir::run()
 	std::cout << "Calculating the radial and azimuthal resolution " << std::endl;
 
 
-	MetaData mdRadial, mdAzimuthal, mdHighest, mdLowest;
+	MetaData mdRadial, mdAvg, mdHighest, mdLowest;
 
-//	Image<double> V;
-//	V.read(fnVol);
-//	MultidimArray<double> &inputVol = V();
-//
-//	radialAverageInMask(mask(), inputVol, mdAzimuthal);
-//	mdAzimuthal.write(fnMDazimuthal);
-
-	radialAverageInMask(mask(), azimuthal, mdAzimuthal);
-	radialAverageInMask(mask(), radial, mdRadial);
-	radialAverageInMask(mask(), highestResolution, mdHighest);
-	radialAverageInMask(mask(), lowestResolution, mdLowest);
+	Image<double> monores;
+	monores.read(fnMonoRes);
+	MultidimArray<double> monoresVol;
+	radialAverageInMask(mask(), radial, azimuthal, highestResolution, lowestResolution, monoresVol, mdAvg);
 
 
-	mdAzimuthal.write(fnMDazimuthal);
-	mdRadial.write(fnMDradial);
-//	mdHighest.write(fnmdHighest);
-//	mdLowest.write(fnmdLowest);
+	mdAvg.write(fnMDazimuthal);
 
 
 ///////////////////////
@@ -1948,8 +2015,6 @@ void ProgResDir::run()
 	FileName fn_md, fn_AniRes;
 
 	imgdoa.read(fnDoA);
-	Image<double> monores;
-	monores.read(fnMonoRes);
 	monores().setXmippOrigin();
 
 	FOR_ALL_ELEMENTS_IN_ARRAY3D(arrows)
