@@ -1867,7 +1867,7 @@ void ProgResDir::run()
 					std::sort(noiseValues.begin(),noiseValues.end());
 					thresholdNoise = noiseValues[size_t(noiseValues.size()*significance)];
 
-					std::cout << "thr="<< thresholdNoise << " " << meanN+criticalZ*sqrt(sigma2N) << " " << NN << std::endl;
+					//std::cout << "thr="<< thresholdNoise << " " << meanN+criticalZ*sqrt(sigma2N) << " " << NN << std::endl;
 					noiseValues.clear();
 
 					#ifdef DEBUG
