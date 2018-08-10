@@ -1138,6 +1138,13 @@ void ProgResDir::radialAverageInMask(MultidimArray<int> &mask,
 			double cum_mean_3 = 0;
 			double cum_mean_4 = 0;
 			double cum_mean_5 = 0;
+
+			double cum2_mean_1 = 0;
+			double cum2_mean_2 = 0;
+			double cum2_mean_3 = 0;
+			double cum2_mean_4 = 0;
+			double cum2_mean_5 = 0;
+
 			N = 0;
 			u_sup = kk + step;
 			u_inf = kk - step;
@@ -1149,16 +1156,30 @@ void ProgResDir::radialAverageInMask(MultidimArray<int> &mask,
 					u = sqrt(k*k + i*i + j*j);
 					if ((u<u_sup) && (u>=u_inf))
 					{
-						cum_mean_1 += A3D_ELEM(inputVol_1, k, i, j);
-						cum_mean_2 += A3D_ELEM(inputVol_2, k, i, j);
-						cum_mean_3 += A3D_ELEM(inputVol_3, k, i, j);
-						cum_mean_4 += A3D_ELEM(inputVol_4, k, i, j);
-						cum_mean_5 += A3D_ELEM(inputVol_5, k, i, j);
+						double aux;
+						aux = A3D_ELEM(inputVol_1, k, i, j);
+						cum_mean_1 += aux;
+						cum2_mean_1 += aux*aux;
+						aux = A3D_ELEM(inputVol_2, k, i, j);
+						cum_mean_2 += aux;
+						cum2_mean_2 += aux*aux;
+						aux = A3D_ELEM(inputVol_3, k, i, j);
+						cum_mean_3 += aux;
+						cum2_mean_3 += aux*aux;
+						aux = A3D_ELEM(inputVol_4, k, i, j);
+						cum_mean_4 += aux;
+						cum2_mean_4 += aux*aux;
+						aux = A3D_ELEM(inputVol_5, k, i, j);
+						cum_mean_5 += aux;
+						cum2_mean_5 += aux*aux;
 
 						N = N + 1;
 					}
 				 }
 			}
+
+			double sigma1, sigma2, sigma3, sigma4, sigma5;
+
 
 			objId = md.addObject();
 			if ((cum_mean_1==0) || (cum_mean_2==0) || (cum_mean_3==0) || (cum_mean_4==0) || (cum_mean_5==0))
@@ -1169,6 +1190,13 @@ void ProgResDir::radialAverageInMask(MultidimArray<int> &mask,
 				md.setValue(MDL_VOLUME_SCORE3, cum_mean_3, objId);
 				md.setValue(MDL_VOLUME_SCORE4, cum_mean_4, objId);
 				md.setValue(MDL_AVG, cum_mean_5, objId);
+
+//				double meanS=sumS/NS;
+//	//			double sigma2S=sumS2/NS-meanS*meanS;
+//				double meanN=sumN/NN;
+//				double sigma2N=sumN2/NN-meanN*meanN;
+//				sigma1
+
 			}
 			else
 			{
@@ -1306,9 +1334,18 @@ void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
 		size_t con;
 		con = (size_t) VEC_ELEM(PrefferredDirHist,ii);
 		std::cout << ii << " " << con << std::endl;
+		double rot = MAT_ELEM(angles, 0, ii);
+		double tilt = MAT_ELEM(angles, 1, ii);
 
-		mdprefDirs.setValue(MDL_ANGLE_ROT, MAT_ELEM(angles, 0, ii), objId);
-		mdprefDirs.setValue(MDL_ANGLE_TILT, MAT_ELEM(angles, 1, ii), objId);
+		if (tilt<0)
+		{
+			tilt = abs(tilt);
+			rot = rot + 180;
+		}
+
+
+		mdprefDirs.setValue(MDL_ANGLE_ROT, rot, objId);
+		mdprefDirs.setValue(MDL_ANGLE_TILT, tilt, objId);
 		mdprefDirs.setValue(MDL_WEIGHT, (double) con, objId);
 		mdprefDirs.setValue(MDL_X, (double) ii, objId);
 		mdprefDirs.setValue(MDL_COUNT, con, objId);
@@ -1987,7 +2024,6 @@ void ProgResDir::run()
 	MultidimArray<double> monoresVol;
 	monoresVol = monores();
 	radialAverageInMask(mask(), radial, azimuthal, highestResolution, lowestResolution, monoresVol, mdAvg);
-
 
 	mdAvg.write(fnMDazimuthal);
 
