@@ -55,7 +55,7 @@ public:
 	 /** Filenames */
 	FileName fnOut, fnVol, fnMask, fnDoA, fnDirections, fnradial, fnazimuthal, fnMonoRes, fnAniRes,
 	fnMDradial, fnMDazimuthal, fnMeanResolution, fnMDThr, fnLowestResolution, fnHighestResolution,
-	fnprefMin;
+	fnprefMin, fnZscore;
 
 	/** sampling rate, minimum resolution, and maximum resolution */
 	double sampling, minRes, maxRes, R, ang_sampling, N_directions, Rparticle, res_step;

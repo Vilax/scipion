@@ -59,6 +59,7 @@ OUTPUT_SPH_FILE = 'sphericity.vol'
 OUTPUT_RADIAL_FILE = 'radial_resolution.vol'
 OUTPUT_AZIMUHTAL_FILE = 'azimuthal_resolution.vol'
 OUTPUT_THRESHOLDS_FILE = 'thresholds.xmd'
+OUTPUT_ZSCOREMAP_FILE = 'zscoreMap.vol'
 
 #TODO: prepare volumes for chimera
 OUTPUT_VARIANCE_FILE_CHIMERA = 'varResolution_Chimera.vol'
@@ -156,7 +157,10 @@ class XmippMonoDirViewer(ProtocolViewer):
         groupRadAzim.addParam('doShowDirectionsHistogram', LabelParam,
                label="Show directions histogram")
         groupRadAzim.addParam('doShowDirectionsSphere', LabelParam,
-               label="Show directions sphere")    
+               label="Show directions sphere")
+        
+        groupRadAzim.addParam('doshowZscoreMap', LabelParam,
+               label="Show zscore map")    
 
         group = form.addGroup('Choose a Color Map')
         group.addParam('colorMap', EnumParam, choices=COLOR_CHOICES.values(),
@@ -190,7 +194,8 @@ class XmippMonoDirViewer(ProtocolViewer):
                 'doShowAzimuthalHistogram': self._plotHistogramAzimuthal,
                 'doShowDirectionsHistogram': self._plotHistogramDirections,
                 'doShowDirectionsSphere': self._show2DDistribution,
-                'doshowAnisotropyResolution': self._showAnisotropyResolution
+                'doshowAnisotropyResolution': self._showAnisotropyResolution,
+                'doshowZscoreMap': self._showZscoreMap
                 
                 }
 
@@ -203,6 +208,9 @@ class XmippMonoDirViewer(ProtocolViewer):
         
     def _showRadialColorSlices(self, param=None):
         self._showColorSlices(OUTPUT_RADIAL_FILE, False, 'Radial Resolution')
+        
+    def _showZscoreMap(self, param=None):
+        self._showColorSlices(OUTPUT_ZSCOREMAP_FILE, False, 'Zscore map')
         
     def _showHighestResolutionColorSlices(self, param=None):
         self._showColorSlices(OUTPUT_RESOLUTION_HIGHEST_FILE, False, 'Highest Resolution')

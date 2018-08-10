@@ -56,6 +56,7 @@ void ProgResDir::readParams()
 	fnMonoRes = getParam("--monores");
 	fnAniRes = getParam("--aniRes");
 	fnprefMin = getParam("--prefMin");
+	fnZscore = getParam("--zScoremap");
 	Nthr = getIntParam("--threads");
 	checkellipsoids = checkParam("--checkellipsoids");
 }
@@ -88,6 +89,7 @@ void ProgResDir::defineParams()
 	addParamsLine("  [--aniRes <vol_file=\"\">]  : metadata of anisotropy and resolution");
 	addParamsLine("  [--prefMin <vol_file=\"\">]  : metadata of highest resolution per direction");
 	addParamsLine("  [--threads <s=4>]          : Number of threads");
+	addParamsLine("  [--zScoremap <vol_file=\"\">]          : Zscore map");
 	addParamsLine("  [--checkellipsoids]          : only for debug");
 }
 
@@ -1116,7 +1118,7 @@ void ProgResDir::radialAverageInMask(MultidimArray<int> &mask,
 		MultidimArray<int> &pMask = mask;
 		int step = 1;
 
-		double N;
+		double N, NN;
 		MultidimArray<double> radialAvg(XSIZE(inputVol_1)*0.5);
 		int uk, uj, ui;
 
@@ -1128,8 +1130,20 @@ void ProgResDir::radialAverageInMask(MultidimArray<int> &mask,
 		inputVol_3.setXmippOrigin();
 		inputVol_4.setXmippOrigin();
 		inputVol_5.setXmippOrigin();
+		MultidimArray<double> zVolume;
+		zVolume.initZeros(inputVol_1);
+		zVolume.setXmippOrigin();
 
 		pMask.setXmippOrigin();
+
+		Matrix2D<double> std_mean_Radial_1, std_mean_Radial_2, std_mean_Radial_3,
+						std_mean_Radial_4, std_mean_Radial_5;
+
+		std_mean_Radial_1.initZeros(2, (size_t) siz*0.5 + 1);
+		std_mean_Radial_2.initZeros(2, (size_t) siz*0.5 + 1);
+		std_mean_Radial_3.initZeros(2, (size_t) siz*0.5 + 1);
+		std_mean_Radial_4.initZeros(2, (size_t) siz*0.5 + 1);
+		std_mean_Radial_5.initZeros(2, (size_t) siz*0.5 + 1);
 
 		for(size_t kk=1; kk<siz*0.5; ++kk)
 		{
@@ -1190,24 +1204,81 @@ void ProgResDir::radialAverageInMask(MultidimArray<int> &mask,
 				md.setValue(MDL_VOLUME_SCORE3, cum_mean_3, objId);
 				md.setValue(MDL_VOLUME_SCORE4, cum_mean_4, objId);
 				md.setValue(MDL_AVG, cum_mean_5, objId);
-
-//				double meanS=sumS/NS;
-//	//			double sigma2S=sumS2/NS-meanS*meanS;
-//				double meanN=sumN/NN;
-//				double sigma2N=sumN2/NN-meanN*meanN;
-//				sigma1
-
 			}
 			else
 			{
+				cum_mean_1 = (cum_mean_1/N);
+				cum_mean_2 = (cum_mean_2/N);
+				cum_mean_3 = (cum_mean_3/N);
+				cum_mean_4 = (cum_mean_4/N);
+				cum_mean_5 = (cum_mean_5/N);
+
+				MAT_ELEM(std_mean_Radial_1,1, kk) = cum_mean_1;
+				MAT_ELEM(std_mean_Radial_2,1, kk) = cum_mean_2;
+				MAT_ELEM(std_mean_Radial_3,1, kk) = cum_mean_3;
+				MAT_ELEM(std_mean_Radial_4,1, kk) = cum_mean_4;
+				MAT_ELEM(std_mean_Radial_5,1, kk) = cum_mean_5;
+
+
 				md.setValue(MDL_IDX, kk, objId);
-				md.setValue(MDL_VOLUME_SCORE1, (cum_mean_1/N), objId);
-				md.setValue(MDL_VOLUME_SCORE2, (cum_mean_2/N), objId);
-				md.setValue(MDL_VOLUME_SCORE3, (cum_mean_3/N), objId);
-				md.setValue(MDL_VOLUME_SCORE4, (cum_mean_4/N), objId);
-				md.setValue(MDL_AVG, (cum_mean_5/N), objId);
+				md.setValue(MDL_VOLUME_SCORE1, cum_mean_1, objId);
+				md.setValue(MDL_VOLUME_SCORE2, cum_mean_2, objId);
+				md.setValue(MDL_VOLUME_SCORE3, cum_mean_3, objId);
+				md.setValue(MDL_VOLUME_SCORE4, cum_mean_4, objId);
+				md.setValue(MDL_AVG, cum_mean_5, objId);
+
+				MAT_ELEM(std_mean_Radial_1,0, kk) = sqrt(cum2_mean_1/(N) - cum_mean_1*cum_mean_1);
+				MAT_ELEM(std_mean_Radial_2,0, kk) = sqrt(cum2_mean_2/(N) - cum_mean_2*cum_mean_2);
+				MAT_ELEM(std_mean_Radial_3,0, kk) = sqrt(cum2_mean_3/(N) - cum_mean_3*cum_mean_3);
+				MAT_ELEM(std_mean_Radial_4,0, kk) = sqrt(cum2_mean_4/(N) - cum_mean_4*cum_mean_4);
+				MAT_ELEM(std_mean_Radial_5,0, kk) = sqrt(cum2_mean_5/(N) - cum_mean_5*cum_mean_5);
+
+				std::cout << "MAT_ELEM(std_mean_Radial_1,0, kk) = " << MAT_ELEM(std_mean_Radial_1,0, kk) << " " << MAT_ELEM(std_mean_Radial_2,0, kk) << " " << MAT_ELEM(std_mean_Radial_3,0, kk) << " " << MAT_ELEM(std_mean_Radial_4,0, kk) << " " << MAT_ELEM(std_mean_Radial_5,0, kk)<< std::endl;
+				std::cout << "MAT_ELEM(std_mean_Radial_1,1, kk) = " << MAT_ELEM(std_mean_Radial_1,1, kk) << " "  << MAT_ELEM(std_mean_Radial_2,1, kk) << " " << MAT_ELEM(std_mean_Radial_3,1, kk) << " " << MAT_ELEM(std_mean_Radial_4,1, kk) << " " << MAT_ELEM(std_mean_Radial_5,1, kk)<< std::endl;
+
+			}
+
+
+			double lastz;
+			FOR_ALL_ELEMENTS_IN_ARRAY3D(pMask)
+			{
+				 if (A3D_ELEM(pMask, k, i, j)>0)
+				{
+					lastz = -1;
+					u = sqrt(k*k + i*i + j*j);
+					if ((u<u_sup) && (u>=u_inf) && (MAT_ELEM(std_mean_Radial_1,1, kk)>0))
+					{
+						double z, aux;
+						aux = abs((A3D_ELEM(inputVol_1, k, i, j) - MAT_ELEM(std_mean_Radial_1,1, kk))/MAT_ELEM(std_mean_Radial_1,0, kk)) +  + 0.002;
+						if (aux > lastz)
+							lastz = aux;
+						aux = abs((A3D_ELEM(inputVol_2, k, i, j) - MAT_ELEM(std_mean_Radial_2,1, kk))/MAT_ELEM(std_mean_Radial_2,0, kk))  + 0.002;
+						if (aux > lastz)
+							lastz = aux;
+						aux = abs((A3D_ELEM(inputVol_3, k, i, j) - MAT_ELEM(std_mean_Radial_3,1, kk))/MAT_ELEM(std_mean_Radial_3,0, kk))  + 0.002;
+						if (aux > lastz)
+							lastz = aux;
+//						aux = abs((A3D_ELEM(inputVol_4, k, i, j) - MAT_ELEM(std_mean_Radial_4,1, kk))/MAT_ELEM(std_mean_Radial_4,0, kk));
+//						if (aux > lastz)
+//							lastz = aux;
+						aux = abs((A3D_ELEM(inputVol_5, k, i, j) - MAT_ELEM(std_mean_Radial_5,1, kk))/MAT_ELEM(std_mean_Radial_5,0, kk))  + 0.002;
+						if (aux > lastz)
+							lastz = aux;
+
+						if (lastz>5.0) //This line considers zscores higher than 5 as 5(saturated at 5sigma)
+							lastz = 5;
+
+						A3D_ELEM(zVolume, k, i, j) = lastz;
+					}
+				 }
 			}
 		}
+
+		Image<double> zVolumesave;
+		zVolumesave = zVolume;
+		zVolumesave.write(fnZscore);
+
+
 }
 
 void ProgResDir::radialAzimuthalResolution(Matrix2D<double> &resolutionMat,
