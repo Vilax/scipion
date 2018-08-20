@@ -77,13 +77,14 @@ public:
 
     /* Mogonogenid amplitud of a volume, given an input volume,
      * the monogenic amplitud is calculated and low pass filtered at frequency w1*/
-    void amplitudeMonogenicSignal3D_fast(const MultidimArray< std::complex<double> > &myfftV,
+    void amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<double> > &myfftV, MultidimArray< std::complex<double> > &myfftV_aux,
     		double w1, double w1l, double wH, MultidimArray<double> &amplitude,
     		int count, int dir, FileName fnDebug,
     		double rot, double tilt);
 
-    void defineCone(MultidimArray< std::complex<double> > &myfftV,
-    		MultidimArray< std::complex<double> > &conefilter, double rot, double tilt);
+    void defineCone(MultidimArray< std::complex<double> > &myfftV, MultidimArray< std::complex<double> > &myfftV_aux,
+			MultidimArray< std::complex<double> > &conefilter, MultidimArray< std::complex<double> > &conefilter_aux,
+			double rot, double tilt);
 
     void diagSymMatrix3x3(Matrix2D<double> A,
 			Matrix1D<double> &eigenvalues, Matrix2D<double> &P);
@@ -92,7 +93,7 @@ public:
 			double &resolution, double &last_resolution,
 			int &last_fourier_idx,
 			double &freq, double &freqL, double &freqH,
-			bool &continueIter, bool &breakIter, bool &doNextIteration);
+			bool &continueIter, bool &breakIter);
 
     double firstMonoResEstimation(MultidimArray< std::complex<double> > &myfftV,
     		double w1, double w1l, MultidimArray<double> &amplitude);
@@ -129,12 +130,12 @@ public:
 public:
     Image<int> mask;
     MultidimArray<double> iu, VRiesz; // Inverse of the frequency
-	MultidimArray< std::complex<double> > fftV, conefilter; // Fourier transform of the input volume
+	MultidimArray< std::complex<double> > fftV, conefilter, conefilter_aux; // Fourier transform of the input volume
 	FourierTransformer transformer_inv;
 	MultidimArray< std::complex<double> > fftVRiesz, fftVRiesz_aux;
 	int N_smoothing;
 	Matrix2D<double> angles, resolutionMatrix, maskMatrix, trigProducts;
-	Matrix1D<double> freq_fourier;
+	Matrix1D<double> freq_fourier, monoResMatrix;;
 
 };
 //@}

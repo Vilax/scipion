@@ -113,7 +113,6 @@ void ProgResDir::produceSideInfo()
 	VRiesz.resizeNoCopy(inputVol);
 	N_freq = ZSIZE(inputVol);
 	maxRes = ZSIZE(inputVol);
-	minRes = 2*sampling;
 
 	transformer_inv.setThreadsNumber(Nthr);
 
@@ -190,10 +189,33 @@ void ProgResDir::produceSideInfo()
 	size_t xrows = angles.mdimx;
 
 	resolutionMatrix.initConstant(xrows, NVoxelsOriginalMask, maxRes);
+	maskMatrix.initConstant(xrows, NVoxelsOriginalMask, 1);
 
 
-	std::cout << MAT_ELEM(resolutionMatrix, 1, 2) << std::endl;
+	monoResMatrix.initZeros(NVoxelsOriginalMask);
 
+
+	Image<double> mono;
+	mono.read(fnMonoRes);
+	MultidimArray<double> &pResolutionVol = mono();
+
+	int maskPos = 0;
+	double lastres = 1e38;
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pResolutionVol)
+	{
+		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
+		{
+			double res;
+			res = DIRECT_MULTIDIM_ELEM(pResolutionVol, n);
+			if ((res>0) && (res<lastres))
+				lastres = res;
+			VEC_ELEM(monoResMatrix, maskPos) = DIRECT_MULTIDIM_ELEM(pResolutionVol, n);
+			std::cout << VEC_ELEM(monoResMatrix, maskPos) << std::endl;
+			++maskPos;
+		}
+	}
+
+	minRes = lastres;
 
 
 	#ifdef DEBUG_MASK
@@ -208,7 +230,7 @@ void ProgResDir::produceSideInfo()
 	freq_fourier.initZeros(ZSIZE(inputVol));
 	int size = ZSIZE(inputVol);
 	maxRes = size;
-	minRes = 1;
+
 	V.clear();
 
 
@@ -384,68 +406,17 @@ void ProgResDir::generateGridProjectionMatching(FileName fnVol_, double smprt,
 //	saveImg2.clear();
 
 
-void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::complex<double> > &myfftV,
+void ProgResDir::amplitudeMonogenicSignal3D_fast(MultidimArray< std::complex<double> > &conefilter, MultidimArray< std::complex<double> > &conefilter_aux,
 		double freq, double freqH, double freqL, MultidimArray<double> &amplitude, int count, int dir, FileName fnDebug,
 		double rot, double tilt)
 {
-	fftVRiesz.initZeros(myfftV);
-//	MultidimArray<double> coneVol;
-//	coneVol.initZeros(myfftV);
-	fftVRiesz_aux.initZeros(myfftV);
-	std::complex<double> J(0,1);
-
-	// Filter the input volume and add it to amplitude
-	long n=0;
-	double ideltal=PI/(freq-freqH);
-
-	for(size_t k=0; k<ZSIZE(myfftV); ++k)
-	{
-		for(size_t i=0; i<YSIZE(myfftV); ++i)
-		{
-			for(size_t j=0; j<XSIZE(myfftV); ++j)
-			{
-				double iun=DIRECT_MULTIDIM_ELEM(iu,n);
-//				double iun = *ptriun;
-				double un=1.0/iun;
-				if (freqH<=un && un<=freq)
-				{
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-//					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= DIRECT_MULTIDIM_ELEM(conefilter, n);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-freq)*ideltal));//H;
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
-//					DIRECT_MULTIDIM_ELEM(coneVol, n) = DIRECT_MULTIDIM_ELEM(conefilter, n);
-				} else if (un>freq)
-				{
-					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(myfftV, n);
-//					DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= DIRECT_MULTIDIM_ELEM(conefilter, n);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
-					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
-//					DIRECT_MULTIDIM_ELEM(coneVol, n) = DIRECT_MULTIDIM_ELEM(conefilter, n);
-				}
-				++n;
-			}
-		}
-	}
+	transformer_inv.inverseFourierTransform(conefilter, amplitude);
 
 //	#ifdef DEBUG_DIR
-////	if ( (count == 0) )
-////	{
-//		Image<double> direction;
-//		direction = coneVol;
-//		direction.write(formatString("cone_%i_%i.vol", dir+1, count));
-////	}
-//	#endif
-
-	transformer_inv.inverseFourierTransform(fftVRiesz, amplitude);
-
-	#ifdef DEBUG_DIR
 		Image<double> filteredvolume;
-		filteredvolume = VRiesz;
+		filteredvolume = amplitude;
 		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir+1,count));
-	#endif
+//	#endif
 
 
 //	amplitude.resizeNoCopy(VRiesz);
@@ -458,52 +429,70 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 
 	// Calculate first component of Riesz vector
 	double ux;
-	n=0;
-	for(size_t k=0; k<ZSIZE(myfftV); ++k)
+	long n=0;
+	for(size_t k=0; k<ZSIZE(conefilter); ++k)
 	{
-		for(size_t i=0; i<YSIZE(myfftV); ++i)
+		for(size_t i=0; i<YSIZE(conefilter); ++i)
 		{
-			for(size_t j=0; j<XSIZE(myfftV); ++j)
+			for(size_t j=0; j<XSIZE(conefilter); ++j)
 			{
 				ux = VEC_ELEM(freq_fourier,j);
-				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = ux*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+				DIRECT_MULTIDIM_ELEM(conefilter, n) = ux*DIRECT_MULTIDIM_ELEM(conefilter_aux, n);
 				++n;
 			}
 		}
 	}
 
-	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
+	transformer_inv.inverseFourierTransform(conefilter, VRiesz);
 
+//	amplitude.initZeros(amplitude);
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 	{
 		DIRECT_MULTIDIM_ELEM(amplitude,n)+=DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 	}
 
+	Image<double> saveImg2;
+//	saveImg2 = amplitude;
+//	if (fnDebug.c_str() != "")
+//	{
+//		FileName iternumber = formatString("amplitudeX_%i_%i.vol", dir+1, count);
+//		saveImg2.write(fnDebug+iternumber);
+//	}
+//	saveImg2.clear();
+
 	// Calculate second and third component of Riesz vector
 	n=0;
 	double uy, uz;
-	for(size_t k=0; k<ZSIZE(myfftV); ++k)
+	for(size_t k=0; k<ZSIZE(conefilter_aux); ++k)
 	{
 		uz = VEC_ELEM(freq_fourier,k);
-		for(size_t i=0; i<YSIZE(myfftV); ++i)
+		for(size_t i=0; i<YSIZE(conefilter_aux); ++i)
 		{
 			uy = VEC_ELEM(freq_fourier,i);
-			for(size_t j=0; j<XSIZE(myfftV); ++j)
+			for(size_t j=0; j<XSIZE(conefilter_aux); ++j)
 			{
-				DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = uz*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
-				DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = uy*DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n);
+				DIRECT_MULTIDIM_ELEM(conefilter, n) = uz*DIRECT_MULTIDIM_ELEM(conefilter_aux, n);
+				DIRECT_MULTIDIM_ELEM(conefilter_aux, n) = uy*DIRECT_MULTIDIM_ELEM(conefilter_aux, n);
 				++n;
 			}
 		}
 	}
-	transformer_inv.inverseFourierTransform(fftVRiesz, VRiesz);
-
+	transformer_inv.inverseFourierTransform(conefilter, VRiesz);
+//	amplitude.initZeros(amplitude);
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitude)
 	{
 		DIRECT_MULTIDIM_ELEM(amplitude,n) += DIRECT_MULTIDIM_ELEM(VRiesz,n)*DIRECT_MULTIDIM_ELEM(VRiesz,n);
 	}
 
-	transformer_inv.inverseFourierTransform(fftVRiesz_aux, VRiesz);
+//	saveImg2 = amplitude;
+//		if (fnDebug.c_str() != "")
+//		{
+//			FileName iternumber = formatString("amplitudeZ_%i_%i.vol", dir+1, count);
+//			saveImg2.write(fnDebug+iternumber);
+//		}
+//		saveImg2.clear();
+
+	transformer_inv.inverseFourierTransform(conefilter_aux, VRiesz);
 
 
 //	amplitude.setXmippOrigin();
@@ -538,8 +527,8 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 
 	//TODO: change (k - z_size*0.5)
 
-		#ifdef MONO_AMPLITUDE
-		Image<double> saveImg2;
+//		#ifdef MONO_AMPLITUDE
+//		Image<double> saveImg2;
 		saveImg2 = amplitude;
 		if (fnDebug.c_str() != "")
 		{
@@ -547,15 +536,15 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 			saveImg2.write(fnDebug+iternumber);
 		}
 		saveImg2.clear();
-		#endif
+//		#endif
 
 
-	transformer_inv.FourierTransform(amplitude, fftVRiesz, false);
+	transformer_inv.FourierTransform(amplitude, conefilter, false);
 
 	double raised_w = PI/(freqL-freq);
 
 	n=0;
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fftVRiesz)
+	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(conefilter)
 	{
 		double un=1.0/DIRECT_MULTIDIM_ELEM(iu,n);
 //		size_t j=n%XSIZE(fftVRiesz);
@@ -565,36 +554,41 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 //		std::cout << "un = " << un << "  freqL = " << freqL << " freq = " << freq << std::endl;
 		if ((freqL)>=un && un>=freq)
 		{
-			DIRECT_MULTIDIM_ELEM(fftVRiesz,n) *= 0.5*(1 + cos(raised_w*(un-freq)));
+			DIRECT_MULTIDIM_ELEM(conefilter,n) *= 0.5*(1 + cos(raised_w*(un-freq)));
 		}
 		else
 		{
 			if (un>freqL)
 			{
-				DIRECT_MULTIDIM_ELEM(fftVRiesz,n) = 0;
+				DIRECT_MULTIDIM_ELEM(conefilter,n) = 0;
 			}
 		}
 	}
 
 	transformer_inv.inverseFourierTransform();
 
-	#ifdef MONO_AMPLITUDE
+//	#ifdef MONO_AMPLITUDE
 
 //	if (fnDebug.c_str() != "")
 //	{
-		saveImg2 = amplitude;
+//	Image<double> saveImg2;
+
+	saveImg2 = amplitude;
 		FileName iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir+1, count);
 		saveImg2.write(fnDebug+iternumber);
 //	}
-	#endif // DEBUG
+//	#endif // DEBUG
 }
 
 
-void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
-		MultidimArray< std::complex<double> > &conefilter, double rot, double tilt)
+void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV, MultidimArray< std::complex<double> > &myfftV_aux,
+							MultidimArray< std::complex<double> > &conefilter, MultidimArray< std::complex<double> > &conefilter_aux,
+							double rot, double tilt)
 {
 //	conefilter.initZeros(myfftV);
 	conefilter = myfftV;
+	conefilter_aux = myfftV_aux;
+
 	// Filter the input volume and add it to amplitude
 
 //	MultidimArray<double> conetest;
@@ -610,7 +604,6 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 	y_dir = sin(tilt*PI/180)*sin(rot*PI/180);
 	z_dir = cos(tilt*PI/180);
 
-//	double ang_con = 10*PI/180;
 	double ang_con = 15*PI/180;
 
 	double uz, uy, ux;
@@ -637,6 +630,7 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 				if (acosine>ang_con)
 				{
 					DIRECT_MULTIDIM_ELEM(conefilter, n) = 0;
+					DIRECT_MULTIDIM_ELEM(conefilter_aux, n) = 0;
 //					DIRECT_MULTIDIM_ELEM(conetest, n) = 0;
 				}
 /*
@@ -673,32 +667,40 @@ void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 								double &resolution, double &last_resolution,
 								int &last_fourier_idx,
 								double &freq, double &freqL, double &freqH,
-								bool &continueIter, bool &breakIter, bool &doNextIteration)
+								bool &continueIter, bool &breakIter)
 {
 	int volsize = ZSIZE(VRiesz);
 
+	freq = sampling/resolution;
+	DIGFREQ2FFT_IDX(freq, volsize, fourier_idx);
 	FFT_IDX2DIGFREQ(fourier_idx, volsize, freq);
-
 	resolution = sampling/freq;
-//	std::cout << "res = " << resolution << std::endl;
-//	std::cout << "min_step = " << min_step << std::endl;
+
+
+	//	std::cout << "res = " << resolution << std::endl;
+	//	std::cout << "min_step = " << min_step << std::endl;
 
 	if ( fabs(resolution - last_resolution)<min_step )
 	{
-		freq = sampling/(last_resolution-min_step);
+		freq = sampling/(last_resolution+min_step);
 		DIGFREQ2FFT_IDX(freq, volsize, fourier_idx);
 		FFT_IDX2DIGFREQ(fourier_idx, volsize, freq);
 
-		if (fourier_idx == last_fourier_idx)
-		{
-			continueIter = true;
-			++fourier_idx;
-			return;
-		}
+	}
+	else
+	{
+		freq = sampling/(resolution);
+		last_resolution = resolution;
+		DIGFREQ2FFT_IDX(freq, volsize, fourier_idx);
+
 	}
 
+	if (fourier_idx == last_fourier_idx)
+	{
+		continueIter = true;
+		return;
+	}
 	resolution = sampling/freq;
-	last_resolution = resolution;
 
 	double step = 0.05*resolution;
 
@@ -740,23 +742,22 @@ void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 //	std::cout << "freq_H = " << freqH << std::endl;
 //	std::cout << "freq_L = " << freqL << std::endl;
 
-	if (freq>0.49 || freq<0)
+	if (freq<0)
 	{
-		std::cout << "Nyquist limit reached" << std::endl;
 		breakIter = true;
-		doNextIteration = false;
 		return;
 	}
 	else
 	{
 		breakIter = false;
-		doNextIteration = true;
 	}
 //	std::cout << "resolution = " << resolution << "  resolutionL = " <<
 //				sampling/(freqL) << "  resolutionH = " << sampling/freqH
 //				<< "  las_res = " << last_resolution << std::endl;
 	last_fourier_idx = fourier_idx;
-	++fourier_idx;
+
+	std::cout << "reoslution = " << resolution  << "continueIter = " << continueIter << "breakIter = " << breakIter<< std::endl;
+
 }
 
 
@@ -1613,35 +1614,22 @@ double ProgResDir::firstMonoResEstimation(MultidimArray< std::complex<double> > 
 
 void ProgResDir::run()
 {
-
-
 	produceSideInfo();
-//	if (checkellipsoids == false)
-//	{
-	bool continueIter = false, breakIter = false;
+
 	double criticalZ=icdf_gauss(significance);
-
-	double range = maxRes-minRes;
-	double step = range/N_freq;
-
-	step = res_step;
 
 	std::cout << "Analyzing directions " << std::endl;
 	std::cout << "maxRes = " << maxRes << std::endl;
 	std::cout << "minRes = " << minRes << std::endl;
 	std::cout << "N_freq = " << N_freq << std::endl;
-	std::cout << "step = " << step << std::endl;
+	std::cout << "step = " << res_step << std::endl;
 	std::cout << "criticalZ = " << criticalZ << std::endl;
 
-
-	double w, wH;
 	int volsize = ZSIZE(VRiesz);
-//	FFT_IDX2DIGFREQ(10, volsize, w);
-//	FFT_IDX2DIGFREQ(11, volsize, wH); //Frequency chosen for a first estimation
 
 	//Checking with MonoRes at 50A;
 	int aux_idx;
-	double aux_freq;
+	double aux_freq, w, wH;;
 
 	aux_freq = sampling/30;
 
@@ -1658,7 +1646,6 @@ void ProgResDir::run()
 		FFT_IDX2DIGFREQ(4, volsize, w);
 		aux_idx = 3;
 	}
-	std::cout << "fourier idx = " << aux_idx << std::endl;
 	std::cout << "Calling MonoRes core as a first estimation at " << sampling/w << "A." << std::endl;
 
 	MultidimArray<double> amplitudeMS;
@@ -1672,74 +1659,119 @@ void ProgResDir::run()
 	double cone_angle = 45.0; //(degrees)
 	cone_angle = PI*cone_angle/180;
 
+	Matrix1D<int> computeDirection;
+	computeDirection.initZeros(N_directions);
+
+
 	trigProducts.initZeros(3, N_directions);
 
+
+
+	double nyquist, resolution_2;
+	nyquist = 2*sampling;
+
+	double res_limit = 18;
+
+	bool continueIter = false, breakIter = false;
+
 	Image<double> outputResolution;
+	FileName fnDebug;
+	std::vector<double> list;
+	int iter = 0;
 
-	for (size_t dir=0; dir<N_directions; dir++)
+	for (double res = minRes; res<res_limit; res = res + res_step)
 	{
-		outputResolution().initZeros(VRiesz);
-//		MultidimArray<double> &pOutputResolution = outputResolution();
-		double freq, freqL, freqH, counter, resolution_2;
-		MultidimArray<int> mask_aux = mask();
-		MultidimArray<int> &pMask = mask_aux;
-		std::vector<double> list;
-		double resolution;  //A huge value for achieving last_resolution < resolution
+		double freq, freqL, freqH, resolution, last_resolution;
+		int fourier_idx,  last_fourier_idx;
+		resolution = res;
+		resolution2eval_(fourier_idx, res_step,
+						resolution, last_resolution, last_fourier_idx,
+						freq, freqL, freqH,
+						continueIter, breakIter);
 
-		double max_meanS = -1e38;
-		double cut_value = 0.025;
+		if (breakIter) //This happen when freq<0 //This shouldn't happen
+			break;
 
-		bool doNextIteration=true;
+		if (continueIter) //This happens if next freq is equal to the previous one
+			continue;
 
-		int fourier_idx, last_fourier_idx = -1, iter = 0, fourier_idx_2;
-		fourier_idx = aux_idx;
-		int count_res = 0;
-		double rot = MAT_ELEM(angles, 0, dir);
-		double tilt = MAT_ELEM(angles, 1, dir);
-		MAT_ELEM(trigProducts, 0, dir) = sin(tilt*PI/180)*cos(rot*PI/180);
-		MAT_ELEM(trigProducts, 1, dir) = sin(tilt*PI/180)*sin(rot*PI/180);
-		MAT_ELEM(trigProducts, 2, dir) = cos(tilt*PI/180);
-		std::cout << "--------------NEW DIRECTION--------------" << std::endl;
-		std::cout << "direction = " << dir+1 << "   rot = " << rot << "   tilt = " << tilt << std::endl;
+		std::cout << "resolution = " << resolution << "  resolutionL = " << sampling/freqL << "  resolutionH = " << sampling/freqH << "freq = " << freq << "  freqL = " << freqL << "  freqH = " << freqH << " iter = " << iter << " idxFourier = " << fourier_idx <<  std::endl;
 
+		list.push_back(resolution);
+
+		if (iter<2)
+			resolution_2 = list[0];
+		else
+			resolution_2 = list[iter - 2];
+
+
+		//High Pass Filter
+		fftVRiesz.initZeros(fftV);
+		fftVRiesz_aux.initZeros(fftV);
+		std::complex<double> J(0,1);
+
+		// Filter the input volume and add it to amplitude
+		long n=0;
+		double ideltal=PI/(freq-freqH);
+
+		for(size_t k=0; k<ZSIZE(fftV); ++k)
+		{
+			for(size_t i=0; i<YSIZE(fftV); ++i)
+			{
+				for(size_t j=0; j<XSIZE(fftV); ++j)
+				{
+					double iun=DIRECT_MULTIDIM_ELEM(iu,n);
+					double un=1.0/iun;
+					if (freqH<=un && un<=freq)
+					{
+						DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(fftV, n);
+						DIRECT_MULTIDIM_ELEM(fftVRiesz, n) *= 0.5*(1+cos((un-freq)*ideltal));
+						DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
+						DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
+						DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
+					} else if (un>freq)
+					{
+						DIRECT_MULTIDIM_ELEM(fftVRiesz, n) = DIRECT_MULTIDIM_ELEM(fftV, n);
+						DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
+						DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
+						DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
+					}
+					++n;
+				}
+			}
+		}
 
 		std::vector<double> noiseValues;
-		FileName fnDebug;
-		double last_resolution = 0;
 
-		defineCone(fftV, conefilter, rot, tilt);
-		maskMatrix.initConstant(1, NVoxelsOriginalMask, 1);
-		do
+		for (size_t dir=0; dir<N_directions; dir++)
 		{
-			continueIter = false;
-			breakIter = false;
-			//std::cout << "--------------Frequency--------------" << std::endl;
-
-			resolution2eval_(fourier_idx, step,
-							resolution, last_resolution, last_fourier_idx,
-							freq, freqL, freqH,
-							continueIter, breakIter, doNextIteration);
-
-			if (breakIter)
-				break;
-
-			if (continueIter)
+			if (VEC_ELEM(computeDirection, dir) > 0)
 				continue;
 
-			std::cout << "resolution = " << resolution << "  resolutionL = " << sampling/freqL << "  resolutionH = " << sampling/freqH << " iter = " << iter << std::endl;
-//			std::cout << "resolution = " << freq 	   << "  resolutionL = " << freqL 		   << "  resolutionH = " << freqH << std::endl;
+			outputResolution().initZeros(VRiesz);
+			MultidimArray<int> mask_aux = mask();
+			MultidimArray<int> &pMask = mask_aux;
+
+			double last_resolution = 0;
 
 
-			list.push_back(resolution);
 
-			if (iter<2)
-				resolution_2 = list[0];
-			else
-				resolution_2 = list[iter - 2];
+			double rot = MAT_ELEM(angles, 0, dir);
+			double tilt = MAT_ELEM(angles, 1, dir);
+			MAT_ELEM(trigProducts, 0, dir) = sin(tilt*PI/180)*cos(rot*PI/180);
+			MAT_ELEM(trigProducts, 1, dir) = sin(tilt*PI/180)*sin(rot*PI/180);
+			MAT_ELEM(trigProducts, 2, dir) = cos(tilt*PI/180);
+
+
+			defineCone(fftVRiesz, fftVRiesz_aux, conefilter, conefilter_aux, rot, tilt);
+
+
+			double max_meanS = -1e38;
+			double cut_value = 0.025;
 
 			fnDebug = "Signal";
 
-			amplitudeMonogenicSignal3D_fast(conefilter, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, rot, tilt);
+			amplitudeMonogenicSignal3D_fast(conefilter, conefilter_aux, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, rot, tilt);
 			//amplitudeMonogenicSignal3D_fast(fftV, freq, freqH, freqL, amplitudeMS, iter, dir, fnDebug, rot, tilt);
 
 			double sumS=0, sumS2=0, sumN=0, sumN2=0, NN = 0, NS = 0;
@@ -1805,23 +1837,10 @@ void ProgResDir::run()
 				}
 			}
 
-//			#ifdef DEBUG_DIR
-//				if (iter == 0)
-//				{
-//				Image<double> img;
-//
-//				FileName iternumber;
-//				iternumber = formatString("cone_noise_%i_%i.vol", dir, iter);
-//				img = coneVol;
-//				img.write(iternumber);
-//				}
-//			#endif
-
-//				std::cout << "NS = " << NS << std::endl;
 			if ( (NS/(double) NVoxelsOriginalMask)<cut_value ) //when the 2.5% is reached then the iterative process stops
 			{
 				std::cout << "Search of resolutions stopped due to mask has been completed" << std::endl;
-				doNextIteration =false;
+				VEC_ELEM(computeDirection, dir) = 1;
 				Nvoxels = 0;
 //				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
 //				{
@@ -1856,7 +1875,8 @@ void ProgResDir::run()
 					//std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
 					std::cout << "Search of resolutions stopped due to too low signal" << std::endl;
 					std::cout << "\n"<< std::endl;
-					doNextIteration = false;
+
+					VEC_ELEM(computeDirection, dir) = 1;
 				}
 				else
 				{
@@ -1879,23 +1899,25 @@ void ProgResDir::run()
 					{
 						if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 						{
-							if (MAT_ELEM(maskMatrix, 0, maskPos) >=1)
+							if ((MAT_ELEM(maskMatrix, dir, maskPos) >=1) && ( (VEC_ELEM(monoResMatrix, maskPos)-0.1)<resolution ) )
 							{
 								if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)>thresholdNoise)
 								{
 	//								DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution;//sampling/freq;
 									MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution;
-									MAT_ELEM(maskMatrix, 0, maskPos) = 1;
+									MAT_ELEM(maskMatrix, dir, maskPos) += 1;
+									if (MAT_ELEM(maskMatrix, dir, maskPos) >2)
+									{
+										MAT_ELEM(maskMatrix, dir, maskPos) = 0;
+										MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution_2;
+									}
+									else
+										MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution;
+
 								}
 								else
 								{
-									MAT_ELEM(maskMatrix, 0, maskPos) += 1;
-									if (MAT_ELEM(maskMatrix, 0, maskPos) >2)
-									{
-										MAT_ELEM(maskMatrix, 0, maskPos) = 0;
-										MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution_2;
-	//									DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution_2; //resolution + counter*step;
-									}
+									MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution;
 								}
 							}
 							++maskPos;
@@ -1908,34 +1930,42 @@ void ProgResDir::run()
 //						std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
 					//#endif
 
-					if (doNextIteration)
-						if (resolution <= (minRes-0.001))
-							doNextIteration = false;
 					}
 			}
-			++iter;
-			last_resolution = resolution;
-		}while(doNextIteration);
+		}
+		++iter;
+	}
+//	amplitudeMS.clear();
+//	fftVRiesz.clear();
 
-//		amplitudeMS.clear();
-//		fftVRiesz.clear();
 
 		size_t maskPos=0;
 		Image<double> ResolutionVol;
 		MultidimArray<double> &pResolutionVol = ResolutionVol();
 
-		pResolutionVol.initZeros(amplitudeMS);
-		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pResolutionVol)
+
+		for (size_t dir=0; dir<N_directions; dir++)
 		{
-			if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
+			pResolutionVol.initZeros(amplitudeMS);
+			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pResolutionVol)
 			{
-				double myres = MAT_ELEM(resolutionMatrix, dir, maskPos);
-				DIRECT_MULTIDIM_ELEM(pResolutionVol, n) = myres;
-//				if (n == 14621798)
-//					std::cout << maskPos << std::endl;
-				++maskPos;
+				if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
+				{
+					double myres = MAT_ELEM(resolutionMatrix, dir, maskPos);
+					DIRECT_MULTIDIM_ELEM(pResolutionVol, n) = myres;
+	//				if (n == 14621798)
+	//					std::cout << maskPos << std::endl;
+					++maskPos;
+				}
 			}
+			Image<double> saveImg;
+			saveImg = pResolutionVol;
+			FileName fnres = formatString("resolution_dir_%i.vol", dir+1);
+			saveImg.write(fnres);
+			saveImg.clear();
 		}
+
+
 		//#endif
 //		#ifdef DEBUG_DIR
 //		Image<double> saveImg;
@@ -1948,237 +1978,189 @@ void ProgResDir::run()
 		list.clear();
 
 		std::cout << "----------------direction-finished----------------" << std::endl;
+
+
+
+
 	}
 
-	////////////////////////////////////////////
 
-	int maskPos = 0;
 
-	////////////////////////////////////////////
-/*
-	Image<double> saveImg;
-	saveImg.read("resolution_dir_1.vol");
-	int count_n = 0;
-	int indi = 0;
-	double myres;
 
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(saveImg())
-	{
-		size_t j=n%XSIZE(saveImg());
-		size_t ki=n/XSIZE(saveImg());
-		size_t i=ki%YSIZE(saveImg());
-		size_t k=ki/YSIZE(saveImg());
-
-		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
-		{
-			myres = MAT_ELEM(resolutionMatrix, 0, maskPos);
-			++maskPos;
-		}
-		if(DIRECT_MULTIDIM_ELEM(saveImg(),n)>0)
-			std::cout << "res=" << myres << " res=" << DIRECT_MULTIDIM_ELEM(saveImg(),n) << " maskPos= "<< maskPos-1 << " n=" << count_n << "  k=" << k << "  i=" << i << "  j=" << j << std::endl;
-		count_n++;
-	}
-*/
-
-//	}
-//	else
+//
+//
+//
+//
+//	int maskPos = 0;
+//
+//
+//	//Remove outliers
+//	removeOutliers(trigProducts, resolutionMatrix);
+//	//Second step of cleaning
+//	removeOutliers(trigProducts, resolutionMatrix);
+////	removeOutliers(angles, resolutionMatrix);
+//
+//	//Ellipsoid fitting
+//	Matrix2D<double> axis;
+//	ellipsoidFitting(trigProducts, resolutionMatrix, axis);
+////	ellipsoidFitting(angles, resolutionMatrix, axis);
+////	}
+//
+//	Image<double> doaVol;
+//	MultidimArray<double> &pdoaVol = doaVol();
+//
+//	pdoaVol.initZeros(NSIZE(mask()),ZSIZE(mask()), YSIZE(mask()), XSIZE(mask()));
+//
+//
+//
+//	int idx = 0;
+////	std::cout << "antes del for = " << MAT_ELEM(axis, 0, 0) << std::endl;
+//	std::cout << "NVoxelsOriginalMask = " << NVoxelsOriginalMask << std::endl;
+//
+//
+//	double niquist;
+//
+//	niquist = 2*sampling;
+//	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pdoaVol)
 //	{
-//		std::cout << "antes del for" << std::endl;
-//		N_directions=angles.mdimx;
-//		trigProducts.initZeros(3, N_directions);
-//		for (size_t dir=0; dir<N_directions; dir++)
+//		if (DIRECT_MULTIDIM_ELEM(mask(), n) >0 ) //before ==1
 //		{
-////			std::cout << "dir = " << dir + 1 << std::endl;
-//			double rot = MAT_ELEM(angles, 0, dir);
-//			double tilt = MAT_ELEM(angles, 1, dir);
-//			MAT_ELEM(trigProducts, 0, dir) = sin(tilt*PI/180)*cos(rot*PI/180);
-//			MAT_ELEM(trigProducts, 1, dir) = sin(tilt*PI/180)*sin(rot*PI/180);
-//			MAT_ELEM(trigProducts, 2, dir) = cos(tilt*PI/180);
-//			Image<double> img;
-//			FileName fnres = formatString("resolution_dir_%i.vol", dir+1);
-//			img.read(fnres);
-//			img().setXmippOrigin();
 //
-//			int maskPos = 0;
-//
-//			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img())
-//			{
-//				if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
-//				{
-//
-//					MAT_ELEM(resolutionMatrix, dir, maskPos) = DIRECT_MULTIDIM_ELEM(img(), n);
-//					++maskPos;
-//				}
-//			}
+//			double a = MAT_ELEM(axis, 0, idx);
+//			double c = MAT_ELEM(axis, 2, idx);
+////			if (idx<100)
+////				std::cout << c << " " << a << ";" << std::endl;
+//			DIRECT_MULTIDIM_ELEM(pdoaVol, n) = (c)/(a);
+//			++idx;
 //		}
-
-	//Remove outliers
-	removeOutliers(trigProducts, resolutionMatrix);
-	//Second step of cleaning
-	removeOutliers(trigProducts, resolutionMatrix);
-//	removeOutliers(angles, resolutionMatrix);
-
-	//Ellipsoid fitting
-	Matrix2D<double> axis;
-	ellipsoidFitting(trigProducts, resolutionMatrix, axis);
-//	ellipsoidFitting(angles, resolutionMatrix, axis);
 //	}
-
-	Image<double> doaVol;
-	MultidimArray<double> &pdoaVol = doaVol();
-
-	pdoaVol.initZeros(NSIZE(mask()),ZSIZE(mask()), YSIZE(mask()), XSIZE(mask()));
-
-
-
-	int idx = 0;
-//	std::cout << "antes del for = " << MAT_ELEM(axis, 0, 0) << std::endl;
-	std::cout << "NVoxelsOriginalMask = " << NVoxelsOriginalMask << std::endl;
-
-
-	double niquist;
-
-	niquist = 2*sampling;
-	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pdoaVol)
-	{
-		if (DIRECT_MULTIDIM_ELEM(mask(), n) >0 ) //before ==1
-		{
-
-			double a = MAT_ELEM(axis, 0, idx);
-			double c = MAT_ELEM(axis, 2, idx);
-//			if (idx<100)
-//				std::cout << c << " " << a << ";" << std::endl;
-			DIRECT_MULTIDIM_ELEM(pdoaVol, n) = (c)/(a);
-			++idx;
-		}
-	}
-
-
-
-	Image<double> imgdoa;
-	imgdoa = pdoaVol;
-	imgdoa.write(fnDoA);
-
-	MultidimArray<double> radial, azimuthal, meanResolution, lowestResolution, highestResolution;
-	MetaData prefDir;
-
-	double radialThr, azimuthalThr;
-	radialAzimuthalResolution(resolutionMatrix, mask(), radial, azimuthal, meanResolution,
-			lowestResolution, highestResolution, radialThr, azimuthalThr, prefDir);
-
-
-	imgdoa = radial;
-	imgdoa.write(fnradial);
-	imgdoa = azimuthal;
-	imgdoa.write(fnazimuthal);
-	imgdoa = lowestResolution;
-	imgdoa.write(fnLowestResolution);
-	imgdoa = highestResolution;
-	imgdoa.write(fnHighestResolution);
-
-	MetaData mdRadialAzimuthalThr;
-	size_t objIdx;
-	objIdx = mdRadialAzimuthalThr.addObject();
-	mdRadialAzimuthalThr.setValue(MDL_RESOLUTION_FREQ, radialThr, objIdx);
-	mdRadialAzimuthalThr.setValue(MDL_RESOLUTION_FREQ2, azimuthalThr, objIdx);
-
-	mdRadialAzimuthalThr.write(fnMDThr);
-
-	std::cout << "radial = " << radialThr << "  azimuthal = " << azimuthalThr << std::endl;
-	std::cout << "Calculating the radial and azimuthal resolution " << std::endl;
-
-
-	MetaData mdRadial, mdAvg, mdHighest, mdLowest;
-
-	Image<double> monores;
-	monores.read(fnMonoRes);
-	MultidimArray<double> monoresVol;
-	monoresVol = monores();
-	radialAverageInMask(mask(), radial, azimuthal, highestResolution, lowestResolution, monoresVol, mdAvg);
-
-	mdAvg.write(fnMDazimuthal);
-
-
-///////////////////////
-
-	double lambda_1, lambda_2, lambda_3, doa;
-	double direction_x, direction_y, direction_z;
-	int counter = 0;
-	Matrix2D<double> eigenvectors;
-	Matrix1D<double> eigenvalues, r0_1(3), rF_1(3), r0_2(3), rF_2(3), r0_3(3), rF_3(3), r(3);
-	MultidimArray<int> arrows;
-	arrows.initZeros(mask());
-	const int gridStep=10;
-	size_t n=0;
-	maskPos=0;
-///////////////////////
-
-	idx = 0;
-	int siz;
-	siz = XSIZE(arrows);
-	double xcoor, ycoor, zcoor, rad, rot, tilt;
-	MetaData md, mdAniRes;
-	size_t objId, objIdAniRes;
-	FileName fn_md, fn_AniRes;
-
-	imgdoa.read(fnDoA);
-	monores().setXmippOrigin();
-
-	FOR_ALL_ELEMENTS_IN_ARRAY3D(arrows)
-	{
-		if (A3D_ELEM(mask(),k,i,j) > 0 ) //before ==1
-		{
-			double doa = A3D_ELEM(imgdoa(),k,i,j);
-			double res = A3D_ELEM(monores(),k,i,j);
-
-			objIdAniRes = mdAniRes.addObject();
-			mdAniRes.setValue(MDL_COST, doa, objIdAniRes);
-			mdAniRes.setValue(MDL_RESOLUTION_SSNR, res, objIdAniRes);
-
-
-
-			//lambda_3 is assumed as the least eigenvalue
-			if ( (i%gridStep==0) && (j%gridStep==0) && (k%gridStep==0) )
-			{
-				double lambda_1 = MAT_ELEM(axis, 0, idx);
-				double lambda_3 = MAT_ELEM(axis, 2, idx);
-
-				xcoor = MAT_ELEM(axis, 3, idx);
-				ycoor = MAT_ELEM(axis, 4, idx);
-				zcoor = MAT_ELEM(axis, 5, idx);
-
-				rot = atan2(ycoor, xcoor)*180/PI;
-				tilt = acos(zcoor)*180/PI;
-
-
-//					rotation3DMatrix(double ang, const Matrix1D<double> &axis,
-//					                      Matrix2D<double> &result, bool homogeneous)
-
-				double sc;
-				sc = lambda_1/8.0;
-//					std::cout << "a = " << lambda_3 << "  c= " << lambda_1 << std::endl;
-//					std::cout << "sc = " << sc << "  c/sc= " << lambda_1/sc << std::endl;
-
-				//write md with values!
-				objId = md.addObject();
-				md.setValue(MDL_ANGLE_ROT, rot, objId);
-				md.setValue(MDL_ANGLE_TILT, tilt, objId);
-				md.setValue(MDL_XCOOR, (int) j, objId);
-				md.setValue(MDL_YCOOR, (int) i, objId);
-				md.setValue(MDL_ZCOOR, (int) k, objId);
-				md.setValue(MDL_MAX, 7.0, objId);
-				md.setValue(MDL_MIN, lambda_3/sc, objId);
-				md.setValue(MDL_INTSCALE, lambda_3/lambda_1, objId);
-			}
-			++idx;
-		}
-		++n;
-	}
-
-	md.write(fnDirections);
-	mdAniRes.write(fnAniRes);
-
-
-
-}
-
+//
+//
+//
+//	Image<double> imgdoa;
+//	imgdoa = pdoaVol;
+//	imgdoa.write(fnDoA);
+//
+//	MultidimArray<double> radial, azimuthal, meanResolution, lowestResolution, highestResolution;
+//	MetaData prefDir;
+//
+//	double radialThr, azimuthalThr;
+//	radialAzimuthalResolution(resolutionMatrix, mask(), radial, azimuthal, meanResolution,
+//			lowestResolution, highestResolution, radialThr, azimuthalThr, prefDir);
+//
+//
+//	imgdoa = radial;
+//	imgdoa.write(fnradial);
+//	imgdoa = azimuthal;
+//	imgdoa.write(fnazimuthal);
+//	imgdoa = lowestResolution;
+//	imgdoa.write(fnLowestResolution);
+//	imgdoa = highestResolution;
+//	imgdoa.write(fnHighestResolution);
+//
+//	MetaData mdRadialAzimuthalThr;
+//	size_t objIdx;
+//	objIdx = mdRadialAzimuthalThr.addObject();
+//	mdRadialAzimuthalThr.setValue(MDL_RESOLUTION_FREQ, radialThr, objIdx);
+//	mdRadialAzimuthalThr.setValue(MDL_RESOLUTION_FREQ2, azimuthalThr, objIdx);
+//
+//	mdRadialAzimuthalThr.write(fnMDThr);
+//
+//	std::cout << "radial = " << radialThr << "  azimuthal = " << azimuthalThr << std::endl;
+//	std::cout << "Calculating the radial and azimuthal resolution " << std::endl;
+//
+//
+//	MetaData mdRadial, mdAvg, mdHighest, mdLowest;
+//
+//	Image<double> monores;
+//	monores.read(fnMonoRes);
+//	MultidimArray<double> monoresVol;
+//	monoresVol = monores();
+//	radialAverageInMask(mask(), radial, azimuthal, highestResolution, lowestResolution, monoresVol, mdAvg);
+//
+//	mdAvg.write(fnMDazimuthal);
+//
+//
+/////////////////////////
+//
+//	double lambda_1, lambda_2, lambda_3, doa;
+//	double direction_x, direction_y, direction_z;
+//	int counter = 0;
+//	Matrix2D<double> eigenvectors;
+//	Matrix1D<double> eigenvalues, r0_1(3), rF_1(3), r0_2(3), rF_2(3), r0_3(3), rF_3(3), r(3);
+//	MultidimArray<int> arrows;
+//	arrows.initZeros(mask());
+//	const int gridStep=10;
+//	size_t n=0;
+//	maskPos=0;
+/////////////////////////
+//
+//	idx = 0;
+//	int siz;
+//	siz = XSIZE(arrows);
+//	double xcoor, ycoor, zcoor, rad, rot, tilt;
+//	MetaData md, mdAniRes;
+//	size_t objId, objIdAniRes;
+//	FileName fn_md, fn_AniRes;
+//
+//	imgdoa.read(fnDoA);
+//	monores().setXmippOrigin();
+//
+//	FOR_ALL_ELEMENTS_IN_ARRAY3D(arrows)
+//	{
+//		if (A3D_ELEM(mask(),k,i,j) > 0 ) //before ==1
+//		{
+//			double doa = A3D_ELEM(imgdoa(),k,i,j);
+//			double res = A3D_ELEM(monores(),k,i,j);
+//
+//			objIdAniRes = mdAniRes.addObject();
+//			mdAniRes.setValue(MDL_COST, doa, objIdAniRes);
+//			mdAniRes.setValue(MDL_RESOLUTION_SSNR, res, objIdAniRes);
+//
+//
+//
+//			//lambda_3 is assumed as the least eigenvalue
+//			if ( (i%gridStep==0) && (j%gridStep==0) && (k%gridStep==0) )
+//			{
+//				double lambda_1 = MAT_ELEM(axis, 0, idx);
+//				double lambda_3 = MAT_ELEM(axis, 2, idx);
+//
+//				xcoor = MAT_ELEM(axis, 3, idx);
+//				ycoor = MAT_ELEM(axis, 4, idx);
+//				zcoor = MAT_ELEM(axis, 5, idx);
+//
+//				rot = atan2(ycoor, xcoor)*180/PI;
+//				tilt = acos(zcoor)*180/PI;
+//
+//
+////					rotation3DMatrix(double ang, const Matrix1D<double> &axis,
+////					                      Matrix2D<double> &result, bool homogeneous)
+//
+//				double sc;
+//				sc = lambda_1/8.0;
+////					std::cout << "a = " << lambda_3 << "  c= " << lambda_1 << std::endl;
+////					std::cout << "sc = " << sc << "  c/sc= " << lambda_1/sc << std::endl;
+//
+//				//write md with values!
+//				objId = md.addObject();
+//				md.setValue(MDL_ANGLE_ROT, rot, objId);
+//				md.setValue(MDL_ANGLE_TILT, tilt, objId);
+//				md.setValue(MDL_XCOOR, (int) j, objId);
+//				md.setValue(MDL_YCOOR, (int) i, objId);
+//				md.setValue(MDL_ZCOOR, (int) k, objId);
+//				md.setValue(MDL_MAX, 7.0, objId);
+//				md.setValue(MDL_MIN, lambda_3/sc, objId);
+//				md.setValue(MDL_INTSCALE, lambda_3/lambda_1, objId);
+//			}
+//			++idx;
+//		}
+//		++n;
+//	}
+//
+//	md.write(fnDirections);
+//	mdAniRes.write(fnAniRes);
+//
+//
+//
+//}
+//
