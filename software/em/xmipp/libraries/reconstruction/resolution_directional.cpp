@@ -188,7 +188,7 @@ void ProgResDir::produceSideInfo()
 	std::cout << "particle radius = " << Rparticle << std::endl;
 	size_t xrows = angles.mdimx;
 
-	resolutionMatrix.initConstant(xrows, NVoxelsOriginalMask, maxRes);
+//	resolutionMatrix.initConstant(xrows, NVoxelsOriginalMask, maxRes);
 	maskMatrix.initConstant(xrows, NVoxelsOriginalMask, 1);
 
 
@@ -220,6 +220,7 @@ void ProgResDir::produceSideInfo()
 		}
 	}
 
+	resolutionMatrix.initConstant(xrows, NVoxelsOriginalMask, lastmax);
 	std::cout << "max Monores = " << lastmax << " minMonoRes = " << lastres << std::endl;
 	minRes = lastres;
 
