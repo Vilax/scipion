@@ -204,13 +204,13 @@ class XmippMonoDirViewer(ProtocolViewer):
         return [cm]  
  
     def _showDoAColorSlices(self, param=None):
-        self._showColorSlices(OUTPUT_DOA_FILE, True, 'Degree of Anisotropy (DoA)')
+        self._showColorSlices(OUTPUT_DOA_FILE, True, 'Degree of Anisotropy (DoA)', 0, 1)
         
     def _showRadialColorSlices(self, param=None):
         self._showColorSlices(OUTPUT_RADIAL_FILE, False, 'Radial Resolution')
         
     def _showZscoreMap(self, param=None):
-        self._showColorSlices(OUTPUT_ZSCOREMAP_FILE, False, 'Zscore map')
+        self._showColorSlices(OUTPUT_ZSCOREMAP_FILE, True, 'Zscore map', 0, 5)
         
     def _showHighestResolutionColorSlices(self, param=None):
         self._showColorSlices(OUTPUT_RESOLUTION_HIGHEST_FILE, False, 'Highest Resolution')
@@ -236,14 +236,14 @@ class XmippMonoDirViewer(ProtocolViewer):
             cm = DataView(self.protocol.inputVolumes.get().getFileName())
             return [cm]
    
-    def _showColorSlices(self, fileName, zerone, titleFigure):
+    def _showColorSlices(self, fileName, setrangelimits, titleFigure, lowlim, highlim):
         imageFile = self.protocol._getExtraPath(fileName)
         img = ImageHandler().read(imageFile)
         imgData = img.getData()
         imgData2 = np.ma.masked_where(imgData < 0.001, imgData, copy=True)
-        if zerone is True:
+        if setrangelimits is True:
             fig, im = self._plotVolumeSlices(titleFigure, imgData2,
-                                         0, 1, self.getColorMap(), dataAxis=self._getAxis())
+                                         lowlim, highlim, self.getColorMap(), dataAxis=self._getAxis())
         else:
             md =MetaData()
             md.read(self.protocol._getExtraPath(OUTPUT_THRESHOLDS_FILE))

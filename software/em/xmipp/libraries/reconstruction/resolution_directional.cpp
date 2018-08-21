@@ -192,6 +192,8 @@ void ProgResDir::produceSideInfo()
 	maskMatrix.initConstant(xrows, NVoxelsOriginalMask, 1);
 
 
+	std::cout << "mis direciones" << xrows <<  std::endl;
+
 	monoResMatrix.initZeros(NVoxelsOriginalMask);
 
 
@@ -200,7 +202,7 @@ void ProgResDir::produceSideInfo()
 	MultidimArray<double> &pResolutionVol = mono();
 
 	int maskPos = 0;
-	double lastres = 1e38;
+	double lastres = 1e38, lastmax = -1;
 	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pResolutionVol)
 	{
 		if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
@@ -209,12 +211,16 @@ void ProgResDir::produceSideInfo()
 			res = DIRECT_MULTIDIM_ELEM(pResolutionVol, n);
 			if ((res>0) && (res<lastres))
 				lastres = res;
+			if ((res>0) && (res>lastmax))
+				lastmax = res;
 			VEC_ELEM(monoResMatrix, maskPos) = DIRECT_MULTIDIM_ELEM(pResolutionVol, n);
-			std::cout << VEC_ELEM(monoResMatrix, maskPos) << std::endl;
+//			std::cout << VEC_ELEM(monoResMatrix, maskPos) << std::endl;
+
 			++maskPos;
 		}
 	}
 
+	std::cout << "max Monores = " << lastmax << " minMonoRes = " << lastres << std::endl;
 	minRes = lastres;
 
 
@@ -592,7 +598,8 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV, Multi
 	// Filter the input volume and add it to amplitude
 
 //	MultidimArray<double> conetest;
-//	conetest.initZeros(myfftV);
+//	conetest.resizeNoCopy(myfftV);
+//	conetest.initConstant(1.0);
 //	#ifdef DEBUG_DIR
 //	MultidimArray<double> coneVol;
 //	coneVol.initZeros(iu);
@@ -1662,9 +1669,7 @@ void ProgResDir::run()
 	Matrix1D<int> computeDirection;
 	computeDirection.initZeros(N_directions);
 
-
 	trigProducts.initZeros(3, N_directions);
-
 
 
 	double nyquist, resolution_2;
@@ -1674,7 +1679,7 @@ void ProgResDir::run()
 
 	bool continueIter = false, breakIter = false;
 
-	Image<double> outputResolution;
+
 	FileName fnDebug;
 	std::vector<double> list;
 	int iter = 0;
@@ -1746,9 +1751,13 @@ void ProgResDir::run()
 		for (size_t dir=0; dir<N_directions; dir++)
 		{
 			if (VEC_ELEM(computeDirection, dir) > 0)
+			{
+				std::cout << "skip direction " << std::endl;
 				continue;
+			}
 
-			outputResolution().initZeros(VRiesz);
+
+
 			MultidimArray<int> mask_aux = mask();
 			MultidimArray<int> &pMask = mask_aux;
 
@@ -1762,6 +1771,7 @@ void ProgResDir::run()
 			MAT_ELEM(trigProducts, 1, dir) = sin(tilt*PI/180)*sin(rot*PI/180);
 			MAT_ELEM(trigProducts, 2, dir) = cos(tilt*PI/180);
 
+//			std::cout << "dir = " << dir <<  "rot = " << rot << " tilt = " << tilt << std::endl;
 
 			defineCone(fftVRiesz, fftVRiesz_aux, conefilter, conefilter_aux, rot, tilt);
 
@@ -1899,25 +1909,28 @@ void ProgResDir::run()
 					{
 						if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 						{
-							if ((MAT_ELEM(maskMatrix, dir, maskPos) >=1) && ( (VEC_ELEM(monoResMatrix, maskPos)-0.1)<resolution ) )
+							if (MAT_ELEM(maskMatrix, dir, maskPos) >=1)
 							{
-								if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)>thresholdNoise)
+								if ( (VEC_ELEM(monoResMatrix, maskPos)-0.5)<resolution )
 								{
-	//								DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution;//sampling/freq;
-									MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution;
-									MAT_ELEM(maskMatrix, dir, maskPos) += 1;
-									if (MAT_ELEM(maskMatrix, dir, maskPos) >2)
+									if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)>thresholdNoise)
 									{
-										MAT_ELEM(maskMatrix, dir, maskPos) = 0;
-										MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution_2;
+		//								DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution;//sampling/freq;
+										MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution;
+										MAT_ELEM(maskMatrix, dir, maskPos) += 1;
+										if (MAT_ELEM(maskMatrix, dir, maskPos) >2)
+										{
+											MAT_ELEM(maskMatrix, dir, maskPos) = 0;
+											MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution_2;
+										}
+										else
+											MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution;
+
 									}
 									else
+									{
 										MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution;
-
-								}
-								else
-								{
-									MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution;
+									}
 								}
 							}
 							++maskPos;
@@ -1939,31 +1952,30 @@ void ProgResDir::run()
 //	fftVRiesz.clear();
 
 
+
+	Image<double> ResolutionVol;
+	MultidimArray<double> &pResolutionVol = ResolutionVol();
+
+	for (size_t dir=0; dir<N_directions; dir++)
+	{
 		size_t maskPos=0;
-		Image<double> ResolutionVol;
-		MultidimArray<double> &pResolutionVol = ResolutionVol();
-
-
-		for (size_t dir=0; dir<N_directions; dir++)
+		pResolutionVol.initZeros(amplitudeMS);
+		FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pResolutionVol)
 		{
-			pResolutionVol.initZeros(amplitudeMS);
-			FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(pResolutionVol)
+			if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
 			{
-				if (DIRECT_MULTIDIM_ELEM(mask(), n) == 1)
-				{
-					double myres = MAT_ELEM(resolutionMatrix, dir, maskPos);
-					DIRECT_MULTIDIM_ELEM(pResolutionVol, n) = myres;
-	//				if (n == 14621798)
-	//					std::cout << maskPos << std::endl;
-					++maskPos;
-				}
+				DIRECT_MULTIDIM_ELEM(pResolutionVol, n) = MAT_ELEM(resolutionMatrix, dir, maskPos);
+//				if (n == 14621798)
+//					std::cout << maskPos << std::endl;
+				++maskPos;
 			}
-			Image<double> saveImg;
-			saveImg = pResolutionVol;
-			FileName fnres = formatString("resolution_dir_%i.vol", dir+1);
-			saveImg.write(fnres);
-			saveImg.clear();
 		}
+		Image<double> saveImg;
+		saveImg = pResolutionVol;
+		FileName fnres = formatString("resolution_dir_%i.vol", dir+1);
+		saveImg.write(fnres);
+		saveImg.clear();
+	}
 
 
 		//#endif
@@ -1987,7 +1999,7 @@ void ProgResDir::run()
 
 
 
-	maskPos = 0;
+	size_t maskPos = 0;
 
 
 	//Remove outliers
