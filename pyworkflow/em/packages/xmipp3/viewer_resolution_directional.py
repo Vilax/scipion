@@ -207,19 +207,19 @@ class XmippMonoDirViewer(ProtocolViewer):
         self._showColorSlices(OUTPUT_DOA_FILE, True, 'Degree of Anisotropy (DoA)', 0, 1)
         
     def _showRadialColorSlices(self, param=None):
-        self._showColorSlices(OUTPUT_RADIAL_FILE, False, 'Radial Resolution')
+        self._showColorSlices(OUTPUT_RADIAL_FILE, False, 'Radial Resolution', -1, -1)
         
     def _showZscoreMap(self, param=None):
         self._showColorSlices(OUTPUT_ZSCOREMAP_FILE, True, 'Zscore map', 0, 5)
         
     def _showHighestResolutionColorSlices(self, param=None):
-        self._showColorSlices(OUTPUT_RESOLUTION_HIGHEST_FILE, False, 'Highest Resolution')
+        self._showColorSlices(OUTPUT_RESOLUTION_HIGHEST_FILE, False, 'Highest Resolution', -1, -1)
         
     def _showLowestResolutionColorSlices(self, param=None):
-        self._showColorSlices(OUTPUT_RESOLUTION_LOWEST_FILE, False, 'Lowest Resolution')
+        self._showColorSlices(OUTPUT_RESOLUTION_LOWEST_FILE, False, 'Lowest Resolution', -1, -1)
         
     def _showAzimuthalColorSlices(self, param=None):
-        self._showColorSlices(OUTPUT_AZIMUHTAL_FILE, False, 'Azimuthal Resolution')
+        self._showColorSlices(OUTPUT_AZIMUHTAL_FILE, False, 'Azimuthal Resolution', -1, -1)
         
     def _showAnisotropyResolution(self, param=None):
         self.plotAnisotropyResolution(self.protocol._getExtraPath('anires.xmd'))
