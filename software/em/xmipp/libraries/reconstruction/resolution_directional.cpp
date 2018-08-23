@@ -1848,103 +1848,90 @@ void ProgResDir::run()
 				}
 			}
 
-			if ( (NS/(double) NVoxelsOriginalMask)<cut_value ) //when the 2.5% is reached then the iterative process stops
+			double meanS=sumS/NS;
+//			double sigma2S=sumS2/NS-meanS*meanS;
+			double meanN=sumN/NN;
+			double sigma2N=sumN2/NN-meanN*meanN;
+
+			if (meanS>max_meanS)
+				max_meanS = meanS;
+
+			if (meanS<0.001*AvgNoise)//0001*max_meanS)
 			{
-				std::cout << "Search of resolutions stopped due to mask has been completed" << std::endl;
+				//std::cout << "  meanS= " << meanS << " sigma2S= " << sigma2S << " NS	= " << NS << std::endl;
+				//std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
+				std::cout << "Search of resolutions stopped due to too low signal" << std::endl;
+				std::cout << "\n"<< std::endl;
+
 				VEC_ELEM(computeDirection, dir) = 1;
-				Nvoxels = 0;
-//				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
-//				{
-//				  if (DIRECT_MULTIDIM_ELEM(pOutputResolution, n) > 0)
-//					DIRECT_MULTIDIM_ELEM(pMask, n) = 1;
-//				}
-				#ifdef DEBUG_MASK
-				mask.write("partial_mask.vol");
-				#endif
 			}
 			else
 			{
-				if (NS == 0)
+				// Check local resolution
+				double thresholdNoise;
+				//thresholdNoise = meanN+criticalZ*sqrt(sigma2N);
+
+				std::sort(noiseValues.begin(),noiseValues.end());
+				thresholdNoise = noiseValues[size_t(noiseValues.size()*significance)];
+
+				//std::cout << "thr="<< thresholdNoise << " " << meanN+criticalZ*sqrt(sigma2N) << " " << NN << std::endl;
+				noiseValues.clear();
+
+				#ifdef DEBUG
+				  std::cout << "Iteration = " << iter << ",   Resolution= " << resolution << ",   Signal = " << meanS << ",   Noise = " << meanN << ",  Threshold = " << thresholdNoise <<std::endl;
+				#endif
+
+				size_t maskPos = 0;
+				FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
 				{
-					std::cout << "There are no points to compute inside the mask" << std::endl;
-					std::cout << "If the number of computed frequencies is low, perhaps the provided"
-							"mask is not enough tight to the volume, in that case please try another mask" << std::endl;
-					break;
-				}
-
-				double meanS=sumS/NS;
-	//			double sigma2S=sumS2/NS-meanS*meanS;
-				double meanN=sumN/NN;
-				double sigma2N=sumN2/NN-meanN*meanN;
-
-				if (meanS>max_meanS)
-					max_meanS = meanS;
-
-				if (meanS<0.001*AvgNoise)//0001*max_meanS)
-				{
-					//std::cout << "  meanS= " << meanS << " sigma2S= " << sigma2S << " NS	= " << NS << std::endl;
-					//std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
-					std::cout << "Search of resolutions stopped due to too low signal" << std::endl;
-					std::cout << "\n"<< std::endl;
-
-					VEC_ELEM(computeDirection, dir) = 1;
-				}
-				else
-				{
-					// Check local resolution
-					double thresholdNoise;
-					//thresholdNoise = meanN+criticalZ*sqrt(sigma2N);
-
-					std::sort(noiseValues.begin(),noiseValues.end());
-					thresholdNoise = noiseValues[size_t(noiseValues.size()*significance)];
-
-					//std::cout << "thr="<< thresholdNoise << " " << meanN+criticalZ*sqrt(sigma2N) << " " << NN << std::endl;
-					noiseValues.clear();
-
-					#ifdef DEBUG
-					  std::cout << "Iteration = " << iter << ",   Resolution= " << resolution << ",   Signal = " << meanS << ",   Noise = " << meanN << ",  Threshold = " << thresholdNoise <<std::endl;
-					#endif
-
-					size_t maskPos = 0;
-					FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
+					if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 					{
-						if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
+						if (MAT_ELEM(maskMatrix, dir, maskPos) >=1)
 						{
-							if (MAT_ELEM(maskMatrix, dir, maskPos) >=1)
+							if ( (VEC_ELEM(monoResMatrix, maskPos)-0.5)<resolution )
 							{
-								if ( (VEC_ELEM(monoResMatrix, maskPos)-0.5)<resolution )
+								if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)>thresholdNoise)
 								{
-									if (DIRECT_MULTIDIM_ELEM(amplitudeMS, n)>thresholdNoise)
+	//								DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution;//sampling/freq;
+									MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution;
+									MAT_ELEM(maskMatrix, dir, maskPos) += 1;
+									if (MAT_ELEM(maskMatrix, dir, maskPos) >2)
 									{
-		//								DIRECT_MULTIDIM_ELEM(pOutputResolution, n) = resolution;//sampling/freq;
-										MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution;
-										MAT_ELEM(maskMatrix, dir, maskPos) += 1;
-										if (MAT_ELEM(maskMatrix, dir, maskPos) >2)
-										{
-											MAT_ELEM(maskMatrix, dir, maskPos) = 0;
-											MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution_2;
-										}
-										else
-											MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution;
-
+										MAT_ELEM(maskMatrix, dir, maskPos) = 0;
+										MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution_2;
 									}
 									else
-									{
 										MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution;
-									}
+
+								}
+								else
+								{
+									MAT_ELEM(resolutionMatrix, dir, maskPos) = resolution;
 								}
 							}
-							++maskPos;
 						}
+						++maskPos;
 					}
+				}
+				int zeros=0;
+				for (size_t px; px<NVoxelsOriginalMask; px++)
+				{
+						if (MAT_ELEM(maskMatrix, dir, maskPos) == 0)
+							++zeros;
+				}
 
-					//#ifdef DEBUG
+				if (( (double) zeros)/( (double ) NVoxelsOriginalMask) > 0.9)
+				{
+					std::cout << "dir = " << dir << "stopped" << std::endl;
+					VEC_ELEM(computeDirection, dir) = 0;
+				}
+
+				//#ifdef DEBUG
 //						std::cout << "thresholdNoise = " << thresholdNoise << std::endl;
 //						std::cout << "  meanS= " << meanS << " NS= " << NS << std::endl;
 //						std::cout << "  meanN= " << meanN << " sigma2N= " << sigma2N << " NN= " << NN << std::endl;
-					//#endif
+				//#endif
 
-					}
 			}
 		}
 		++iter;
