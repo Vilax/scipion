@@ -1761,6 +1761,11 @@ void ProgResDir::run()
 			int x_size = XSIZE(amplitudeMS);
 			int y_size = YSIZE(amplitudeMS);
 
+			size_t idx_mask;
+			idx_mask = 0;
+
+
+
 			for(int k=0; k<z_size; ++k)
 			{
 //				std::cout << " k = " << k  <<std::endl;
@@ -1768,11 +1773,18 @@ void ProgResDir::run()
 				{
 					for(int j=0; j<x_size; ++j)
 					{
+
+
 						if (DIRECT_MULTIDIM_ELEM(pMask, n)>=1)
 						{
+							if (MAT_ELEM(maskMatrix, 0, idx_mask) >0)
+							{
 							amplitudeValue=DIRECT_MULTIDIM_ELEM(amplitudeMS, n);
 							sumS  += amplitudeValue;
 							++NS;
+							}
+							++idx_mask;
+
 						}
 						else if (DIRECT_MULTIDIM_ELEM(pMask, n)==0)
 						{
