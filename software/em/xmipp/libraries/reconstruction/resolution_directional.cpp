@@ -682,6 +682,10 @@ void ProgResDir::resolution2eval_(int &fourier_idx, double min_step,
 	resolution = sampling/freq;
 //	std::cout << "res = " << resolution << std::endl;
 //	std::cout << "min_step = " << min_step << std::endl;
+	if (resolution>8)
+		min_step =1;
+
+
 
 	if ( fabs(resolution - last_resolution)<min_step )
 	{
@@ -1641,9 +1645,6 @@ void ProgResDir::run()
 
 	//Checking with MonoRes at 50A;
 	int aux_idx;
-	double aux_freq;
-
-	aux_freq = sampling/30;
 
 	if (maxRes>18)
 	{
