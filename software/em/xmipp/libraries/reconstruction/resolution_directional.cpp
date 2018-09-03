@@ -2028,7 +2028,7 @@ void ProgResDir::run()
 	//Remove outliers
 	removeOutliers(trigProducts, resolutionMatrix);
 	//Second step of cleaning
-	removeOutliers(trigProducts, resolutionMatrix);
+//	removeOutliers(trigProducts, resolutionMatrix);
 //	removeOutliers(angles, resolutionMatrix);
 
 	//Ellipsoid fitting
