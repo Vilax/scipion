@@ -599,8 +599,8 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 	conefilter = myfftV;
 	// Filter the input volume and add it to amplitude
 
-//	MultidimArray<double> conetest;
-//	conetest.initZeros(myfftV);
+	MultidimArray<double> conetest;
+	conetest.initZeros(myfftV);
 //	#ifdef DEBUG_DIR
 //	MultidimArray<double> coneVol;
 //	coneVol.initZeros(iu);
@@ -635,7 +635,7 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 				//double dotproduct = (uy*x_dir + ux*y_dir + uz*z_dir)*iun;
 				iun *= (ux + uy + uz);
 				double acosine = acos(fabs(iun));
-//				DIRECT_MULTIDIM_ELEM(conetest, n) = real(conj(DIRECT_MULTIDIM_ELEM(myfftV, n))*DIRECT_MULTIDIM_ELEM(myfftV, n));
+				DIRECT_MULTIDIM_ELEM(conetest, n) = real(conj(DIRECT_MULTIDIM_ELEM(myfftV, n))*DIRECT_MULTIDIM_ELEM(myfftV, n));
 				if (acosine>ang_con)
 				{
 					DIRECT_MULTIDIM_ELEM(conefilter, n) = 0;
@@ -652,9 +652,9 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 		}
 	}
 //
-//	Image<double> saveImg2;
-//	saveImg2 = conetest;
-//	saveImg2.write("cono.vol");
+	Image<double> saveImg2;
+	saveImg2 = conetest;
+	saveImg2.write("cono.vol");
 
 }
 
