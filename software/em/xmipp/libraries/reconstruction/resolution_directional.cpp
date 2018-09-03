@@ -864,8 +864,8 @@ void ProgResDir::removeOutliers(Matrix2D<double> &anglesMat,
 
 		}
 
-		if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
-			std::cout << "threshold_gauss--------------=" << threshold_gauss << std::endl;
+//		if ((k == 201311) || (k == 201312) || (k == 283336) || (k == 324353) || (k == 324362) || (k == 324512))
+//			std::cout << "threshold_gauss--------------=" << threshold_gauss << std::endl;
 
 	}
 }
