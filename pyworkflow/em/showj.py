@@ -103,6 +103,11 @@ PROJECT_PATH = 'projectPath'
 OBJECT_ID = 'objectId'
 
 
+def getJvmMaxMemory():
+    # Memory in GB
+    return os.environ.get("JAVA_MAX_MEMORY", 2)
+
+
 class ColumnsConfig():
     """ Store the configuration of the columns for a given table in a dataset.
     The order of the columns will be stored and configuration for each columns.
@@ -225,7 +230,8 @@ class ColumnProperties():
                 'columnName': self.getName(),
                 'columnLabel': self.getLabel()
                 }
-        
+
+
 def getArchitecture():
     import platform
     arch = platform.architecture()[0]
@@ -233,7 +239,8 @@ def getArchitecture():
         if a in arch:
             return a
     return 'NO_ARCH' 
-    
+
+
 def getJavaIJappArguments(memory, appName, appArgs):
     """ Build the command line arguments to launch 
     a Java application based on ImageJ. 
@@ -241,9 +248,9 @@ def getJavaIJappArguments(memory, appName, appArgs):
     appName: the qualified name of the java application.
     appArgs: the arguments specific to the application.
     """ 
-    if len(memory) == 0:
-        memory = "1g"
-        print "No memory size provided. Using default: " + memory
+    if memory is None:
+        memory = getJvmMaxMemory()
+        print "No memory size provided. Using default: %s" % memory
     
     jdkLib = join(os.environ['JAVA_HOME'], 'lib')
     imagej_home = join(os.environ['XMIPP_HOME'], "external", "imagej")
@@ -251,22 +258,25 @@ def getJavaIJappArguments(memory, appName, appArgs):
     javaLib = join(os.environ['XMIPP_HOME'], 'java', 'lib')
     plugins_dir = os.path.join(imagej_home, "plugins")
     arch = getArchitecture()
-    args = "-Xmx%(memory)s -d%(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
+    args = "-Xmx%(memory)sg -d%(arch)s -Djava.library.path=%(lib)s -Dplugins.dir=%(plugins_dir)s -cp %(jdkLib)s/*:%(imagej_home)s/*:%(javaLib)s/* %(appName)s %(appArgs)s" % locals()
 
     return args
+
 
 def runJavaIJapp(memory, appName, args, env={}):
     from pyworkflow.em.packages import xmipp3
     env.update(xmipp3.getEnviron(xmippFirst=False))
 
     args = getJavaIJappArguments(memory, appName, args)
-    print 'java %s'%args
+    print 'java %s' % args
     #return subprocess.Popen('java ' + args, shell=True, env=env)
     cmd = ['java'] + shlex.split(args)
     return subprocess.Popen(cmd, env=env)
 
+
 def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None,
-                              memory='2g', pickerProps=None, inTmpFolder=False):
+                              memory=None, pickerProps=None, inTmpFolder=False):
+
         app = "xmipp.viewer.particlepicker.training.SupervisedPickerRunner"
         args = "--input %s --output %s"%(micsFn, outputDir)
 
@@ -282,7 +292,7 @@ def launchSupervisedPickerGUI(micsFn, outputDir, protocol, mode=None,
         if inTmpFolder:
             args += " --tmp true"
 
-        return runJavaIJapp("%s" % memory, app, args)
+        return runJavaIJapp(memory, app, args)
     
 
 def launchTiltPairPickerGUI(micsFn, outputDir, protocol, mode=None, memory='2g'):
@@ -313,7 +323,8 @@ class ProtocolTCPRequestHandler(SocketServer.BaseRequestHandler):
         else:
             answer = 'no answer available'
             self.request.sendall(answer + '\n')
-    
+
+
 class MySocketServer (SocketServer.TCPServer):
 
     def serve_forever(self):
