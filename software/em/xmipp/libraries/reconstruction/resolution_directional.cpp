@@ -389,8 +389,8 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 		double rot, double tilt)
 {
 	fftVRiesz.initZeros(myfftV);
-//	MultidimArray<double> coneVol;
-//	coneVol.initZeros(myfftV);
+	MultidimArray<double> coneVol;
+	coneVol.initZeros(myfftV);
 	fftVRiesz_aux.initZeros(myfftV);
 	std::complex<double> J(0,1);
 
@@ -423,29 +423,30 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
-//					DIRECT_MULTIDIM_ELEM(coneVol, n) = DIRECT_MULTIDIM_ELEM(conefilter, n);
+					DIRECT_MULTIDIM_ELEM(coneVol, n) = DIRECT_MULTIDIM_ELEM(conefilter, n);
 				}
 				++n;
 			}
 		}
 	}
 
+
 //	#ifdef DEBUG_DIR
 ////	if ( (count == 0) )
 ////	{
-//		Image<double> direction;
-//		direction = coneVol;
-//		direction.write(formatString("cone_%i_%i.vol", dir+1, count));
+		Image<double> direction;
+		direction = coneVol;
+		direction.write(formatString("cone_%i_%i.vol", dir+1, count));
 ////	}
 //	#endif
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, amplitude);
 
-	#ifdef DEBUG_DIR
+//	#ifdef DEBUG_DIR
 		Image<double> filteredvolume;
 		filteredvolume = VRiesz;
 		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir+1,count));
-	#endif
+//	#endif
 
 
 //	amplitude.resizeNoCopy(VRiesz);
