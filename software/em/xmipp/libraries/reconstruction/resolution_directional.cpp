@@ -1883,9 +1883,9 @@ void ProgResDir::run()
 					//std::cout << "thr="<< thresholdNoise << " " << meanN+criticalZ*sqrt(sigma2N) << " " << NN << std::endl;
 					noiseValues.clear();
 
-					#ifdef DEBUG
+//					#ifdef DEBUG
 					  std::cout << "Iteration = " << iter << ",   Resolution= " << resolution << ",   Signal = " << meanS << ",   Noise = " << meanN << ",  Threshold = " << thresholdNoise <<std::endl;
-					#endif
+//					#endif
 
 					size_t maskPos = 0;
 					FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(amplitudeMS)
