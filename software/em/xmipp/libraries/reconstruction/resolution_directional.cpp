@@ -423,7 +423,7 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) = -J;
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= DIRECT_MULTIDIM_ELEM(fftVRiesz, n);
 					DIRECT_MULTIDIM_ELEM(fftVRiesz_aux, n) *= iun;
-					DIRECT_MULTIDIM_ELEM(coneVol, n) = 1;//DIRECT_MULTIDIM_ELEM(conefilter, n);
+					DIRECT_MULTIDIM_ELEM(coneVol, n) =  real(DIRECT_MULTIDIM_ELEM(myfftV, n)*conj(DIRECT_MULTIDIM_ELEM(myfftV, n)));
 				}
 				++n;
 			}
