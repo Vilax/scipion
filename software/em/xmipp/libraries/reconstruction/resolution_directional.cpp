@@ -434,18 +434,18 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 //	#ifdef DEBUG_DIR
 ////	if ( (count == 0) )
 ////	{
-		Image<double> direction;
-		direction = coneVol;
-		direction.write(formatString("cone_%i_%i.vol", dir+1, count));
+//		Image<double> direction;
+//		direction = coneVol;
+//		direction.write(formatString("cone_%i_%i.vol", dir+1, count));
 ////	}
 //	#endif
 
 	transformer_inv.inverseFourierTransform(fftVRiesz, amplitude);
 
 //	#ifdef DEBUG_DIR
-		Image<double> filteredvolume;
-		filteredvolume = VRiesz;
-		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir+1,count));
+//		Image<double> filteredvolume;
+//		filteredvolume = VRiesz;
+//		filteredvolume.write(formatString("Volumen_filtrado_%i_%i.vol", dir+1,count));
 //	#endif
 
 
@@ -540,14 +540,14 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 	//TODO: change (k - z_size*0.5)
 
 //		#ifdef MONO_AMPLITUDE
-		Image<double> saveImg2;
-		saveImg2 = amplitude;
-		if (fnDebug.c_str() != "")
-		{
-			FileName iternumber = formatString("smoothed_volume_%i_%i.vol", dir+1, count);
-			saveImg2.write(fnDebug+iternumber);
-		}
-		saveImg2.clear();
+//		Image<double> saveImg2;
+//		saveImg2 = amplitude;
+//		if (fnDebug.c_str() != "")
+//		{
+//			FileName iternumber = formatString("smoothed_volume_%i_%i.vol", dir+1, count);
+//			saveImg2.write(fnDebug+iternumber);
+//		}
+//		saveImg2.clear();
 //		#endif
 
 
@@ -584,9 +584,9 @@ void ProgResDir::amplitudeMonogenicSignal3D_fast(const MultidimArray< std::compl
 //	if (fnDebug.c_str() != "")
 //	{
 //	Image<double> saveImg2;
-		saveImg2 = amplitude;
-		FileName iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir+1, count);
-		saveImg2.write(fnDebug+iternumber);
+//		saveImg2 = amplitude;
+//		FileName iternumber = formatString("_Filtered_Amplitude_%i_%i.vol", dir+1, count);
+//		saveImg2.write(fnDebug+iternumber);
 //	}
 //	#endif // DEBUG
 }
@@ -599,8 +599,8 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 	conefilter = myfftV;
 	// Filter the input volume and add it to amplitude
 
-	MultidimArray<double> conetest;
-	conetest.initZeros(myfftV);
+//	MultidimArray<double> conetest;
+//	conetest.initZeros(myfftV);
 //	#ifdef DEBUG_DIR
 //	MultidimArray<double> coneVol;
 //	coneVol.initZeros(iu);
@@ -635,7 +635,7 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 				//double dotproduct = (uy*x_dir + ux*y_dir + uz*z_dir)*iun;
 				iun *= (ux + uy + uz);
 				double acosine = acos(fabs(iun));
-				DIRECT_MULTIDIM_ELEM(conetest, n) = log(real(conj(DIRECT_MULTIDIM_ELEM(myfftV, n))*DIRECT_MULTIDIM_ELEM(myfftV, n)));
+//				DIRECT_MULTIDIM_ELEM(conetest, n) = log(real(conj(DIRECT_MULTIDIM_ELEM(myfftV, n))*DIRECT_MULTIDIM_ELEM(myfftV, n)));
 				if (acosine>ang_con)
 				{
 					DIRECT_MULTIDIM_ELEM(conefilter, n) = 0;
@@ -652,9 +652,9 @@ void ProgResDir::defineCone(MultidimArray< std::complex<double> > &myfftV,
 		}
 	}
 //
-	Image<double> saveImg2;
-	saveImg2 = conetest;
-	saveImg2.write("cono.vol");
+//	Image<double> saveImg2;
+//	saveImg2 = conetest;
+//	saveImg2.write("cono.vol");
 
 }
 
